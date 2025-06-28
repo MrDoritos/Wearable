@@ -1,1 +1,5 @@
 *.blend1
+build
+.vscode
+STM32
+STM32_2
