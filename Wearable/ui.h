@@ -1,68 +1,72 @@
 #pragma once
 
-typedef short fb;
-typedef char pixel;
+typedef unsigned short fb;
+typedef unsigned char pixel;
 
-template<fb Width, fb Height, fb BPP>
+template<fb WIDTH, fb HEIGHT, fb BPP>
 struct Framebuffer {
-    // Total width, total height
-    // BPP determines buffer size
-    const fb width = Width, height = Height, bpp = BPP;
+    static constexpr fb PXPERBYTE = 8 / BPP;
+    static constexpr fb SIZE = WIDTH * HEIGHT / PXPERBYTE;
+    static constexpr fb bpp = BPP;
+    static constexpr fb width = WIDTH;
+    static constexpr fb height = HEIGHT;
 
-    pixel buffer[getSize()];
+    pixel buffer[SIZE];
 
     // Get size of backbuffer in bytes
-    inline constexpr fb getSize() {
-        return (Width * Height * BPP) / 8;
+    inline constexpr fb getSize() const {
+        return SIZE;
     }
 
-    inline constexpr fb getWidth() {
-        return Width;
+    inline constexpr fb getWidth() const {
+        return WIDTH;
     }
 
-    inline constexpr fb getHeight() {
-        return Height;
+    inline constexpr fb getHeight() const {
+        return HEIGHT;
     }
 
-    inline constexpr fb isBound(const fb& x, const fb& y) {
-        return x >= 0 && y >= 0 && x < Width && y < Height;
+    inline constexpr fb isBound(const fb& x, const fb& y) const {
+        return x >= 0 && y >= 0 && x < WIDTH && y < HEIGHT;
     }
 
-    inline constexpr fb getOffset(const fb& x, const fb& y) {
-        return (y * Width) + x;
+    inline constexpr fb getOffset(const fb& x, const fb& y) const {
+        return ((y * WIDTH) + x) / PXPERBYTE;
     }
 
-    inline constexpr fb getBitOffset(const fb& x) {
-        return (x % (8 / BPP)) * BPP;
+    inline constexpr fb getBitOffset(const fb& x) const {
+        //return (x % (8 / BPP)) * BPP;
+        return (x & 7);
     }
 
-    inline constexpr fb getByteMask(const fb& x) {
+    inline constexpr fb getByteMask(const fb& x) const {
         const fb bits = getBitOffset(x);
-        return getBitMask() << bits;
+        return this->getBitMask() << bits;
     }
 
-    inline constexpr fb getBitMask() {
+    inline constexpr fb getBitMask() const {
         return (1 << BPP) - 1;
     }
 
     inline void putPixel(const fb& x, const fb& y, const pixel& px) {
-        const fb offset = getOffset(x, y);
-        const fb bits = getBitOffset(x);
-        const fb bytemask = getByteMask(x);
+        const fb offset = this->getOffset(x, y);
+        const fb bits = this->getBitOffset(x);
+        const fb bytemask = this->getByteMask(x);
+        const fb bitmask = this->getBitMask();
         buffer[offset] &= ~bytemask;
-        const pixel pxbyte = px << bits;
+        const pixel pxbyte = (px & bitmask) << bits;
         buffer[offset] |= pxbyte;
     }
 
-    inline pixel getPixel(const fb& x, const fb& y) {
-        const fb offset = getOffset(x, y);
-        const fb bits = getBitOffset(x);
-        const fb bytemask = getByteMask(x);
+    inline constexpr pixel getPixel(const fb& x, const fb& y) const {
+        const fb offset = this->getOffset(x, y);
+        const fb bits = this->getBitOffset(x);
+        const fb bytemask = this->getByteMask(x);
         return (buffer[offset] & bytemask) >> bits;
     }
 
     inline void clear() {
-        for (fb i = 0; i < getSize(); i++)
+        for (fb i = 0; i < SIZE; i++)
             buffer[i] = 0;
     }
 

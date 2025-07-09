@@ -3,3 +3,6 @@ build
 .vscode
 STM32
 STM32_2
+*.o
+callgrind*
+Arm
