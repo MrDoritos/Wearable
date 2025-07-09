@@ -49,6 +49,25 @@ struct TextureT : public Buffer {
         }
     }
 
+    template<typename T>
+    inline void putTexture(const T &texture, const fb &dx, const fb &dy, const fb &w = 0, const fb &h = 0, const fb &sx = 0, const fb &sy = 0) {
+        const fb width = w ? w : texture.getWidth();
+        const fb height = h ? h : texture.getHeight();
+
+        for (fb i = 0, k = dx; i < w && k < width; i++, k++) {
+            for (fb j = 0, l = dy; j < h && l < height; j++, l++) {
+                pixel srcPix = texture.getPixel(i + sx, j + sy);
+                if (texture.bpp > 1) {
+                    //if (!(srcPix & 1))
+                    //if (~srcPix & 1)
+                    //    continue;
+                    srcPix >>= (texture.bpp - this->bpp);
+                }
+                this->putPixel(k, l, srcPix);
+            }
+        }
+    }
+
     inline void putSprite(const Sprite &sprite, const fb &x, const fb &y, const fb &w = 0, const fb &h = 0) {
         const fb width = w ? w : sprite.getWidth();
         const fb height = h ? h : sprite.getHeight();

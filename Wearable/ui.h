@@ -37,8 +37,9 @@ struct Framebuffer {
     }
 
     inline constexpr fb getBitOffset(const fb& x) const {
-        //return (x % (8 / BPP)) * BPP;
-        return (x & 7);
+        return (x % PXPERBYTE);
+        //return (x & 7);
+        //return x & (PXPERBYTE-1);
     }
 
     inline constexpr fb getByteMask(const fb& x) const {
@@ -69,7 +70,8 @@ struct Framebuffer {
         const fb offset = this->getOffset(x, y);
         const fb bits = this->getBitOffset(x);
         const fb bytemask = this->getByteMask(x);
-        return (buffer[offset] & bytemask) >> bits;
+        const fb bitmask = this->getBitMask();
+        return ((buffer[offset] & bytemask) >> bits) & bitmask;
     }
 
     inline void clear() {

@@ -4,6 +4,9 @@
 #include <bitset>
 #include <iostream>
 
+extern const char _binary_fixedsys_bin_start[];
+extern const char _binary_fixedsys_bin_end[];
+
 struct ConsoleBuffer : public Framebuffer<128, 128, 1> {
     static constexpr const char* blockMap = " \0▘\0▝\0▀\0▖\0▌\0▞\0▛\0▗\0▚\0▐\0▜\0▄\0▙\0▟\0█\0";
     static constexpr const char* blockMap2w = "  \0▀ \0 ▀\0▀▀\0▄ \0█ \0▄▀\0█▀\0 ▄\0▀▄\0 █\0▀█\0▄▄\0█▄\0▄█\0██\0";
@@ -73,6 +76,10 @@ using ConsoleTexture = TextureT<ConsoleBuffer>;
 
 ConsoleTexture texture;
 
+using FontTexture = TextureT<Framebuffer<256, 256, 2>>;
+
+FontTexture font;
+
 void test() {
     std::cerr << "width: " << texture.width << " height: " << texture.height << " bpp: " << texture.bpp << " SIZE: " << texture.SIZE << " PXPERBYTE: " << texture.PXPERBYTE << std::endl;
     std::cerr << "bitmask: " << std::bitset<16>(texture.getBitMask()) << std::endl;
@@ -85,13 +92,16 @@ void test() {
 
 int main() {
     //test();
+    memcpy(font.buffer, &_binary_fixedsys_bin_start[0], _binary_fixedsys_bin_end - _binary_fixedsys_bin_start);
     texture.clear(0);
-    texture.circle(64, 64, 24, 0, false);
-    texture.line(0,0,127,127,1);
-    texture.line(0,127,127,0,1);
+    //texture.circle(64, 64, 24, 0, false);
+    //texture.line(0,0,127,127,1);
+    //texture.line(0,127,127,0,1);
+    texture.putTexture(font, 0, 0, 128, 128, 0, 0);
     //texture.clear(0);
     //texture.line_callback(127,0,0,127, [&](const fb &x, const fb &y){ texture.circle(x, y, 1, 1); });
     texture.flush();
+    //texture.flushBlocks(texture.blockMapAscii2w, 2);
     console::readKey();
     return 0;
 }
