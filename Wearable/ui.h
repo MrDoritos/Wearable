@@ -1,5 +1,7 @@
 #pragma once
 
+#include <stdlib.h>
+
 typedef unsigned short fb;
 typedef unsigned char pixel;
 

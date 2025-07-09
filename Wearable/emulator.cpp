@@ -21,40 +21,38 @@ struct ConsoleBuffer : public Framebuffer<128, 128, 1> {
     }
 
     template<typename BLOCKSRC>
-    inline void flushBlocks(const BLOCKSRC blockmap, int w=1, int stride_x=2, int stride_y=2);
+    inline void flushBlocks(const BLOCKSRC blockmap, const int &w=1, const int &stride_x=2, const int &stride_y=2);
 
     inline void flush();
 };
 
 template<typename BLOCKSRC>
-void ConsoleBuffer::flushBlocks(BLOCKSRC _blockMap, int w, int stride_x, int stride_y) {
+void ConsoleBuffer::flushBlocks(const BLOCKSRC _blockMap, const int &w, const int &stride_x, const int &stride_y) {
     const int cwidth = console::getConsoleWidth(), cheight = console::getConsoleHeight();
     const int clength = cwidth * cheight;
     const int mapLength = (1 << (stride_x * stride_y));
     const int blength = clength * 4 * w;
     const char *blockMap = (const char*)_blockMap;
 
-    int mapOffsets[mapLength];
-    for (int i = 0, j = 0, k = 0; i < mapLength; mapOffsets[i]=k, k=j, i++)
-        j += strlen(blockMap + j) + 1;
+    int mapOffsets[mapLength][2];
+    for (int i = 0, j = 0, k = 0, l = 0; i < mapLength; 
+        l = strlen(blockMap + j), j += l + 1, mapOffsets[i][0] = k, mapOffsets[i][1] = l, k = j, i++);
 
     char ch_buffer[blength];
-    color_t co_buffer[blength];
     int offset2 = 0, _offset = 0;
 
     memset(ch_buffer, ' ', blength);
-    memset(co_buffer, FWHITE|BBLACK,blength);
 
     for (int sy = 0, cy = 0; sy < height && cy < cheight; sy+=stride_y, cy++) {
         for (int sx = 0, cx = 0; sx < width && cx < cwidth; sx+=stride_x, cx+=w) {
             const int num = blockToNum(sx, sy, stride_x, stride_y);
-            if (num >= mapLength)
-                continue;
-            const char *ch = &blockMap[mapOffsets[num]];
-            const int l = strlen(ch);
+            const char *ch = &blockMap[mapOffsets[num][0]];
+            const int l = mapOffsets[num][1];
             const int offset = cy * cwidth + cx;
 
-            memcpy(ch_buffer + offset + offset2, ch, l);
+            for (int i = 0; i < l; i++)
+                ch_buffer[i + offset + offset2] = ch[i];
+
             offset2 += (l-w);
             _offset = offset + offset2;
         }
