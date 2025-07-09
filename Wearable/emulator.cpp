@@ -5,62 +5,102 @@
 #include <iostream>
 
 struct ConsoleBuffer : public Framebuffer<128, 128, 1> {
-    inline const char* translateBlock(const fb &x, const fb &y) {
-        fb dat = 0;
-        for (int j = y, k = 0; j < y+2; j++) {
-            for (int i = x; i < x+2; i++, k+=bpp) {
-                dat |= (getPixel(i, j) & 1) << k;
-            }
-        }
+    static constexpr const char* (blockMap)[] = {
+        " ","▘","▝","▀","▖","▌","▞","▛","▗","▚","▐","▜","▄","▙","▟","█",
+    };
 
-        dat &= 0xF;
+    static constexpr const char* (blockMap2w)[] = {
+        "  ","▀ "," ▀","▀▀","▄ ","█ ","▄▀","█▀"," ▄","▀▄"," █","▀█","▄▄","█▄","▄█","██",
+    };
+    static constexpr const char *blockMapAscii = " \0`\0'\0^\0,\0[\0/\0<\0.\0\\\0]\0>\0_\0L\0J\0#\0";
+    static constexpr const char *blockMapAscii2w = "  \0^ \0 ^\0^^\0v \0$ \0v^\0$^\0 v\0^v\0 $\0^$\0vv\0$v\0v$\0$$\0";
 
-        const char* (blockMap)[] = {
-            " ","▘","▝","▀","▖","▌","▞","▛","▗","▚","▐","▜","▄","▙","▟","█",
-        };
-
-        //const char *blockMapAscii = " \0`\0'\0^\0,\0[\0/\0<\0.\0\\\0]\0>\0_\0L\0J\0#\0";
-        const char *blockMapAscii = "  \0^ \0 ^\0^^\0v \0$ \0v^\0$^\0 v\0^v\0 $\0^$\0vv\0$v\0v$\0$$\0";
-
-        //return blockMap[dat & 0x0F];
-        return &blockMapAscii[dat*3];
+    inline fb blockToNum(const fb &x, const fb &y, const fb &xn, const fb &yn) {
+        fb num = 0;
+        const fb mask = (1 << bpp) - 1;
+        const fb tot = 1 << (xn * yn);
+        for (int j = y, k = 0; j < y + yn; j++)
+            for (int i = x; i < x + xn; i++, k+=bpp)
+                num |= (getPixel(i, j) & mask) << k;
+        return num & (tot - 1);
     }
 
-    inline void flush() {
-        const int cwidth = console::getConsoleWidth(), cheight = console::getConsoleHeight();
-        const int clength = cwidth * cheight;
-        char ch_buffer[clength * 4];
-        color_t co_buffer[clength];
+    template<typename BLOCKSRC>
+    inline void flushBlocks(const BLOCKSRC blockmap, int w=1, int stride_x=2, int stride_y=2);
 
-        memset(ch_buffer, ' ', clength);
-        memset(co_buffer, FWHITE | BBLACK, clength);
-        int offset2 = 0;
-
-        /*
-        for (int x = 0; x < width && x < cwidth; x++) {
-            for (int y = 0; y < height && y < cheight; y++) {
-                const int offset = y * cwidth + x;
-                co_buffer[offset] = getPixel(x, y) ? BWHITE : BBLACK;
-            }
-        }
-        */
-
-        for (int x = 0; x < width && x < cwidth * 2; x+=2) {
-            for (int y = 0; y < height && y < cheight * 2; y+=2) {
-                const char *ch = translateBlock(x, y);
-                const int l = strlen(ch);
-                //const int offset = ((y/2) * cwidth + (x/2));
-                const int offset = (y/2) * cwidth + x;
-                memcpy(ch_buffer + offset2 + offset, ch, l);
-                //offset2 += (l-1);
-                //offset2 += 1;
-            }
-        }
-
-        //console::write(ch_buffer, co_buffer, clength);
-        console::write(0, 0, ch_buffer);
-    }
+    inline void flush();
 };
+
+template<>
+void ConsoleBuffer::flushBlocks<char const* const*>(char const* const* blockMap, int w, int stride_x, int stride_y) {
+    const int cwidth = console::getConsoleWidth(), cheight = console::getConsoleHeight();
+    const int clength = cwidth * cheight;
+    const int blength = clength * 4;
+    //const int mapLength = sizeof(blockMap)/sizeof(blockMap[0]);
+    const int mapLength = (1 << (stride_x * stride_y));
+    char ch_buffer[blength];
+    color_t co_buffer[blength];
+    int offset2 = 0, _offset = 0;
+
+    memset(ch_buffer, 'x', blength);
+    memset(co_buffer, FWHITE|BBLACK,blength);
+
+    for (int sy = 0, cy = 0; sy < height && cy < cheight; sy+=stride_y, cy++) {
+        for (int sx = 0, cx = 0; sx < width && cx < cwidth; sx+=stride_x, cx+=w) {
+            const int num = blockToNum(sx, sy, stride_x, stride_y);
+            if (num >= mapLength)
+                continue;
+            const char *ch = blockMap[num];
+            const int l = strlen(ch);
+            const int offset = cy * cwidth + cx;
+
+            memcpy(ch_buffer + offset + offset2, ch, l);
+            offset2 += (l-w);
+            _offset = offset + offset2;
+        }
+    }
+
+    ch_buffer[_offset+w] = '\0';
+    console::clear();
+    console::write(0, 0, ch_buffer);
+}
+
+template<>
+void ConsoleBuffer::flushBlocks<const char*>(const char *blockMap, int w, int stride_x, int stride_y) {
+    const int cwidth = console::getConsoleWidth(), cheight = console::getConsoleHeight();
+    const int clength = cwidth * cheight;
+    const int blength = clength * w;
+    const int mapLength = (1 << (stride_x * stride_y));
+    char ch_buffer[blength];
+    color_t co_buffer[blength];
+    int offset2 = 0, _offset = 0;
+
+    memset(ch_buffer, 'x', blength);
+    memset(co_buffer, FWHITE|BBLACK,blength);
+
+    for (int sy = 0, cy = 0; sy < height && cy < cheight; sy+=stride_y, cy++) {
+        for (int sx = 0, cx = 0; sx < width && cx < cwidth; sx+=stride_x, cx += w) {
+            const int num = blockToNum(sx, sy, stride_x, stride_y);
+            if (num >= mapLength)
+                continue;
+            const char *ch = &blockMap[num*(w+1)];
+            const int l = strlen(ch);
+            const int offset = cy * cwidth + cx;
+
+            memcpy(ch_buffer + offset + offset2, ch, l);
+            offset2 += (l-w);
+            _offset = offset + offset2;
+        }
+    }
+
+    ch_buffer[_offset+w] = '\0';
+    console::clear();
+    console::write(0, 0, ch_buffer);
+}
+
+void ConsoleBuffer::flush() {
+    flushBlocks(blockMap2w, 2);
+}
 
 ConsoleBuffer buffer;
 
@@ -82,6 +122,12 @@ int main() {
     test();
     texture.clear(1);
     texture.circle(64, 64, 24, 0);
-    texture.flush();
+    //texture.flush();
+    texture.flushBlocks(texture.blockMap);
     console::readKey();
+    texture.flushBlocks(texture.blockMap2w, 2);
+    console::readKey();
+    texture.flushBlocks(texture.blockMapAscii2w, 2);
+    console::readKey();
+    return 0;
 }
