@@ -26,7 +26,7 @@ struct Framebuffer {
         return HEIGHT;
     }
 
-    inline constexpr fb isBound(const fb& x, const fb& y) const {
+    inline constexpr bool isBound(const fb& x, const fb& y) const {
         return x >= 0 && y >= 0 && x < WIDTH && y < HEIGHT;
     }
 
@@ -56,6 +56,11 @@ struct Framebuffer {
         buffer[offset] &= ~bytemask;
         const pixel pxbyte = (px & bitmask) << bits;
         buffer[offset] |= pxbyte;
+    }
+
+    inline void putPixelBound(const fb &x, const fb &y, const pixel &px) {
+        if (isBound(x, y))
+            putPixel(x, y, px);
     }
 
     inline constexpr pixel getPixel(const fb& x, const fb& y) const {

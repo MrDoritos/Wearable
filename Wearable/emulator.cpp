@@ -42,7 +42,7 @@ void ConsoleBuffer::flushBlocks(BLOCKSRC _blockMap, int w, int stride_x, int str
     color_t co_buffer[blength];
     int offset2 = 0, _offset = 0;
 
-    memset(ch_buffer, 'x', blength);
+    memset(ch_buffer, ' ', blength);
     memset(co_buffer, FWHITE|BBLACK,blength);
 
     for (int sy = 0, cy = 0; sy < height && cy < cheight; sy+=stride_y, cy++) {
@@ -86,15 +86,14 @@ void test() {
 }
 
 int main() {
-    test();
-    texture.clear(1);
-    texture.circle(64, 64, 24, 0);
-    //texture.flush();
-    texture.flushBlocks(texture.blockMap);
-    console::readKey();
-    texture.flushBlocks(texture.blockMap2w, 2);
-    console::readKey();
-    texture.flushBlocks(texture.blockMapAscii2w, 2);
+    //test();
+    texture.clear(0);
+    texture.circle(64, 64, 24, 0, false);
+    texture.line(0,0,127,127,1);
+    texture.line(0,127,127,0,1);
+    //texture.clear(0);
+    //texture.line_callback(127,0,0,127, [&](const fb &x, const fb &y){ texture.circle(x, y, 1, 1); });
+    texture.flush();
     console::readKey();
     return 0;
 }
