@@ -68,9 +68,9 @@ struct I2C : public BUS {
     i2c_master_dev_handle_t dev = 0;
 
     inline esp_err_t write(const uint8_t *c, const uint8_t n) {
-        for (int i = 0; i < n; i++)
-            printf("%x ", c[i]);
-        printf("\n");
+        //for (int i = 0; i < n; i++)
+        //    printf("%x ", c[i]);
+        //printf("\n");
         
         ESP_RETURN_ON_ERROR(i2c_master_transmit(dev, c, n, I2C_TIMEOUT / portTICK_PERIOD_MS), TAG, "i2c_master_transmit failed");
 
@@ -159,7 +159,7 @@ struct I2C : public BUS {
     }
 };
 
-using I2C_SH1107 = I2C<0x3C, 100000>;
+using I2C_SH1107 = I2C<0x3C, 1000000>;
 
 template<uint8_t _WIDTH, uint8_t _HEIGHT, typename I2C_DEVICE>
 struct Display : public I2C_DEVICE {
