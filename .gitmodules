@@ -1,3 +1,6 @@
 [submodule "Wearable/console"]
 	path = Wearable/console
 	url = https://github.com/MrDoritos/console
+[submodule "Wearable/esp-idf"]
+	path = Wearable/esp-idf
+	url = https://github.com/espressif/esp-idf
