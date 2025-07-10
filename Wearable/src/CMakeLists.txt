@@ -1,2 +1,5 @@
-idf_component_register(SRCS "Wearable.c"
-                    INCLUDE_DIRS ".")
+idf_component_register(
+    SRCS "wearable.cpp"
+    INCLUDE_DIRS "."
+    PRIV_REQUIRES spi_flash
+)
