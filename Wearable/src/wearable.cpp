@@ -9,9 +9,16 @@
 #include "displaybuffer.h"
 #include "texture.h"
 
+extern const char _binary_fixedsys_bin_start[];
+extern const char _binary_fixedsys_bin_end[];
+
 using namespace wbl;
 
 using DisplayTexture = TextureT<DisplayBuffer>;
+
+using FontTexture = TextureT<FramebufferT<256, 256, 2>>;
+
+FontTexture font;
 
 DisplayTexture display;
 
@@ -25,12 +32,17 @@ void demo() {
     printf("clear 0\n");
     vTaskDelay(ms / portTICK_PERIOD_MS);
     */
+    
     display.clear(0);
+    /*
     display.flush();
     printf("clear 1\n");
     vTaskDelay(ms / portTICK_PERIOD_MS);
-    display.circle(64, 64, 24, 1, true);
+    */
+    display.putTexture(font, 0, 0, 128, 128, 0, 0);
     display.flush();
+    /*
+    display.circle(64, 64, 24, 1, true);
     printf("circle\n");
     vTaskDelay(1000 / portTICK_PERIOD_MS);
     display.line(0,0,127,127,1);
@@ -39,6 +51,7 @@ void demo() {
     vTaskDelay(1000 / portTICK_PERIOD_MS);
     display.line(0,127,127,0,1);
     display.flush();
+    */
     vTaskDelay(1000 / portTICK_PERIOD_MS);
     /*
     display.clear(0);
@@ -52,6 +65,7 @@ void demo() {
 extern "C" {
 void app_main() {
     printf("test\n");
+    memcpy(font.buffer, &_binary_fixedsys_bin_start[0], _binary_fixedsys_bin_end - _binary_fixedsys_bin_start);
 
     if (display.init() != ESP_OK) {
         printf("Failed to initialize display\n");
