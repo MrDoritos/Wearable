@@ -51,6 +51,11 @@ struct TextureT : public Buffer {
         }
     }
 
+    inline void putPixelBound(const fb &x, const fb &y, const pixel &px) {
+        if (this->isBound(x, y))
+            this->putPixel(x, y, px);
+    }
+
     template<typename T>
     inline void putTexture(const T &texture, const fb &dx, const fb &dy, const fb &w = 0, const fb &h = 0, const fb &sx = 0, const fb &sy = 0) {
         const fb width = w ? w : texture.getWidth();

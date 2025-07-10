@@ -17,17 +17,19 @@ DisplayTexture display;
 
 void demo() {
     const TickType_t ms=300;
+    /*
     display.clearDisplay(0);
     printf("full\n");
     vTaskDelay(ms / portTICK_PERIOD_MS);
     display.clearDisplay(255);
     printf("clear 0\n");
     vTaskDelay(ms / portTICK_PERIOD_MS);
+    */
     display.clear(0);
     display.flush();
     printf("clear 1\n");
     vTaskDelay(ms / portTICK_PERIOD_MS);
-    display.circle(64, 64, 24, 1, false);
+    display.circle(64, 64, 24, 1, true);
     display.flush();
     printf("circle\n");
     vTaskDelay(1000 / portTICK_PERIOD_MS);
@@ -35,11 +37,16 @@ void demo() {
     display.flush();
     printf("line\n");
     vTaskDelay(1000 / portTICK_PERIOD_MS);
+    display.line(0,127,127,0,1);
+    display.flush();
+    vTaskDelay(1000 / portTICK_PERIOD_MS);
+    /*
     display.clear(0);
     display.flush();
     printf("clear 0\n");
     vTaskDelay(ms / portTICK_PERIOD_MS);
     fflush(stdout);
+    */
 }
 
 extern "C" {

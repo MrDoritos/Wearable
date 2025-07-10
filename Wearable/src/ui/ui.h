@@ -38,14 +38,14 @@ struct FramebufferT {
         return ((y * WIDTH) + x) / PXPERBYTE;
     }
 
-    inline constexpr fb getBitOffset(const fb& x) const {
+    inline constexpr fb getBitOffset(const fb& x, const fb &y) const {
         return (x % PXPERBYTE);
         //return (x & 7);
         //return x & (PXPERBYTE-1);
     }
 
-    inline constexpr fb getByteMask(const fb& x) const {
-        const fb bits = getBitOffset(x);
+    inline constexpr fb getByteMask(const fb& x, const fb &y) const {
+        const fb bits = this->getBitOffset(x, y);
         return this->getBitMask() << bits;
     }
 
@@ -55,23 +55,18 @@ struct FramebufferT {
 
     inline void putPixel(const fb& x, const fb& y, const pixel& px) {
         const fb offset = this->getOffset(x, y);
-        const fb bits = this->getBitOffset(x);
-        const fb bytemask = this->getByteMask(x);
+        const fb bits = this->getBitOffset(x, y);
+        const fb bytemask = this->getByteMask(x, y);
         const fb bitmask = this->getBitMask();
         buffer[offset] &= ~bytemask;
         const pixel pxbyte = (px & bitmask) << bits;
         buffer[offset] |= pxbyte;
     }
 
-    inline void putPixelBound(const fb &x, const fb &y, const pixel &px) {
-        if (isBound(x, y))
-            putPixel(x, y, px);
-    }
-
     inline constexpr pixel getPixel(const fb& x, const fb& y) const {
         const fb offset = this->getOffset(x, y);
-        const fb bits = this->getBitOffset(x);
-        const fb bytemask = this->getByteMask(x);
+        const fb bits = this->getBitOffset(x, y);
+        const fb bytemask = this->getByteMask(x, y);
         const fb bitmask = this->getBitMask();
         return ((buffer[offset] & bytemask) >> bits) & bitmask;
     }
