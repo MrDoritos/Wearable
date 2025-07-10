@@ -9,11 +9,11 @@ template<typename Display, typename Frame = FramebufferT<Display::WIDTH, Display
 struct DisplayBufferT : public Frame, public Display {
     inline bool init() {
         if (!Display::init())
-            return 1;
+            return 0;
 
         Frame::clear();
         Display::clearDisplay();
-        return 0;
+        return 1;
     }
 
     inline void flush() {

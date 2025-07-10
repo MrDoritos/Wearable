@@ -16,13 +16,22 @@ using DisplayTexture = TextureT<DisplayBuffer>;
 DisplayTexture display;
 
 void demo() {
+    display.clearDisplay(255);
+    printf("full\n");
+    vTaskDelay(1000 / portTICK_PERIOD_MS);
+    display.clearDisplay(0);
+    printf("clear\n");
+    vTaskDelay(1000 / portTICK_PERIOD_MS);
+    display.clear(1);
     display.circle(64, 64, 24, 0, false);
     display.flush();
     display.line(0,0,127,127,1);
     display.flush();
+    printf("custom\n");
     vTaskDelay(1000 / portTICK_PERIOD_MS);
     display.clear(0);
     display.flush();
+    fflush(stdout);
 }
 
 extern "C" {
@@ -33,7 +42,10 @@ void app_main() {
         printf("Failed to initialize display\n");
     } else {
         printf("Display initialized\n");
-        while (1) demo();
+        while (1) {
+            demo();
+            vPortYield();
+        }
     }
 
     fflush(stdout);

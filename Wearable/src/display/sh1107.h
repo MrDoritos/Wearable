@@ -22,7 +22,7 @@ struct I2C_BUS {
 
     inline bool init() {
         if (bus != nullptr)
-            return 0;
+            return 1;
 
         const i2c_master_bus_config_t bus_config = {
             .i2c_port = PORT,
@@ -75,10 +75,10 @@ struct I2C : public BUS {
 
     inline bool init() {
         if (!BUS::init())
-            return 1;
+            return 0;
 
         if (dev != nullptr)
-            return 0;
+            return 1;
 
         i2c_device_config_t dev_config = {
             .dev_addr_length = I2C_ADDR_BIT_LEN_7,
@@ -92,7 +92,7 @@ struct I2C : public BUS {
     }
 };
 
-using I2C_SH1107 = I2C<0x3C, 400000>;
+using I2C_SH1107 = I2C<0x3C, 100000>;
 
 template<uint8_t _WIDTH, uint8_t _HEIGHT, typename I2C_DEVICE>
 struct Display : public I2C_DEVICE {
@@ -127,11 +127,12 @@ struct Display : public I2C_DEVICE {
 
     inline bool init() {
         if (!I2C_DEVICE::init())
-            return 1;
+            return 0;
 
         this->write_commands(SH1107::initcmds, sizeof(SH1107::initcmds));
+        this->write_command(SH1107::ALL_ON);
 
-        return 0;
+        return 1;
     }
 };
 
