@@ -16,21 +16,29 @@ using DisplayTexture = TextureT<DisplayBuffer>;
 DisplayTexture display;
 
 void demo() {
-    display.clearDisplay(255);
-    printf("full\n");
-    vTaskDelay(1000 / portTICK_PERIOD_MS);
+    const TickType_t ms=300;
     display.clearDisplay(0);
-    printf("clear\n");
-    vTaskDelay(1000 / portTICK_PERIOD_MS);
-    display.clear(1);
-    display.circle(64, 64, 24, 0, false);
+    printf("full\n");
+    vTaskDelay(ms / portTICK_PERIOD_MS);
+    display.clearDisplay(255);
+    printf("clear 0\n");
+    vTaskDelay(ms / portTICK_PERIOD_MS);
+    display.clear(0);
     display.flush();
+    printf("clear 1\n");
+    vTaskDelay(ms / portTICK_PERIOD_MS);
+    display.circle(64, 64, 24, 1, false);
+    display.flush();
+    printf("circle\n");
+    vTaskDelay(1000 / portTICK_PERIOD_MS);
     display.line(0,0,127,127,1);
     display.flush();
-    printf("custom\n");
+    printf("line\n");
     vTaskDelay(1000 / portTICK_PERIOD_MS);
     display.clear(0);
     display.flush();
+    printf("clear 0\n");
+    vTaskDelay(ms / portTICK_PERIOD_MS);
     fflush(stdout);
 }
 
@@ -38,7 +46,7 @@ extern "C" {
 void app_main() {
     printf("test\n");
 
-    if (!display.init()) {
+    if (display.init() != ESP_OK) {
         printf("Failed to initialize display\n");
     } else {
         printf("Display initialized\n");
