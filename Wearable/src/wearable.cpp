@@ -6,9 +6,38 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 
+#include "displaybuffer.h"
+#include "texture.h"
+
+using namespace wbl;
+
+using DisplayTexture = TextureT<DisplayBuffer>;
+
+DisplayTexture display;
+
+void demo() {
+    display.circle(64, 64, 24, 0, false);
+    display.flush();
+    display.line(0,0,127,127,1);
+    display.flush();
+    vTaskDelay(1000 / portTICK_PERIOD_MS);
+    display.clear(0);
+    display.flush();
+}
+
 extern "C" {
 void app_main() {
     printf("test\n");
+
+    if (!display.init()) {
+        printf("Failed to initialize display\n");
+    } else {
+        printf("Display initialized\n");
+        while (1) demo();
+    }
+
+    fflush(stdout);
+
 
     uint32_t flash_size;
     esp_flash_get_size(0, &flash_size);

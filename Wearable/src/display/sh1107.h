@@ -1,6 +1,6 @@
 #pragma once
 
-#include "sh1107.h"
+#include "sh1107_defs.h"
 
 #include "sdkconfig.h"
 #include "freertos/FreeRTOS.h"
@@ -12,47 +12,48 @@
 namespace wbl {
 namespace SH1107 {
 
-template<typename _PORT, typename _SDA, typename _SCL, typename _CLK>
+template<uint8_t _PORT, gpio_num_t _SDA, gpio_num_t _SCL, i2c_clock_source_t _CLK>
 struct I2C_BUS {
-    static constexpr typename PORT = _PORT;
-    static constexpr typename SDA = _SDA;
-    static constexpr typename SCL = _SCL;
-    static constexpr typename CLK = _CLK;
+    static constexpr uint8_t PORT = _PORT;
+    static constexpr gpio_num_t SDA = _SDA;
+    static constexpr gpio_num_t SCL = _SCL;
 
-    static i2c_master_bus_handle_t *bus = 0;
+    i2c_master_bus_handle_t bus = 0;
 
     inline bool init() {
-        if (bus > 0)
+        if (bus != nullptr)
             return 0;
 
         const i2c_master_bus_config_t bus_config = {
             .i2c_port = PORT,
             .sda_io_num = SDA,
             .scl_io_num = SCL,
-            .clk_source = CLK,
+            .clk_source = _CLK,
             .glitch_ignore_cnt = 7,
-            .flags.enable_internal_pullup = true,
+            .flags = {
+                .enable_internal_pullup = true
+            },
         };
 
-        i2c_new_master_bus(&bus_config, bus);
+        i2c_new_master_bus(&bus_config, &bus);
 
-        return (bus > 0);
+        return (bus != nullptr);
     }
 };
 
-using I2C_BUS_0 = I2C_BUS<I2C_NUM_0, CONFIG_I2C_MASTER_SDA, CONFIG_I2C_MASTER_SCL, CONFIG_I2C_MASTER_FREQUENCY>;
+using I2C_BUS_0 = I2C_BUS<I2C_NUM_0, GPIO_NUM_5, GPIO_NUM_4, I2C_CLK_SRC_DEFAULT>;
 
 template<uint8_t _I2C_ADDRESS, uint32_t _I2C_CLOCK, uint16_t _I2C_TIMEOUT=1000, typename BUS=I2C_BUS_0>
 struct I2C : public BUS {
     static constexpr uint8_t I2C_ADDRESS = _I2C_ADDRESS;
 
-    static uint16_t I2C_TIMEOUT = _I2C_TIMEOUT;
-    static uint32_t I2C_CLOCK = _I2C_CLOCK;
+    uint16_t I2C_TIMEOUT = _I2C_TIMEOUT;
+    uint32_t I2C_CLOCK = _I2C_CLOCK;
 
-    static i2c_master_dev_handle_t *dev = 0;
+    i2c_master_dev_handle_t dev = 0;
 
     inline void write(const uint8_t *c, const uint8_t n) {
-        i2c_master_transmit(dev, c, n, I2C_TIMEOUT / portTick_PERIOD_MS);
+        i2c_master_transmit(dev, c, n, I2C_TIMEOUT / portTICK_PERIOD_MS);
     }
 
     template<uint8_t prefix=0x0, typename ...T> 
@@ -76,7 +77,7 @@ struct I2C : public BUS {
         if (!BUS::init())
             return 1;
 
-        if (dev > 0)
+        if (dev != nullptr)
             return 0;
 
         i2c_device_config_t dev_config = {
@@ -85,9 +86,9 @@ struct I2C : public BUS {
             .scl_speed_hz = I2C_CLOCK,
         };
 
-        i2c_master_bus_add_device(bus, &dev_config, dev);
+        i2c_master_bus_add_device(this->bus, &dev_config, &dev);
 
-        return (dev > 0);
+        return (dev != nullptr);
     }
 };
 
@@ -97,15 +98,14 @@ template<uint8_t _WIDTH, uint8_t _HEIGHT, typename I2C_DEVICE>
 struct Display : public I2C_DEVICE {
     static constexpr uint8_t WIDTH = _WIDTH;
     static constexpr uint8_t HEIGHT = _HEIGHT;
-    static constexpr uint32_t I2C_CLOCK = _I2C_CLOCK;
     static constexpr uint8_t PAGES = ((HEIGHT + 7) / 8);
     static constexpr uint8_t BYTES_PER_PAGE = WIDTH;
     
     inline void setPagePosition(const uint8_t &page, const uint8_t &page_start=0, const uint8_t &page_start_offset=0) {
         const uint8_t cmd[] = {
-            SET_PAGEADDR + page, 0x10 + ((page_start + page_start_offset) >> 4), (page_start + page_start_offset) & 0xf
+            SH1107::SET_PAGEADDR + page, 0x10 + ((page_start + page_start_offset) >> 4), (page_start + page_start_offset) & 0xf
         };
-        write_commands(cmd, sizeof(cmd));
+        this->write_commands(cmd, sizeof(cmd));
     }
   
     inline void clearDisplay(const uint8_t &color=0x0) {
@@ -113,24 +113,24 @@ struct Display : public I2C_DEVICE {
         const uint8_t dc = 0x40;
         uint8_t clearData[size];
         for (uint8_t i = 0; i < size; i++)
-        clearData[i] = color;
+            clearData[i] = color;
         for (uint8_t p = 0; p < PAGES; p++) {
-        uint8_t bytes_remaining = BYTES_PER_PAGE;
-        setPagePosition(p);
-        while (bytes_remaining>0) {
-            const uint8_t count = bytes_remaining > size ? size : bytes_remaining;
-            write_payload(clearData, count, &dc, 1);
-            bytes_remaining -= count;
-        }
+            uint8_t bytes_remaining = BYTES_PER_PAGE;
+            this->setPagePosition(p);
+            while (bytes_remaining>0) {
+                const uint8_t count = bytes_remaining > size ? size : bytes_remaining;
+                this->write_payload(clearData, count, &dc, 1);
+                bytes_remaining -= count;
+            }
         }
     }
 
     inline bool init() {
-        if (!I2C::init())
+        if (!I2C_DEVICE::init())
             return 1;
 
-        write_commands(initcmds, sizeof(initcmds));
-        
+        this->write_commands(SH1107::initcmds, sizeof(SH1107::initcmds));
+
         return 0;
     }
 };

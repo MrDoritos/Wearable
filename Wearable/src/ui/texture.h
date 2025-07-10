@@ -3,6 +3,8 @@
 #include "ui.h"
 #include <math.h>
 
+namespace wbl {
+
 template<typename Buffer>
 struct SpriteT {
     const Buffer &src;
@@ -167,3 +169,5 @@ struct AtlasT : public TextureT<Buffer> {
         return Sprite(*this, x, y, x+sx, y+sy);
     }
 };
+
+}

@@ -2,11 +2,13 @@
 
 #include <stdlib.h>
 
+namespace wbl {
+
 typedef unsigned short fb;
 typedef unsigned char pixel;
 
 template<fb WIDTH, fb HEIGHT, fb BPP>
-struct Framebuffer {
+struct FramebufferT {
     static constexpr fb PXPERBYTE = 8 / BPP;
     static constexpr fb SIZE = WIDTH * HEIGHT / PXPERBYTE;
     static constexpr fb bpp = BPP;
@@ -81,3 +83,5 @@ struct Framebuffer {
 
     inline void flush() {}
 };
+
+}
