@@ -99,6 +99,9 @@ struct Origin {
     constexpr Origin():x(0),y(0){}
     constexpr Origin(const uu &x, const uu &y):x(x),y(y){}
     constexpr Origin(const Box &b);
+
+    constexpr uu getOffsetX() { return x; }
+    constexpr uu getOffsetY() { return y; }
 };
 
 template<typename T>
@@ -109,6 +112,9 @@ struct LengthT {
 
     constexpr LengthT(const T &width, const T &height):width(width),height(height){}
     constexpr LengthT(){}
+
+    constexpr T getWidth() { return width; }
+    constexpr T getHeight() { return height; }
 };
 
 struct Length : public LengthT<uu> {
@@ -122,6 +128,11 @@ struct Size : public Origin, public Length {
     constexpr Size(const uu &x, const uu &y, const uu &w, const uu &h):Origin(x,y),Length(w,h){}
     constexpr Size(const Origin &o, const Length &l):Origin(o),Length(l){}
     constexpr Size(const Box &b);
+
+    constexpr uu getLeft() { return x; }
+    constexpr uu getTop() { return y; }
+    constexpr uu getRight() { return x + width; }
+    constexpr uu getBottom() { return y + height; }
 };
 
 struct Box {
