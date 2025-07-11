@@ -75,13 +75,20 @@ void demo_pattern_() {
 void demo_pattern() {
     FramebufferT<16, 16, 2> buf;
     buf.clear();
-    for (fb y = 0; y < buf.getHeight(); y+=2) {
+    for (fb y = 0; y < buf.getHeight(); y++) {
         for (fb x = 0; x < buf.getWidth(); x++) {
-            if (x % 2) {
+            if (x == y || (x == (y-8))) {
             buf.putPixel(x, y, 3);
-            display.putPixel(x + 16, y, 3);
+            display.putPixel(x + 16, y, 1);
             }
-            display.putPixel(x, y+16, buf.getPixel(x, y) > 0);
+            display.putPixel(x, y+16, buf.getPixel(x, y) > 0 ? 1 : 0);
+            display.putPixel(x+16, y+16, buf.getPixel(x, y) > 1 ? 1 : 0);
+        }
+    }
+    for (int x = 32; x < 64; x++) {
+        for (int y = 0; y < 32; y++) {
+            if (x % 2 ^ y % 2)
+                display.putPixel(x, y, 1);
         }
     }
     display.putTexture(buf, 0, 0, 16, 16, 0, 0);
@@ -127,7 +134,7 @@ void demo() {
     //write_characters("M M M 9 9 mm M", 0, 0);
     //write_characters("M M M 9 9 mm M", 0, 24);
     display.flush();
-    vTaskDelay(20000 / portTICK_PERIOD_MS);
+    vTaskDelay(5000 / portTICK_PERIOD_MS);
     display.putTexture(I.src, 0, 0, 128, 128, 0, 0);
     display.flush();
     /*
@@ -163,7 +170,7 @@ void app_main() {
         printf("Display initialized\n");
         display.clear(1);
         display.flush();
-        vTaskDelay(1000 / portTICK_PERIOD_MS);
+        vTaskDelay(100 / portTICK_PERIOD_MS);
         while (1) {
             demo();
             vPortYield();

@@ -83,7 +83,7 @@ struct Image {
                 alpha = raw[i+(bpp-1)];
             alpha /= alphadiv;
             const int converted_offset = k / px_per_byte;
-            const int converted_bitshift = (k % px_per_byte);
+            const int converted_bitshift = (k % px_per_byte) * destbits;
             const int converted_px = (value << valuebits) | alpha;
             const int bitmask = (1 << destbits) - 1;
             const int destpx = (converted_px & bitmask) << converted_bitshift;

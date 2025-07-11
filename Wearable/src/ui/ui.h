@@ -36,21 +36,24 @@ struct FramebufferT {
 
     inline constexpr fb getOffset(const fb& x, const fb& y) const {
         return ((y * WIDTH) + x) / PXPERBYTE;
+        //return (8 / (y * WIDTH) * BPP) + (8 / x * BPP);
+        //return ((y * WIDTH) / PXPERBYTE) + (x / PXPERBYTE);
     }
 
-    inline constexpr fb getBitOffset(const fb& x, const fb &y) const {
-        return ((y * WIDTH) + x) % PXPERBYTE;
+    inline constexpr pixel getBitOffset(const fb& x, const fb &y) const {
+        return (x % PXPERBYTE) * BPP;
+        //return (((y * WIDTH) + x) % PXPERBYTE);
         //return (x % PXPERBYTE);
         //return (x & 7);
         //return x & (PXPERBYTE-1);
     }
 
-    inline constexpr fb getByteMask(const fb& x, const fb &y) const {
-        const fb bits = this->getBitOffset(x, y);
-        return this->getBitMask() << bits;
+    inline constexpr pixel getByteMask(const fb& x, const fb &y) const {
+        const pixel bits = this->getBitOffset(x, y);
+        return (this->getBitMask() << bits);
     }
 
-    inline constexpr fb getBitMask() const {
+    inline constexpr pixel getBitMask() const {
         return (1 << BPP) - 1;
     }
 
@@ -60,8 +63,11 @@ struct FramebufferT {
         const fb bytemask = this->getByteMask(x, y);
         const fb bitmask = this->getBitMask();
         buffer[offset] &= ~bytemask;
-        const pixel pxbyte = (px & bitmask) << bits;
+        //const pixel pxbyte = (px & bitmask) << bits;
+        const pixel pxbyte = (px << bits) & bytemask;
         buffer[offset] |= pxbyte;
+        //buffer[offset] |= bytemask;
+        //buffer[offset] = 2;
     }
 
     inline constexpr pixel getPixel(const fb& x, const fb& y) const {
@@ -70,6 +76,8 @@ struct FramebufferT {
         const fb bytemask = this->getByteMask(x, y);
         const fb bitmask = this->getBitMask();
         return ((buffer[offset] & bytemask) >> bits) & bitmask;
+        //return (this->buffer[offset] >> bits) & bitmask;
+        //return (this->buffer[offset] & bytemask);
     }
 
     inline void clear() {
