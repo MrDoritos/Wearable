@@ -126,16 +126,17 @@ void demo() {
     const FontProvider::Sprite I = font.getCharacter('M');
 
     //display.putTexture(font, 0, 0, 128, 128, 0, 0);
-    printf("%i %i %i %i %i %i\n", I.getWidth(), I.getHeight(), I.x0, I.y0, I.x1, I.y1);
-    demo_pattern();
+    //printf("%i %i %i %i %i %i\n", I.getWidth(), I.getHeight(), I.x0, I.y0, I.x1, I.y1);
+    //demo_pattern();
     //display.putSprite(I, 0, 0);
-    //write_characters("Hello World!",0 ,0);
-    //write_characters("Mnotmworking",0,16);
+    write_characters("Hello World!",0 ,0);
+    write_characters("Mnotmworking",0,16);
     //write_characters("M M M 9 9 mm M", 0, 0);
     //write_characters("M M M 9 9 mm M", 0, 24);
     display.flush();
     vTaskDelay(5000 / portTICK_PERIOD_MS);
-    display.putTexture(I.src, 0, 0, 128, 128, 0, 0);
+    display.putTexture(I.src, 0, 0, 128, 64, 0, 0);
+    display.putTexture(I.src, 0, 64, 128, 128, 126, 0);
     display.flush();
     /*
     display.circle(64, 64, 24, 1, true);

@@ -70,9 +70,9 @@ struct TextureT : public Buffer {
                     //if (~srcPix & 1)
                     //    continue;
                     //srcPix >>= (texture.bpp - this->bpp);
-                    //srcPix = ((srcPix & 1) && srcPix > 1) ? 1 : 0;
+                    srcPix = ((srcPix & 1) && srcPix > 1) ? 1 : 0;
                 }
-                this->putPixel(k, l, srcPix > 1);
+                this->putPixel(k, l, srcPix);
             }
         }
     }
@@ -86,7 +86,7 @@ struct TextureT : public Buffer {
             for (fb j = 0, l = y; j < height; j++, l++) {
                 pixel srcPix = sprite.src.getPixel(i + sprite.x0, j + sprite.y0);
                 if (sprite.src.bpp > 1) {
-                    //srcPix = ((srcPix & 1) && srcPix > 1) ? 1 : 0;
+                    srcPix = ((srcPix & 1) && srcPix > 1) ? 1 : 0;
                     //if (~(srcPix & 1))
                     //    srcPix = 0;
                     //srcPix >>= (sprite.src.bpp - this->bpp);
