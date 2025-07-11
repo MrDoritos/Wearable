@@ -101,10 +101,19 @@ struct Origin {
     constexpr Origin(const Box &b);
 };
 
-struct Length {
-    uu width, height;
-    constexpr Length():width(0),height(0){}
-    constexpr Length(const uu &width, const uu &height):width(width),height(height){}
+template<typename T>
+struct LengthT {
+    typedef T value_type;
+
+    T width, height;
+
+    constexpr LengthT(const T &width, const T &height):width(width),height(height){}
+    constexpr LengthT(){}
+};
+
+struct Length : public LengthT<uu> {
+    constexpr Length(const uu &width, const uu &height):LengthT(width, height){}
+    constexpr Length():Length(0,0){}
     constexpr Length(const Box &b);
 };
 
@@ -133,11 +142,24 @@ struct Box {
         );
         return resolved;
     }
+
+    friend constexpr inline Box operator+(const Box &a, const Box &b) {
+        return Box(
+            a.top.value+b.top.value,
+            a.right.value+b.right.value,
+            a.bottom.value+b.bottom.value,
+            a.left.value+b.left.value
+        );
+    }
+    
+    friend constexpr inline Box& operator+=(Box &a, const Box &b) {
+        return a = (a + b);
+    }
 };
 
 constexpr Origin::Origin(const Box &b):x(b.left.value),y(b.top.value){}
 
-constexpr Length::Length(const Box &b):width(b.right.value-b.left.value),height(b.bottom.value-b.top.value){}
+constexpr Length::Length(const Box &b):Length(b.right.value-b.left.value,b.bottom.value-b.top.value){}
 
 constexpr Size::Size(const Box &b):Origin(b),Length(b){}
 
@@ -177,26 +199,36 @@ struct DimensionMinMax : public ValueMinMaxT<Dimension> {
     constexpr DimensionMinMax(const Dimension &value):DimensionMinMax(value, NONEDIM, NONEDIM) {}
     constexpr DimensionMinMax():DimensionMinMax(NONEDIM){}
 
-    template<typename RType = Dimension>
-    constexpr RType getExplicitValue() {
+    template<typename IType = Dimension, typename RType = Dimension>
+    constexpr RType getImplicitValue(const IType &value) {
         if (max > value) {
             if (min > max)
                 return min;
             return max;
         }
-        
+
         if (min > value)
             return min;
 
         return value;
     }
 
+    template<typename RType = Dimension>
+    constexpr RType getExplicitValue() {
+        return getImplicitValue<RType>(value);
+    }
+
+    template<typename IType = Dimension, typename RType = Dimension>
+    constexpr RType getComparedValue(const IType &value_candidate) {
+        return getImplicitValue<RType>(value_candidate > value ? value_candidate : value);
+    }
+
     template<typename IType = Dimension, typename RType = DimensionMinMax>
     constexpr RType resolve(const IType &src) {
         const RType resolved(
-            ::resolve(src, value),
-            ::resolve(src, min),
-            ::resolve(src, max)
+            UI::resolve(src, value),
+            UI::resolve(src, min),
+            UI::resolve(src, max)
         );
 
         return resolved;
@@ -211,8 +243,8 @@ struct Style : public Size {
     Box margin, padding;
     OverflowT overflow;
 
-    Length content;
-    Box computed, used;
+    Length content, used;
+    LengthT<Dimension> computed;
 
     constexpr Style(){}
 };
@@ -225,7 +257,8 @@ struct Element : public Style {
     constexpr Element():parent(nullptr),sibling(nullptr),child(nullptr){}
 
     constexpr void compute_layout() {
-
+        if (!parent)
+            computed = {width.getExplicitValue(), height.getExplicitValue()};
     }
 };
 
