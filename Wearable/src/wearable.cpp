@@ -9,6 +9,7 @@
 #include "displaybuffer.h"
 #include "texture.h"
 #include "font.h"
+#include "ui.h"
 
 //extern const char _binary_fixedsys_bin_start[];
 //extern const char _binary_fixedsys_bin_end[];
@@ -30,6 +31,8 @@ extern const FontProvider font asm("_binary_dosjpn_bin_start");
 //FontProvider font;
 
 DisplayTexture display;
+
+UI::Element test;
 
 void delay(uint16_t ms) {
     vTaskDelay(ms / portTICK_PERIOD_MS);
