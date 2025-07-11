@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ui.h"
+#include "framebuffer.h"
 #include "console.h"
 
 #include <string.h>

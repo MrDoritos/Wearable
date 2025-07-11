@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ui.h"
+#include "framebuffer.h"
 #include "sh1107.h"
 
 namespace wbl {

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ui.h"
+#include "framebuffer.h"
 #include <math.h>
 
 namespace wbl {
