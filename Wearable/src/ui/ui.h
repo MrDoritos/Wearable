@@ -23,7 +23,7 @@ enum Unit : uint8_t {
 enum Display : uint8_t {
     BLOCK=0,
     INLINE=1,
-    INLINE_BLOCK=1,
+    INLINE_BLOCK=2,
 };
 
 enum Align : uint8_t {
@@ -65,12 +65,30 @@ struct Dimension {
         }
     }
 
-    friend constexpr bool operator==(const Dimension &a, const Dimension &b) {
+    friend constexpr inline bool operator==(const Dimension &a, const Dimension &b) {
         return (a.unit == b.unit) && (a.value == b.value);
     }
 
-    friend constexpr bool operator!=(const Dimension &a, const Dimension &b) {
+    friend constexpr inline bool operator!=(const Dimension &a, const Dimension &b) {
         return !(a == b);
+    }
+
+    friend constexpr inline bool operator>(const Dimension &a, const Dimension &b) {
+        if (a.unit == b.unit)
+            return a.value > b.value;
+        return (b.unit == NONE);
+    }
+
+    friend constexpr inline bool operator<(const Dimension &a, const Dimension &b) {
+        return b > a;
+    }
+
+    friend constexpr inline bool operator<=(const Dimension &a, const Dimension &b) {
+        return !(a > b);
+    }
+
+    friend constexpr inline bool operator>=(const Dimension &a, const Dimension &b) {
+        return !(a > b);
     }
 };
 
@@ -125,6 +143,8 @@ constexpr Size::Size(const Box &b):Origin(b),Length(b){}
 
 template<typename T>
 struct AxisT {
+    typedef T value_type;
+
     T x, y;
 
     constexpr AxisT(){}
@@ -135,24 +155,64 @@ using OverflowT = AxisT<Overflow>;
 
 template<typename T>
 struct ValueMinMaxT {
+    typedef T value_type;
+
     T value, min, max;
 
     constexpr ValueMinMaxT(const T &value, const T &min, const T &max):value(value),min(min),max(max){}
 };
 
+template<typename RType, typename SRCType, typename BType>
+static constexpr inline RType resolve(const SRCType &src, const BType &b) {
+    return b;
+}
+
+template<typename RType, typename SRCType>
+static constexpr inline RType resolve(const SRCType &src, const Dimension &b) {
+    return b.resolve<RType>(src);
+}
+
 struct DimensionMinMax : public ValueMinMaxT<Dimension> {
     constexpr DimensionMinMax(const Dimension &value, const Dimension &min, const Dimension &max):ValueMinMaxT(value,min,max){}
     constexpr DimensionMinMax(const Dimension &value):DimensionMinMax(value, NONEDIM, NONEDIM) {}
     constexpr DimensionMinMax():DimensionMinMax(NONEDIM){}
+
+    template<typename RType = Dimension>
+    constexpr RType getExplicitValue() {
+        if (max > value) {
+            if (min > max)
+                return min;
+            return max;
+        }
+        
+        if (min > value)
+            return min;
+
+        return value;
+    }
+
+    template<typename IType = Dimension, typename RType = DimensionMinMax>
+    constexpr RType resolve(const IType &src) {
+        const RType resolved(
+            ::resolve(src, value),
+            ::resolve(src, min),
+            ::resolve(src, max)
+        );
+
+        return resolved;
+    }
 };
 
-struct Style {
+struct Style : public Size {
     Align align{LEFT}, text_align{LEFT};
     Display display{BLOCK};
     Position position{STATIC};
     DimensionMinMax width, height;
     Box margin, padding;
     OverflowT overflow;
+
+    Length content;
+    Box computed, used;
 
     constexpr Style(){}
 };
@@ -163,6 +223,10 @@ struct Element : public Style {
     Element *child;
 
     constexpr Element():parent(nullptr),sibling(nullptr),child(nullptr){}
+
+    constexpr void compute_layout() {
+
+    }
 };
 
 };
