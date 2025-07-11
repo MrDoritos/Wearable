@@ -11,7 +11,7 @@ target_compile_options(${COMPONENT_LIB} PRIVATE
 )
 
 target_add_binary_data(${COMPONENT_LIB}
-    ../assets/fixedsys.bin
+    ../assets/dosjpn.bin
     ALIGN_BYTES 4
     EMBED_AS_ARRAY
     SOURCE_DIR ../assets

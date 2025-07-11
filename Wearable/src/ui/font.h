@@ -41,7 +41,7 @@ namespace wbl {
         }
 
         inline constexpr FontSprite getCharacter(const CharT &character) const {
-            return FontSprite(this->getSpriteAligned(character % glyphs_per_row, character / glyphs_per_column, 1, 1, font_width, font_height), font_width, font_height, advance_x, advance_y);
+            return FontSprite(this->getSpriteAligned(character % glyphs_per_row, character / glyphs_per_row, 1, 1, font_width, font_height), font_width, font_height, advance_x, advance_y);
             //FontSprite ret[1];
             //return *this->getCharacter(character, ret);
         }

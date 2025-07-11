@@ -2,9 +2,9 @@
 # CMakeLists in this exact order for cmake to work correctly
 cmake_minimum_required(VERSION 3.16)
 
-project(Wearable)
 
 set(EXTRA_COMPONENT_DIRS src)
 include($ENV{IDF_PATH}/tools/cmake/project.cmake)
+project(Wearable)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)

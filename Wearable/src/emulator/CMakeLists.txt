@@ -30,6 +30,10 @@ add_library(lib
     ${GENERATED_ASSET_OBJECTS}
 )
 
+target_compile_options(lib PUBLIC
+    -g
+)
+
 add_executable(Emulator
     emulator.cpp
 )

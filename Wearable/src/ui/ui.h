@@ -10,7 +10,7 @@ typedef unsigned char pixel;
 template<fb WIDTH, fb HEIGHT, fb BPP>
 struct FramebufferT {
     static constexpr fb PXPERBYTE = 8 / BPP;
-    static constexpr fb SIZE = WIDTH * HEIGHT / PXPERBYTE;
+    static constexpr fb SIZE = (WIDTH * HEIGHT) / PXPERBYTE;
     static constexpr fb bpp = BPP;
     static constexpr fb width = WIDTH;
     static constexpr fb height = HEIGHT;
@@ -39,7 +39,8 @@ struct FramebufferT {
     }
 
     inline constexpr fb getBitOffset(const fb& x, const fb &y) const {
-        return (x % PXPERBYTE);
+        return ((y * WIDTH) + x) % PXPERBYTE;
+        //return (x % PXPERBYTE);
         //return (x & 7);
         //return x & (PXPERBYTE-1);
     }
