@@ -9,6 +9,7 @@ template<typename Buffer>
 struct SpriteT {
     const Buffer &src;
     const fb x0, y0, x1, y1;
+
     SpriteT(const Buffer &src, const fb &x0, const fb &y0, const fb &x1, const fb &y1)
         :src(src),x0(x0),y0(y0),x1(x1),y1(y1) {}
 
@@ -21,7 +22,7 @@ template<typename Buffer>
 struct TextureT : public Buffer {
     using Sprite = SpriteT<Buffer>;
 
-    inline void clear(const pixel &px) {
+    inline void clear(const pixel &px = 0) {
         pixel d = 0;
         for (fb i = 0; i < this->PXPERBYTE; i++)
             d |= px << (this->bpp * i);
@@ -75,12 +76,13 @@ struct TextureT : public Buffer {
         }
     }
 
-    inline void putSprite(const Sprite &sprite, const fb &x, const fb &y, const fb &w = 0, const fb &h = 0) {
+    template<typename _SpriteT = Sprite>
+    inline void putSprite(const _SpriteT &sprite, const fb &x, const fb &y, const fb &w = 0, const fb &h = 0) {
         const fb width = w ? w : sprite.getWidth();
         const fb height = h ? h : sprite.getHeight();
 
-        for (fb i = 0, k = x; i < w; i++, k++) {
-            for (fb j = 0, l = y; j < h; j++, l++) {
+        for (fb i = 0, k = x; i < width; i++, k++) {
+            for (fb j = 0, l = y; j < height; j++, l++) {
                 this->putPixel(k, l, sprite.src.getPixel(i + sprite.x0, j + sprite.y0));
             }
         }
@@ -172,6 +174,10 @@ struct AtlasT : public TextureT<Buffer> {
 
     inline constexpr Sprite getSprite(const fb &x, const fb &y, const fb &sx, const fb &sy) const {
         return Sprite(*this, x, y, x+sx, y+sy);
+    }
+
+    inline constexpr Sprite getSpriteAligned(const fb &x, const fb &y, const fb &nx, const fb &ny, const fb &sw, const fb &sh) const {
+        return getSprite(x * sw, y * sh, nx * sw, ny * sh);
     }
 };
 

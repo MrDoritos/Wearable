@@ -6,3 +6,6 @@ STM32_2
 *.o
 callgrind*
 Arm
+ghidra
+*.1
+*.old

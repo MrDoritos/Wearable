@@ -8,9 +8,10 @@
 
 #include "displaybuffer.h"
 #include "texture.h"
+#include "font.h"
 
-extern const char _binary_fixedsys_bin_start[];
-extern const char _binary_fixedsys_bin_end[];
+//extern const char _binary_fixedsys_bin_start[];
+//extern const char _binary_fixedsys_bin_end[];
 
 using namespace wbl;
 
@@ -18,7 +19,11 @@ using DisplayTexture = TextureT<DisplayBuffer>;
 
 using FontTexture = TextureT<FramebufferT<256, 256, 2>>;
 
-FontTexture font;
+using FontProvider = MonospaceFontProviderT<FontTexture, 8, 14, 0, 0, char, 32, 20>;
+
+extern const FontProvider font asm("_binary_fixedsys_bin_start");
+
+//FontProvider font;
 
 DisplayTexture display;
 
@@ -33,13 +38,20 @@ void demo() {
     vTaskDelay(ms / portTICK_PERIOD_MS);
     */
     
-    display.clear(0);
     /*
     display.flush();
     printf("clear 1\n");
     vTaskDelay(ms / portTICK_PERIOD_MS);
     */
-    display.putTexture(font, 0, 0, 128, 128, 0, 0);
+    display.clear();
+    const FontProvider::Sprite I = font.getCharacter('I');
+
+    //display.putTexture(font, 0, 0, 128, 128, 0, 0);
+    printf("%i %i %i %i %i %i\n", I.getWidth(), I.getHeight(), I.x0, I.y0, I.x1, I.y1);
+    display.putSprite(I, 0, 0);
+    display.flush();
+    vTaskDelay(1000 / portTICK_PERIOD_MS);
+    display.putTexture(I.src, 0, 0, 128, 128, 0, 0);
     display.flush();
     /*
     display.circle(64, 64, 24, 1, true);
@@ -65,12 +77,15 @@ void demo() {
 extern "C" {
 void app_main() {
     printf("test\n");
-    memcpy(font.buffer, &_binary_fixedsys_bin_start[0], _binary_fixedsys_bin_end - _binary_fixedsys_bin_start);
+    //memcpy(font.buffer, &_binary_fixedsys_bin_start[0], _binary_fixedsys_bin_end - _binary_fixedsys_bin_start);
 
     if (display.init() != ESP_OK) {
         printf("Failed to initialize display\n");
     } else {
         printf("Display initialized\n");
+        display.clear(1);
+        display.flush();
+        vTaskDelay(1000 / portTICK_PERIOD_MS);
         while (1) {
             demo();
             vPortYield();
