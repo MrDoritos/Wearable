@@ -38,6 +38,10 @@ add_executable(Emulator
     emulator.cpp
 )
 
+add_executable(Tests
+    tests/layout.cpp
+)
+
 target_include_directories(lib PUBLIC
     ../ui
     ../../console
@@ -49,7 +53,17 @@ target_link_libraries(Emulator
     lib
 )
 
+target_link_libraries(Tests
+    lib
+)
+
 target_compile_options(Emulator PUBLIC
     -g
     -z noexecstack
+)
+
+target_compile_options(Tests PUBLIC
+    -g
+    -z noexecstack
+    -Wfatal-errors
 )
