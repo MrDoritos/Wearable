@@ -1,7 +1,7 @@
 #pragma once
 
 #include <stdlib.h>
-#include "types.h"
+#include "sizes.h"
 
 namespace wbl {
 

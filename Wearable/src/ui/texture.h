@@ -9,6 +9,11 @@ namespace wbl {
 struct IGraphicsContext {
     virtual inline void putPixel(const Origin &pos, const pixel &px) = 0;
     virtual inline void fill(const Size &size, const pixel &px) = 0;
+    virtual inline pixel getPixel(const Origin &pos) = 0;
+    virtual inline void circle(const Origin &center, const fb &radius, const pixel &px, const bool &fill=true) = 0;
+    virtual inline bool isBound(const Origin &pos) = 0;
+    virtual inline Size getSize() = 0;
+    virtual inline void line(const Origin &pos_start, const Origin &pos_end, const pixel &px) = 0;
 };
 
 template<typename Buffer>
@@ -47,6 +52,10 @@ struct TextureT : public Buffer {
 
     inline void fill(const Size &size, const pixel &px) {
         fill(size.x, size.y, size.x + size.width, size.y + size.height, px);
+    }
+
+    inline void circle(const Origin &center, const fb &radius, const pixel &px, const bool fill=true) {
+        circle(center.x, center.y, px, fill);
     }
 
     inline void circle(const fb &cx, const fb &cy, const fb &r, const pixel &px, const bool fill=true) {
@@ -186,6 +195,10 @@ struct TextureT : public Buffer {
             [this, px](const fb &x, const fb &y) { this->putPixelBound(x, y, px); }
         );
     }
+
+    inline void line(const Origin &start, const Origin &end, const pixel &px) {
+        line(start.x, start.y, end.x, end.y, px);
+    }
 };
 
 template<typename Buffer, typename Texture = TextureT<Buffer>>
@@ -197,7 +210,27 @@ struct TextureGraphicsContext : protected Texture, public IGraphicsContext {
     }
     
     inline void putPixel(const Origin &pos, const pixel &px) override {
+        Texture::putPixel(pos, px);
+    }
 
+    inline pixel getPixel(const Origin &pos) override {
+        return Texture::getPixel(pos);
+    }
+
+    inline void circle(const Origin &center, const fb &radius, const pixel &px, const bool &fill = true) override {
+        Texture::circle(center, radius, px, fill);
+    }
+
+    inline bool isBound(const Origin &pos) override {
+        return Texture::isBound(pos);
+    }
+
+    inline Size getSize() override {
+        return Size(0,0,Texture::getWidth(), Texture::getHeight());
+    }
+
+    inline void line(const Origin &pos_start, const Origin &pos_end, const pixel &px) {
+        return Texture::line(pos_start, pos_end, px);
     }
 };
 
