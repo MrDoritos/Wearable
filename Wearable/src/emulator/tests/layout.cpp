@@ -146,6 +146,7 @@ enum Stage {
     INITIAL,
     CONTAINER_SIZES,
     CONTAINER_GROWTH,
+    POSITION,
 };
 
 std::string print_layout_state(const Element &src, Stage stage, int levels=0) {
@@ -166,6 +167,14 @@ std::string print_layout_state(const Element &src, Stage stage, int levels=0) {
             ret += app + "container:" + stringify(src.container);
             ret += app + "computed:" + stringify(src.computed);
             ret += app + "margin:" + stringify(src.margin);
+            break;
+        case POSITION:
+            ret += app + "POSITION";
+            ret += app + "container:" + stringify(src.container);
+            ret += app + "to px:" + stringify<Length>(src.container);
+            ret += app + "add:" + stringify<LengthD>(Box() + src.container);
+            ret += app + stringify<Origin>(src);
+            ret += app + stringify<Size>(src);
             break;
     }
 
@@ -194,12 +203,23 @@ int main() {
         .height = { 20 },
     };
 
+    header << StyleInfo {
+        .width = { 5 },
+        .height = { 5 },
+    };
+
     screen << StyleInfo {
-        .width = { 50, PERC }
+        .width = { 50, PERC },
+        .height = { 50, PERC }
     };
 
     scrollable << StyleInfo {
         .width = { 30 }
+    };
+
+    footer << StyleInfo {
+        .width = { 10 },
+        .height = { 10 },
     };
 
     std::cout << stringify(root) << std::endl;    
@@ -214,6 +234,10 @@ int main() {
     root.resolve_container_growth(c);
 
     std::cout << print_layout_state(root, CONTAINER_GROWTH) << std::endl;
+
+    root.resolve_container_position();
+
+    std::cout << print_layout_state(root, POSITION) << std::endl;
 
     //auto r = screen.width.resolve(Dimension{20});
 

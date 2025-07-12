@@ -147,6 +147,17 @@ struct Origin {
 
     constexpr uu getOffsetX() const { return x; }
     constexpr uu getOffsetY() const { return y; }
+
+    friend constexpr inline Origin operator+(const Origin &a, const Origin &b) {
+        return Origin(
+            a.x + b.x,
+            a.y + b.y
+        );
+    }
+
+    friend constexpr inline Origin &operator+=(Origin &a, const Origin &b) {
+        return a = a + b;
+    }
 };
 
 template<typename T>
@@ -156,15 +167,21 @@ struct LengthT {
     T width, height;
 
     constexpr LengthT(const T &width, const T &height):width(width),height(height){}
+    constexpr LengthT(const T &value):width(value),height(value){}
     constexpr LengthT(){}
 
     constexpr T getWidth() const { return width; }
     constexpr T getHeight() const { return height; }
 
+    /*
+    constexpr inline LengthT &operator=(const T &value) {
+
+    }*/
+
     friend constexpr inline LengthT operator+(const LengthT &a, const LengthT &b) {
         return LengthT(
             a.width + b.width,
-            b.height + b.height
+            a.height + b.height
         );
     }
 
@@ -184,12 +201,20 @@ struct Length : public LengthT<uu> {
 struct LengthD : public LengthT<Dimension> {
     using LengthT<Dimension>::LengthT;
 
-    constexpr explicit inline operator Length() const {
+    constexpr LengthD(const LengthT<Dimension> &v):LengthT<Dimension>(v){}
+
+    constexpr /*explicit*/ inline operator Length() const {
         return Length(
             (uu)width,
             (uu)height
         );
     }
+
+    /*
+    constexpr inline operator LengthT<Dimension>() const {
+        return *this;
+    }
+    */
 };
 
 struct Size : public Origin, public Length {
@@ -248,6 +273,13 @@ struct Box {
         );
     }
 
+    constexpr inline explicit operator Origin() const {
+        return Origin(
+            (uu)left,
+            (uu)top
+        );
+    }
+
     friend constexpr inline Box operator+(const Box &a, const Box &b) {
         return Box(
             a.top.value+b.top.value,
@@ -255,6 +287,14 @@ struct Box {
             a.bottom.value+b.bottom.value,
             a.left.value+b.left.value
         );
+    }
+
+    friend constexpr inline LengthD operator+(const LengthD &a, const Box &b) {
+        return a + (LengthD)b;
+    }
+
+    friend constexpr inline LengthD operator+(const Box &a, const LengthD &b) {
+        return b + (LengthD)a;
     }
     
     friend constexpr inline Box& operator+=(Box &a, const Box &b) {
@@ -357,10 +397,10 @@ struct DimensionMinMax : public ValueMinMaxT<Dimension> {
 };
 
 struct StyleInfo { 
-    Align align;//{LEFT};
-    Align text_align;//{LEFT};
-    Display display;//{BLOCK};
-    Position position;//{STATIC};
+    Align align{LEFT};
+    Align text_align{LEFT};
+    Display display{BLOCK};
+    Position position{STATIC};
     DimensionMinMax width, height;
     Box margin, padding;
     OverflowT overflow;
@@ -378,6 +418,44 @@ struct Style : public Size, public StyleInfo {
     //Style(){}
 };
 
+struct Event {
+    enum Type : uint8_t {
+        NONE,
+        BUFFER,
+        CLEAR,
+        LOG,
+        USER_INPUT,
+        LOAD,
+        RESET,
+        VISIBILITY,
+        LAYOUT,
+        FONT,
+        DRAW,
+        TICK,
+        CONTENT_SIZE,
+        FRAME,
+        DISPLAY,
+        FOCUS,
+        SCREEN,
+    };
+
+    enum Value : uint8_t {
+        NONE,
+        DPAD_LEFT,
+        DPAD_RIGHT,
+        DPAD_UP,
+        DPAD_DOWN,
+        DPAD_ENTER,
+        DISPLAY_ON,
+        DISPLAY_OFF,
+        DISPLAY_LOCKED,
+        DISPLAY_UNLOCKED,
+    };
+
+    Type type;
+    Value value;
+};
+
 struct Element : public Style {
     const char *name;
 
@@ -388,6 +466,16 @@ struct Element : public Style {
     constexpr Element(const char *name, Element *parent, Element *sibling, Element *child):name(name),parent(parent),sibling(sibling),child(child){}
     constexpr Element(const char *name):Element(name,nullptr,nullptr,nullptr){}
     constexpr Element():Element(nullptr){}
+
+    constexpr inline Element &operator<<(const Origin &origin) {
+        *((Origin*)this) = origin;
+        return *this;
+    }
+
+    constexpr inline Element &operator<<(const Length &length) {
+        *((Length*)this) = length;
+        return *this;
+    }
 
     constexpr inline Element &operator<<(const Style &style) {
         *((Style*)this) = style;
@@ -541,6 +629,68 @@ struct Element : public Style {
         
         if (sibling)
             sibling->resolve_container_growth(parent_context);
+    }
+
+    constexpr void resolve_container_position() {
+        Element *cur = child;
+
+        *this << container;
+        const Size original_size = *this;
+        const Origin original_origin = *this;
+        Length inline_size;
+        Origin offset = original_origin;
+
+        while (cur) {
+            Box child_margin = cur->margin.resolve(container);
+            Box child_padding = cur->padding.resolve(container);
+            Box child_box = child_margin + child_padding;
+            Length child_use = child_box + cur->container;
+
+            switch (cur->display) {
+                case BLOCK:
+                    //offset += {0,inline_size.height};
+                    //offset.x = original_origin.x;
+                    offset.x = original_origin.x;
+                    offset.y += inline_size.height;
+                    inline_size = 0;
+                    break;
+                case INLINE:
+                case INLINE_BLOCK:
+                    break;
+            }
+
+            printf("%s -> %s\n", name, cur->name);
+
+            Origin child_offset = (Origin)child_margin + offset;
+
+            printf("x: %i y: %i x: %i y: %i\n", offset.x, offset.y, child_offset.x, child_offset.y);
+            *cur << child_offset;
+            //*cur << offset;
+            //*cur << Origin(1,1);
+
+            switch (cur->display) {
+                case BLOCK:
+                    //offset += {0,child_use.height};
+                    //offset.x = original_origin.x;
+                    offset.y += child_use.height;
+                    offset.x = original_origin.x;
+                    inline_size = 0;
+                    break;
+                case INLINE:
+                case INLINE_BLOCK:
+                    inline_size += {child_use.width,0};
+                    if (child_use.height > inline_size.height)
+                        inline_size.height = child_use.height;
+                    break;
+            }
+
+            cur = cur->sibling;
+        }
+
+        if (child)
+            child->resolve_container_position();
+        if (sibling)
+            sibling->resolve_container_position();
     }
 };
 
