@@ -55,7 +55,7 @@ struct Dimension {
     constexpr Dimension(const uu &v, const Unit &unit=PX):unit(unit),value(v){}
     
     template<typename RET=uu, typename CALC=float>
-    constexpr RET resolve(const Dimension &major) {
+    constexpr RET resolve(const Dimension &major) const {
         switch (unit) {
             case PX:
                 return RET(value);
@@ -66,13 +66,19 @@ struct Dimension {
         }
     }
 
-    inline constexpr explicit operator uu() {
+    inline constexpr explicit operator uu() const {
         return resolve(0);
     }
 
     friend constexpr inline Dimension operator+(const Dimension &a, const Dimension &b) {
         return Dimension(
             a.value + b.value
+        );
+    }
+
+    friend constexpr inline Dimension operator-(const Dimension &a, const Dimension &b) {
+        return Dimension(
+            a.value - b.value
         );
     }
 
@@ -131,8 +137,8 @@ struct Origin {
     constexpr Origin(const uu &x, const uu &y):x(x),y(y){}
     constexpr Origin(const Box &b);
 
-    constexpr uu getOffsetX() { return x; }
-    constexpr uu getOffsetY() { return y; }
+    constexpr uu getOffsetX() const { return x; }
+    constexpr uu getOffsetY() const { return y; }
 };
 
 template<typename T>
@@ -144,14 +150,18 @@ struct LengthT {
     constexpr LengthT(const T &width, const T &height):width(width),height(height){}
     constexpr LengthT(){}
 
-    constexpr T getWidth() { return width; }
-    constexpr T getHeight() { return height; }
+    constexpr T getWidth() const { return width; }
+    constexpr T getHeight() const { return height; }
 
     friend constexpr inline LengthT operator+(const LengthT &a, const LengthT &b) {
         return LengthT(
             a.width + b.width,
             b.height + b.height
         );
+    }
+
+    friend constexpr inline LengthT &operator+=(LengthT &a, const LengthT &b) {
+        return a = a + b;
     }
 };
 
@@ -166,7 +176,7 @@ struct Length : public LengthT<uu> {
 struct LengthD : public LengthT<Dimension> {
     using LengthT<Dimension>::LengthT;
 
-    constexpr explicit inline operator Length() {
+    constexpr explicit inline operator Length() const {
         return Length(
             (uu)width,
             (uu)height
@@ -180,10 +190,10 @@ struct Size : public Origin, public Length {
     constexpr Size(const Origin &o, const Length &l):Origin(o),Length(l){}
     constexpr Size(const Box &b);
 
-    constexpr uu getLeft() { return x; }
-    constexpr uu getTop() { return y; }
-    constexpr uu getRight() { return x + width; }
-    constexpr uu getBottom() { return y + height; }
+    constexpr uu getLeft() const { return x; }
+    constexpr uu getTop() const { return y; }
+    constexpr uu getRight() const { return x + width; }
+    constexpr uu getBottom() const { return y + height; }
 };
 
 struct Box {
@@ -195,7 +205,7 @@ struct Box {
     constexpr Box(const uu &t, const uu &r, const uu &b, const uu &l):top(t),right(r),bottom(b),left(l){}
     constexpr Box(const Size &s):top(s.y),right(s.x+s.width),bottom(s.y+s.height),left(s.x){}
     
-    constexpr Box resolve(const Box &major) {
+    constexpr Box resolve(const Box &major) const {
         const Box resolved(
             top.resolve(major.top),
             right.resolve(major.right),
@@ -205,12 +215,28 @@ struct Box {
         return resolved;
     }
 
-    constexpr Box resolve(const LengthD &major) {
+    constexpr Box resolve(const LengthD &major) const {
         return Box(
             top.resolve(major.height),
             right.resolve(major.width),
             bottom.resolve(major.height),
             left.resolve(major.width)  
+        );
+    }
+
+    constexpr inline explicit operator Size() const {
+        return Size(
+            left.value,
+            top.value,
+            right.value-left.value,
+            bottom.value-top.value
+        );
+    }
+
+    constexpr inline explicit operator LengthD() const {
+        return LengthD(
+            right-left,
+            bottom-top
         );
     }
 
@@ -331,29 +357,6 @@ struct Element : public Style {
     constexpr Element(const char *name):Element(name,nullptr,nullptr,nullptr){}
     constexpr Element():Element(nullptr){}
 
-    /*
-        when units are percent, they are of the container's size with margins
-
-        I'd like computed size to be the container size, otherwise more math is done
-    */
-
-    constexpr void resolve_relative_container_sizes() {
-        if (!parent) {
-            container = {width.getExplicitValue(), height.getExplicitValue()};
-            return;
-        }
-
-        const LengthD &parent_container = parent->container;
-
-        DimensionMinMax rel_w = width.resolve(parent_container.width);
-        DimensionMinMax rel_h = height.resolve(parent_container.height);
-
-        container = {
-            rel_w.getComparedValue(content.width),
-            rel_h.getComparedValue(content.height)
-        };
-    }
-
     constexpr inline Element *append_sibling(Element *element) {
         assert(element && "Element null");
 
@@ -385,6 +388,29 @@ struct Element : public Style {
         return *append_child(&element);
     }
 
+    /*
+        when units are percent, they are of the container's size with margins
+
+        I'd like computed size to be the container size, otherwise more math is done
+    */
+
+    constexpr void resolve_relative_container_sizes() {
+        if (!parent) {
+            container = {width.getExplicitValue(), height.getExplicitValue()};
+            return;
+        }
+
+        const LengthD &parent_container = parent->container;
+
+        DimensionMinMax rel_w = width.resolve(parent_container.width);
+        DimensionMinMax rel_h = height.resolve(parent_container.height);
+
+        container = {
+            rel_w.getComparedValue(content.width),
+            rel_h.getComparedValue(content.height)
+        };
+    }
+
     struct FlowContext {
         uu inline_width, inline_height, block_width, block_height;
 
@@ -392,15 +418,67 @@ struct Element : public Style {
             inline_width(iw),inline_height(ih),block_width(bw),block_height(bh) {}
         constexpr FlowContext():FlowContext(0,0,0,0){}
 
+        constexpr inline operator Length() const {
+            return Length(
+                block_width,
+                block_height + inline_height
+            );
+        }
+
         constexpr void append(const Element &element) {
-            LengthD total;
+            if (!element.parent)
+                return;
 
-            if (element.parent) {
-                const LengthD &parent_container = element.parent->container;
+            const LengthD &parent_container = element.parent->container;
+            Box resolved = 
+                element.margin.resolve(parent_container) +
+                element.padding.resolve(parent_container);
 
+            LengthD total = (LengthD)resolved;
+
+            total += element.container;
+
+            Length real = (Length)total;
+
+            switch (element.display) {
+                case BLOCK:
+                    block_height += inline_height;
+                    inline_height = 0;
+                    inline_width = 0;
+                    block_height += real.height;
+                    if (real.width > block_width)
+                        block_width = real.width;
+                    break;
+                case INLINE:
+                case INLINE_BLOCK:
+                    if (real.height > inline_height)
+                        inline_height = real.height;
+                    inline_width += real.width;
+                    if (block_width < inline_width)
+                        block_width = inline_width;
+                    break;
             }
         }
     };
+
+    constexpr void resolve_container_growth(FlowContext &parent_context) {
+        FlowContext context;
+
+        if (child)
+            child->resolve_container_growth(context);
+        
+        const Length grow = context;
+
+        if (grow.width > container.width)
+            container.width = grow.width;
+        if (grow.height > container.height)
+            container.height = grow.height;
+
+        parent_context.append(*this);
+        
+        if (sibling)
+            sibling->resolve_container_growth(parent_context);
+    }
 };
 
 }
