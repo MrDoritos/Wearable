@@ -2,6 +2,8 @@
 
 #include <inttypes.h>
 #include <cassert>
+#include <type_traits>
+#include <stdio.h>
 
 namespace wbl {
 namespace UI {
@@ -66,6 +68,11 @@ struct Dimension {
         }
     }
 
+    template<typename RET=uu, typename CALC=float>
+    constexpr RET resolve(const uu &major) const {
+        return resolve(Dimension(major));
+    }
+
     inline constexpr explicit operator uu() const {
         return resolve(0);
     }
@@ -111,7 +118,7 @@ struct Dimension {
     friend constexpr inline bool operator>(const uu &a, const Dimension &b) {
         if (b.unit == NONE)
             return true;
-        if (!a && b.value)
+        if (a && !b.value)
             return true;
         return a > b.value;
     }
@@ -283,17 +290,24 @@ struct ValueMinMaxT {
 
 template<typename RType, typename SRCType, typename BType>
 static constexpr inline RType resolve(const SRCType &src, const BType &b) {
+    if (std::is_same<BType, Dimension>::value) {
+        return b.template resolve<RType>(src);
+    }
+
     return b;
 }
 
+/*
 template<typename RType, typename SRCType>
-static constexpr inline RType resolve(const SRCType &src, const Dimension &b) {
+static constexpr inline RType resolve<RType, SRCType, Dimension>(const SRCType &src, const Dimension &b) {
     return b.resolve<RType>(src);
 }
+*/
 
 struct DimensionMinMax : public ValueMinMaxT<Dimension> {
     constexpr DimensionMinMax(const Dimension &value, const Dimension &min, const Dimension &max):ValueMinMaxT(value,min,max){}
     constexpr DimensionMinMax(const Dimension &value):DimensionMinMax(value, NONEDIM, NONEDIM) {}
+    constexpr DimensionMinMax(const uu &value, const Unit &unit):DimensionMinMax(Dimension{value,unit}){}
     constexpr DimensionMinMax():DimensionMinMax(NONEDIM){}
 
     template<typename IType = Dimension, typename RType = Dimension>
@@ -323,27 +337,34 @@ struct DimensionMinMax : public ValueMinMaxT<Dimension> {
     template<typename IType = Dimension, typename RType = DimensionMinMax>
     constexpr RType resolve(const IType &src) {
         const RType resolved(
-            UI::resolve(src, value),
-            UI::resolve(src, min),
-            UI::resolve(src, max)
+            UI::resolve<IType>(src, value),
+            UI::resolve<IType>(src, min),
+            UI::resolve<IType>(src, max)
         );
 
         return resolved;
     }
 };
 
-struct Style : public Size {
-    Align align{LEFT}, text_align{LEFT};
-    Display display{BLOCK};
-    Position position{STATIC};
+struct StyleInfo { 
+    Align align;//{LEFT};
+    Align text_align;//{LEFT};
+    Display display;//{BLOCK};
+    Position position;//{STATIC};
     DimensionMinMax width, height;
     Box margin, padding;
     OverflowT overflow;
 
     Length content, used;
     LengthD computed, container;
+};
+
+struct Style : public Size, public StyleInfo {
+    using StyleInfo::width;
+    using StyleInfo::height;
 
     constexpr Style(){}
+    //Style(){}
 };
 
 struct Element : public Style {
@@ -356,6 +377,16 @@ struct Element : public Style {
     constexpr Element(const char *name, Element *parent, Element *sibling, Element *child):name(name),parent(parent),sibling(sibling),child(child){}
     constexpr Element(const char *name):Element(name,nullptr,nullptr,nullptr){}
     constexpr Element():Element(nullptr){}
+
+    constexpr inline Element &operator<<(const Style &style) {
+        *((Style*)this) = style;
+        return *this;
+    }
+
+    constexpr inline Element &operator<<(const StyleInfo &style) {
+        *((StyleInfo*)this) = style;
+        return *this;
+    }
 
     constexpr inline Element *append_sibling(Element *element) {
         assert(element && "Element null");
@@ -376,6 +407,8 @@ struct Element : public Style {
     constexpr inline Element *append_child(Element *element) {
         assert(element && "Element null");
         
+        element->parent = this;
+
         if (child)
             child->append_sibling(element);
         else
@@ -397,18 +430,28 @@ struct Element : public Style {
     constexpr void resolve_relative_container_sizes() {
         if (!parent) {
             container = {width.getExplicitValue(), height.getExplicitValue()};
-            return;
+        } else {
+            const LengthD &parent_container = parent->container;
+
+            DimensionMinMax rel_w = width.resolve(parent_container.width);
+            DimensionMinMax rel_h = height.resolve(parent_container.height);
+
+            computed = {
+                rel_w.value,
+                rel_h.value
+            };
+
+            container = {
+                rel_w.getComparedValue(content.width),
+                rel_h.getComparedValue(content.height)
+            };
         }
 
-        const LengthD &parent_container = parent->container;
+        if (child)
+            child->resolve_relative_container_sizes();
 
-        DimensionMinMax rel_w = width.resolve(parent_container.width);
-        DimensionMinMax rel_h = height.resolve(parent_container.height);
-
-        container = {
-            rel_w.getComparedValue(content.width),
-            rel_h.getComparedValue(content.height)
-        };
+        if (sibling)
+            sibling->resolve_relative_container_sizes();
     }
 
     struct FlowContext {
