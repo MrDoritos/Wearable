@@ -12,8 +12,8 @@ struct Display {
     inline int init();
 };
 
-struct ConsoleBuffer : public FramebufferT<128,128,1>, public Display {
-    using Frame = FramebufferT<128,128,1>;
+struct ConsoleBuffer : public FramebufferT<StaticbufferT<128,128,1>>, public Display {
+    using Frame = FramebufferT<StaticbufferT<128,128,1>>;
 
     static constexpr const char* blockMap = " \0▘\0▝\0▀\0▖\0▌\0▞\0▛\0▗\0▚\0▐\0▜\0▄\0▙\0▟\0█\0";
     static constexpr const char* blockMap2w = "  \0▀ \0 ▀\0▀▀\0▄ \0█ \0▄▀\0█▀\0 ▄\0▀▄\0 █\0▀█\0▄▄\0█▄\0▄█\0██\0";
@@ -24,10 +24,10 @@ struct ConsoleBuffer : public FramebufferT<128,128,1>, public Display {
 
     inline fb blockToNum(const fb &x, const fb &y, const fb &xn, const fb &yn) {
         fb num = 0;
-        const fb mask = (1 << bpp) - 1;
+        const fb mask = (1 << this->BPP) - 1;
         const fb tot = 1 << (xn * yn);
         for (int j = y, k = 0; j < y + yn; j++)
-            for (int i = x; i < x + xn; i++, k+=bpp)
+            for (int i = x; i < x + xn; i++, k+=this->BPP)
                 num |= (getPixel(i, j) & mask) << k;
         return num & (tot - 1);
     }
@@ -60,8 +60,8 @@ void ConsoleBuffer::flushBlocks(const BLOCKSRC _blockMap, const int &w, const in
 
     memset(ch_buffer, ' ', blength);
 
-    for (int sy = 0, cy = 0; sy < height && cy < cheight; sy+=stride_y, cy++) {
-        for (int sx = 0, cx = 0; sx < width && cx < cwidth; sx+=stride_x, cx+=w) {
+    for (int sy = 0, cy = 0; sy < this->HEIGHT && cy < cheight; sy+=stride_y, cy++) {
+        for (int sx = 0, cx = 0; sx < this->WIDTH && cx < cwidth; sx+=stride_x, cx+=w) {
             const int num = blockToNum(sx, sy, stride_x, stride_y);
             const char *ch = &blockMap[mapOffsets[num][0]];
             const int l = mapOffsets[num][1];

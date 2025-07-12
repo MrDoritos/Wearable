@@ -18,7 +18,7 @@ using namespace wbl;
 
 using DisplayTexture = TextureT<DisplayBuffer>;
 
-using FontTexture = TextureT<FramebufferT<256, 256, 2>>;
+using FontTexture = TextureT<FramebufferT<StaticbufferT<256, 256, 2>>>;
 
 //using FontProvider = MonospaceFontProviderT<FontTexture, 8, 14, 0, 0, char, 32, 14>;
 
@@ -76,7 +76,7 @@ void demo_pattern_() {
 }
 
 void demo_pattern() {
-    FramebufferT<16, 16, 2> buf;
+    FramebufferT<StaticbufferT<16, 16, 2>> buf;
     buf.clear();
     for (fb y = 0; y < buf.getHeight(); y++) {
         for (fb x = 0; x < buf.getWidth(); x++) {

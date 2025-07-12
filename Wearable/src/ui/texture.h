@@ -25,7 +25,7 @@ struct TextureT : public Buffer {
     inline void clear(const pixel &px = 0) {
         pixel d = 0;
         for (fb i = 0; i < this->PXPERBYTE; i++)
-            d |= px << (this->bpp * i);
+            d |= px << (this->BPP * i);
         for (fb i = 0; i < this->getSize(); i++) {
             this->buffer[i] = d;
         }
@@ -65,7 +65,7 @@ struct TextureT : public Buffer {
         for (fb i = 0, k = dx; i < w && k < width; i++, k++) {
             for (fb j = 0, l = dy; j < h && l < height; j++, l++) {
                 pixel srcPix = texture.getPixel(i + sx, j + sy);
-                if (texture.bpp > 1) {
+                if (texture.BPP > 1) {
                     //if (!(srcPix & 1))
                     //if (~srcPix & 1)
                     //    continue;
@@ -85,7 +85,7 @@ struct TextureT : public Buffer {
         for (fb i = 0, k = x; i < width; i++, k++) {
             for (fb j = 0, l = y; j < height; j++, l++) {
                 pixel srcPix = sprite.src.getPixel(i + sprite.x0, j + sprite.y0);
-                if (sprite.src.bpp > 1) {
+                if (sprite.src.BPP > 1) {
                     srcPix = ((srcPix & 1) && srcPix > 1) ? 1 : 0;
                     //if (~(srcPix & 1))
                     //    srcPix = 0;
