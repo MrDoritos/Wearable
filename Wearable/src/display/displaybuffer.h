@@ -8,7 +8,7 @@ namespace wbl {
 template<uint8_t WIDTH, uint8_t HEIGHT, uint8_t BPP>
 struct FramebufferPageT : public FramebufferT<StaticbufferT<WIDTH, HEIGHT, BPP>> {
     inline constexpr fb getOffset(const fb &x, const fb &y) const {
-        return (y / 8) * WIDTH + x;
+        return (y / 8) * this->WIDTH + x;
     }
 
     inline constexpr fb getBitOffset(const fb &x, const fb &y) const {

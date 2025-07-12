@@ -1,17 +1,15 @@
 #pragma once
 
 #include <stdlib.h>
+#include "types.h"
 
 namespace wbl {
 
-typedef unsigned short fb;
-typedef unsigned char pixel;
-
 template<fb _WIDTH, fb _HEIGHT, fb _BPP>
 struct StaticbufferT {
-    static constexpr fb BPP = _BPP;
     static constexpr fb WIDTH = _WIDTH;
     static constexpr fb HEIGHT = _HEIGHT;
+    static constexpr fb BPP = _BPP;
     static constexpr fb PXPERBYTE = 8 / _BPP;
     static constexpr fb SIZE = (_WIDTH * _HEIGHT) / PXPERBYTE;
     
@@ -19,9 +17,9 @@ struct StaticbufferT {
 };
 
 struct Memorybuffer {
-    const fb BPP;
     const fb WIDTH;
     const fb HEIGHT;
+    const fb BPP;
     const fb PXPERBYTE = 8 / BPP;
     const fb SIZE = (WIDTH * HEIGHT) / PXPERBYTE;
 

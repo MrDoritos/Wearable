@@ -5,4 +5,5 @@ namespace wbl {
     typedef unsigned short fb;
     typedef unsigned char ub;
     typedef fb uu;
+    typedef ub pixel;
 }

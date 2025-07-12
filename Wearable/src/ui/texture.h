@@ -1,9 +1,14 @@
 #pragma once
 
 #include "framebuffer.h"
+#include "sizes.h"
 #include <math.h>
 
 namespace wbl {
+
+struct IGraphicsContext {
+    virtual inline void putPixel() = 0;
+};
 
 template<typename Buffer>
 struct SpriteT {

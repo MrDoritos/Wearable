@@ -283,6 +283,8 @@ struct Element : public Style {
                     buffer->fill()
                 */
                 break;
+            default:
+                break;
         }
     }
 
@@ -313,12 +315,15 @@ struct Element : public Style {
                     event->resetPropagation();
                 }
                 break;
-            case Event::BROADCAST:
+            case Event::BROADCAST: {
                 Event::Direction copy = Event::Direction(Event::SKIP_SELF | (event->direction & Event::SELF_FIRST));
                 event->direction = Event::Direction(copy | Event::CHILDREN);
                 dispatch_event(event);
                 event->direction = Event::Direction(copy | Event::PARENT);
                 dispatch_event(event);
+                break;
+            }
+            default:
                 break;
         }
 
@@ -467,6 +472,8 @@ struct Element : public Style {
                     if (block_width < inline_width)
                         block_width = inline_width;
                     break;
+                default:
+                    break;
             }
         }
     };
@@ -520,6 +527,8 @@ struct Element : public Style {
                 case INLINE:
                 case INLINE_BLOCK:
                     break;
+                default:
+                    break;
             }
 
             printf("%s -> %s\n", name, cur->name);
@@ -544,6 +553,8 @@ struct Element : public Style {
                     inline_size += {child_use.width,0};
                     if (child_use.height > inline_size.height)
                         inline_size.height = child_use.height;
+                    break;
+                default:
                     break;
             }
 
