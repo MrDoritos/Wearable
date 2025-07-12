@@ -118,9 +118,10 @@ struct Dimension {
     friend constexpr inline bool operator>(const uu &a, const Dimension &b) {
         if (b.unit == NONE)
             return true;
-        if (a && !b.value)
-            return true;
-        return a > b.value;
+        if (b.unit == PX)
+            return (a > b.value);
+        return true;
+        //return a > b.value;
     }
 
     friend constexpr inline bool operator<(const uu &a, const Dimension &b) {
@@ -311,7 +312,7 @@ struct DimensionMinMax : public ValueMinMaxT<Dimension> {
     constexpr DimensionMinMax():DimensionMinMax(NONEDIM){}
 
     template<typename IType = Dimension, typename RType = Dimension>
-    constexpr RType getImplicitValue(const IType &value) {
+    constexpr RType getImplicitValue(const IType &value) const {
         if (max > value) {
             if (min > max)
                 return min;
@@ -325,17 +326,26 @@ struct DimensionMinMax : public ValueMinMaxT<Dimension> {
     }
 
     template<typename RType = Dimension>
-    constexpr RType getExplicitValue() {
+    constexpr RType getExplicitValue() const {
         return getImplicitValue<RType>(value);
     }
 
     template<typename IType = Dimension, typename RType = Dimension>
-    constexpr RType getComparedValue(const IType &value_candidate) {
+    constexpr RType getComparedValue(const IType &value_candidate) const {
         return getImplicitValue<RType>(value_candidate > value ? value_candidate : value);
     }
 
     template<typename IType = Dimension, typename RType = DimensionMinMax>
-    constexpr RType resolve(const IType &src) {
+    constexpr RType getCompared(const IType &value_candidate) const {
+        return RType(
+            getComparedValue(value_candidate),
+            min,
+            max
+        );
+    }
+
+    template<typename IType = Dimension, typename RType = DimensionMinMax>
+    constexpr RType resolve(const IType &src) const {
         const RType resolved(
             UI::resolve<IType>(src, value),
             UI::resolve<IType>(src, min),
@@ -357,6 +367,7 @@ struct StyleInfo {
 
     Length content, used;
     LengthD computed, container;
+    DimensionMinMax resolved_width, resolved_height;
 };
 
 struct Style : public Size, public StyleInfo {
@@ -368,11 +379,11 @@ struct Style : public Size, public StyleInfo {
 };
 
 struct Element : public Style {
+    const char *name;
+
     Element *parent;
     Element *sibling;
     Element *child;
-
-    const char *name;
 
     constexpr Element(const char *name, Element *parent, Element *sibling, Element *child):name(name),parent(parent),sibling(sibling),child(child){}
     constexpr Element(const char *name):Element(name,nullptr,nullptr,nullptr){}
@@ -430,6 +441,8 @@ struct Element : public Style {
     constexpr void resolve_relative_container_sizes() {
         if (!parent) {
             container = {width.getExplicitValue(), height.getExplicitValue()};
+            resolved_width = width;
+            resolved_height = height;
         } else {
             const LengthD &parent_container = parent->container;
 
@@ -445,6 +458,9 @@ struct Element : public Style {
                 rel_w.getComparedValue(content.width),
                 rel_h.getComparedValue(content.height)
             };
+
+            resolved_width = rel_w.getCompared(content.width);
+            resolved_height = rel_h.getCompared(content.height);
         }
 
         if (child)
@@ -512,10 +528,14 @@ struct Element : public Style {
         
         const Length grow = context;
 
+        /*
         if (grow.width > container.width)
             container.width = grow.width;
         if (grow.height > container.height)
             container.height = grow.height;
+        */
+        container.width = resolved_width.getComparedValue(grow.width);
+        container.height = resolved_height.getComparedValue(grow.height);
 
         parent_context.append(*this);
         

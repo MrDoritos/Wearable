@@ -149,7 +149,7 @@ enum Stage {
 };
 
 std::string print_layout_state(const Element &src, Stage stage, int levels=0) {
-    std::string ret = "\n"+ element_name(src, levels);
+    std::string ret = "\n\n"+ element_name(src, levels);
 
     std::string app(levels, ' ');
     app = "\n" + app;
@@ -164,6 +164,7 @@ std::string print_layout_state(const Element &src, Stage stage, int levels=0) {
         case CONTAINER_GROWTH:
             ret += app + "CONTAINER_GROWTH";
             ret += app + "container:" + stringify(src.container);
+            ret += app + "computed:" + stringify(src.computed);
             ret += app + "margin:" + stringify(src.margin);
             break;
     }
@@ -197,6 +198,10 @@ int main() {
         .width = { 50, PERC }
     };
 
+    scrollable << StyleInfo {
+        .width = { 30 }
+    };
+
     std::cout << stringify(root) << std::endl;    
 
     std::cout << print_tree(root) << std::endl;
@@ -205,12 +210,17 @@ int main() {
 
     std::cout << print_layout_state(root, CONTAINER_SIZES) << std::endl;
 
-    auto r = screen.width.resolve(Dimension{20});
+    Element::FlowContext c;
+    root.resolve_container_growth(c);
 
-    std::cout << stringify(r) << std::endl;
-    std::cout << stringify(r.getComparedValue(0)) << std::endl;
-    std::cout << stringify(r.getComparedValue(9)) << std::endl;
-    std::cout << stringify(r.getImplicitValue(0)) << std::endl;
+    std::cout << print_layout_state(root, CONTAINER_GROWTH) << std::endl;
+
+    //auto r = screen.width.resolve(Dimension{20});
+
+    //std::cout << stringify(r) << std::endl;
+    //std::cout << stringify(r.getComparedValue(0)) << std::endl;
+    //std::cout << stringify(r.getComparedValue(9)) << std::endl;
+    //std::cout << stringify(r.getImplicitValue(0)) << std::endl;
 
     return 0;
 }
