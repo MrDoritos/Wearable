@@ -137,7 +137,13 @@ void demo() {
     //write_characters("M M M 9 9 mm M", 0, 0);
     //write_characters("M M M 9 9 mm M", 0, 24);
     display.flush();
-    vTaskDelay(5000 / portTICK_PERIOD_MS);
+    vTaskDelay(500 / portTICK_PERIOD_MS);
+    TextureGraphicsContext<FramebufferT<Memorybuffer>> graphics(128, 128, 1, display.buffer);
+    display.clear(0);
+    display.fill({0,0,16,16}, 1);
+    graphics.fill(Size{0,24,16,16}, 1);
+    display.flush();
+    vTaskDelay(1000 / portTICK_PERIOD_MS);
     display.putTexture(I.src, 0, 0, 128, 64, 0, 0);
     display.putTexture(I.src, 0, 64, 128, 128, 126, 0);
     display.flush();
@@ -152,7 +158,7 @@ void demo() {
     display.line(0,127,127,0,1);
     display.flush();
     */
-    vTaskDelay(5000 / portTICK_PERIOD_MS);
+    vTaskDelay(1000 / portTICK_PERIOD_MS);
     /*
     display.clear(0);
     display.flush();

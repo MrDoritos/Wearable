@@ -7,7 +7,8 @@
 namespace wbl {
 
 struct IGraphicsContext {
-    virtual inline void putPixel() = 0;
+    virtual inline void putPixel(const Origin &pos, const pixel &px) = 0;
+    virtual inline void fill(const Size &size, const pixel &px) = 0;
 };
 
 template<typename Buffer>
@@ -25,6 +26,8 @@ struct SpriteT {
 
 template<typename Buffer>
 struct TextureT : public Buffer {
+    using Buffer::Buffer;
+
     using Sprite = SpriteT<Buffer>;
 
     inline void clear(const pixel &px = 0) {
@@ -40,6 +43,10 @@ struct TextureT : public Buffer {
         for (fb x = x0; x < x1; x++)
             for (fb y = y0; y < y1; y++)
                 this->putPixel(x, y, px);
+    }
+
+    inline void fill(const Size &size, const pixel &px) {
+        fill(size.x, size.y, size.x + size.width, size.y + size.height, px);
     }
 
     inline void circle(const fb &cx, const fb &cy, const fb &r, const pixel &px, const bool fill=true) {
@@ -178,6 +185,19 @@ struct TextureT : public Buffer {
         line_callback(x1, y1, x2, y2, 
             [this, px](const fb &x, const fb &y) { this->putPixelBound(x, y, px); }
         );
+    }
+};
+
+template<typename Buffer, typename Texture = TextureT<Buffer>>
+struct TextureGraphicsContext : protected Texture, public IGraphicsContext {
+    using Texture::Texture;
+
+    inline void fill(const Size &size, const pixel &px) override {
+        Texture::fill(size, px);
+    }
+    
+    inline void putPixel(const Origin &pos, const pixel &px) override {
+
     }
 };
 
