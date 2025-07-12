@@ -11,12 +11,31 @@
 
 namespace wbl {
 namespace UI {
-    
-struct Dimension;
-struct Origin;
+
+enum Display : ub;
+enum Align : ub;
+enum Position : ub;
+enum Overflow : ub;
+
+template<typename T>
+struct DimensionT;
+template<typename T>
+struct OriginT;
+template<typename T>
+struct LengthT;
 struct Length;
-struct Box;
-struct Size;
+template<typename T>
+struct BoxT;
+template<typename T, typename Origin, typename Length>
+struct SizeT;
+template<typename T>
+struct AxisT;
+
+using Dimension = DimensionT<uu>;
+using Origin = OriginT<uu>;
+using Box = BoxT<Dimension>;
+using Size = SizeT<uu, Origin, Length>;
+using OverflowT = AxisT<Overflow>;
 
 enum Display : uint8_t {
     BLOCK=0,
@@ -44,73 +63,74 @@ enum Overflow : uint8_t {
     SCROLL=2,
 };
 
-struct Dimension {
+template<typename T>
+struct DimensionT {
     Unit unit;
-    uu value;
+    T value;
 
-    constexpr Dimension():unit(NONE),value(0){}
-    constexpr Dimension(const uu &v, const Unit &unit=PX):unit(unit),value(v){}
+    constexpr DimensionT():unit(NONE),value(0){}
+    constexpr DimensionT(const T &v, const Unit &unit=PX):unit(unit),value(v){}
     
-    template<typename RET=uu, typename CALC=float>
-    constexpr RET resolve(const Dimension &major) const {
+    template<typename RType=T, typename CALC=float>
+    constexpr RType resolve(const DimensionT &major) const {
         switch (unit) {
             case PX:
-                return RET(value);
+                return RType(value);
             case PERC:
-                return RET(CALC(major.value) * (CALC(value) * 0.01));
+                return RType(CALC(major.value) * (CALC(value) * 0.01));
             default:
-                return RET(0);
+                return RType(0);
         }
     }
 
-    template<typename RET=uu, typename CALC=float>
-    constexpr RET resolve(const uu &major) const {
-        return resolve(Dimension(major));
+    template<typename RType=T, typename CALC=float>
+    constexpr RType resolve(const T &major) const {
+        return resolve(DimensionT(major));
     }
 
-    inline constexpr explicit operator uu() const {
+    inline constexpr explicit operator T() const {
         return resolve(0);
     }
 
-    friend constexpr inline Dimension operator+(const Dimension &a, const Dimension &b) {
-        return Dimension(
+    friend constexpr inline DimensionT operator+(const DimensionT &a, const DimensionT &b) {
+        return DimensionT(
             a.value + b.value
         );
     }
 
-    friend constexpr inline Dimension operator-(const Dimension &a, const Dimension &b) {
-        return Dimension(
+    friend constexpr inline DimensionT operator-(const DimensionT &a, const DimensionT &b) {
+        return DimensionT(
             a.value - b.value
         );
     }
 
-    friend constexpr inline bool operator==(const Dimension &a, const Dimension &b) {
+    friend constexpr inline bool operator==(const DimensionT &a, const DimensionT &b) {
         return (a.unit == b.unit) && (a.value == b.value);
     }
 
-    friend constexpr inline bool operator!=(const Dimension &a, const Dimension &b) {
+    friend constexpr inline bool operator!=(const DimensionT &a, const DimensionT &b) {
         return !(a == b);
     }
 
-    friend constexpr inline bool operator>(const Dimension &a, const Dimension &b) {
+    friend constexpr inline bool operator>(const DimensionT &a, const DimensionT &b) {
         if (a.unit == b.unit)
             return a.value > b.value;
         return (b.unit == NONE);
     }
 
-    friend constexpr inline bool operator<(const Dimension &a, const Dimension &b) {
+    friend constexpr inline bool operator<(const DimensionT &a, const DimensionT &b) {
         return b > a;
     }
 
-    friend constexpr inline bool operator<=(const Dimension &a, const Dimension &b) {
+    friend constexpr inline bool operator<=(const DimensionT &a, const DimensionT &b) {
         return !(a > b);
     }
 
-    friend constexpr inline bool operator>=(const Dimension &a, const Dimension &b) {
+    friend constexpr inline bool operator>=(const DimensionT &a, const DimensionT &b) {
         return !(a > b);
     }
 
-    friend constexpr inline bool operator>(const uu &a, const Dimension &b) {
+    friend constexpr inline bool operator>(const T &a, const DimensionT &b) {
         if (b.unit == NONE)
             return true;
         if (b.unit == PX)
@@ -119,38 +139,41 @@ struct Dimension {
         //return a > b.value;
     }
 
-    friend constexpr inline bool operator<(const uu &a, const Dimension &b) {
+    friend constexpr inline bool operator<(const T &a, const DimensionT &b) {
         return b > a;
     }
 
-    friend constexpr inline bool operator<=(const uu &a, const Dimension &b) {
+    friend constexpr inline bool operator<=(const T &a, const DimensionT &b) {
         return !(a > b);
     }
 
-    friend constexpr inline bool operator>=(const uu &a, const Dimension &b) {
+    friend constexpr inline bool operator>=(const T &a, const DimensionT &b) {
         return !(a > b);
     }
 };
 
+//using Dimension = DimensionT<uu>;
+
 static constexpr Dimension NONEDIM = Dimension(0, NONE);
 
-struct Origin {
-    uu x, y;
-    constexpr Origin():x(0),y(0){}
-    constexpr Origin(const uu &x, const uu &y):x(x),y(y){}
-    constexpr Origin(const Box &b);
+template<typename T>
+struct OriginT {
+    T x, y;
+    constexpr OriginT():x(0),y(0){}
+    constexpr OriginT(const T &x, const T &y):x(x),y(y){}
+    constexpr OriginT(const Box &b);
 
-    constexpr uu getOffsetX() const { return x; }
-    constexpr uu getOffsetY() const { return y; }
+    constexpr T getOffsetX() const { return x; }
+    constexpr T getOffsetY() const { return y; }
 
-    friend constexpr inline Origin operator+(const Origin &a, const Origin &b) {
-        return Origin(
+    friend constexpr inline OriginT operator+(const OriginT &a, const OriginT &b) {
+        return OriginT(
             a.x + b.x,
             a.y + b.y
         );
     }
 
-    friend constexpr inline Origin &operator+=(Origin &a, const Origin &b) {
+    friend constexpr inline OriginT &operator+=(OriginT &a, const OriginT &b) {
         return a = a + b;
     }
 };
@@ -212,29 +235,30 @@ struct LengthD : public LengthT<Dimension> {
     */
 };
 
-struct Size : public Origin, public Length {
-    constexpr Size(){}
-    constexpr Size(const uu &x, const uu &y, const uu &w, const uu &h):Origin(x,y),Length(w,h){}
-    constexpr Size(const Origin &o, const Length &l):Origin(o),Length(l){}
-    constexpr Size(const Box &b);
+template<typename T, typename Origin = OriginT<T>, typename Length = LengthT<T>>
+struct SizeT : public Origin, public Length {
+    constexpr SizeT(){}
+    constexpr SizeT(const T &x, const T &y, const T &w, const T &h):Origin(x,y),Length(w,h){}
+    constexpr SizeT(const Origin &o, const Length &l):Origin(o),Length(l){}
+    constexpr SizeT(const Box &b);
 
-    constexpr uu getLeft() const { return x; }
-    constexpr uu getTop() const { return y; }
-    constexpr uu getRight() const { return x + width; }
-    constexpr uu getBottom() const { return y + height; }
+    constexpr T getLeft() const { return this->x; }
+    constexpr T getTop() const { return this->y; }
+    constexpr T getRight() const { return this->x + this->width; }
+    constexpr T getBottom() const { return this->y + this->height; }
 };
 
-struct Box {
-    Dimension top, right, bottom, left;
+template<typename T>
+struct BoxT {
+    T top, right, bottom, left;
 
-    constexpr Box(){}
-    constexpr Box(const uu &v, const Unit &u):top(v,u),right(v,u),bottom(v,u),left(v,u){}
-    constexpr Box(const Dimension &t, const Dimension &r, const Dimension &b, const Dimension &l):top(t),right(r),bottom(b),left(l){}
-    constexpr Box(const uu &t, const uu &r, const uu &b, const uu &l):top(t),right(r),bottom(b),left(l){}
-    constexpr Box(const Size &s):top(s.y),right(s.x+s.width),bottom(s.y+s.height),left(s.x){}
+    constexpr BoxT(){}
+    constexpr BoxT(const T &t, const T &r, const T &b, const T &l):top(t),right(r),bottom(b),left(l){}
+    constexpr BoxT(const T &v):BoxT(v){}
+    constexpr BoxT(const Size &s):top(s.y),right(s.x+s.width),bottom(s.y+s.height),left(s.x){}
     
-    constexpr Box resolve(const Box &major) const {
-        const Box resolved(
+    constexpr BoxT resolve(const BoxT &major) const {
+        const BoxT resolved(
             top.resolve(major.top),
             right.resolve(major.right),
             bottom.resolve(major.bottom),
@@ -243,8 +267,8 @@ struct Box {
         return resolved;
     }
 
-    constexpr Box resolve(const LengthD &major) const {
-        return Box(
+    constexpr BoxT resolve(const LengthD &major) const {
+        return BoxT(
             top.resolve(major.height),
             right.resolve(major.width),
             bottom.resolve(major.height),
@@ -275,8 +299,8 @@ struct Box {
         );
     }
 
-    friend constexpr inline Box operator+(const Box &a, const Box &b) {
-        return Box(
+    friend constexpr inline BoxT operator+(const BoxT &a, const BoxT &b) {
+        return BoxT(
             a.top.value+b.top.value,
             a.right.value+b.right.value,
             a.bottom.value+b.bottom.value,
@@ -284,24 +308,26 @@ struct Box {
         );
     }
 
-    friend constexpr inline LengthD operator+(const LengthD &a, const Box &b) {
+    friend constexpr inline LengthD operator+(const LengthD &a, const BoxT &b) {
         return a + (LengthD)b;
     }
 
-    friend constexpr inline LengthD operator+(const Box &a, const LengthD &b) {
+    friend constexpr inline LengthD operator+(const BoxT &a, const LengthD &b) {
         return b + (LengthD)a;
     }
     
-    friend constexpr inline Box& operator+=(Box &a, const Box &b) {
+    friend constexpr inline BoxT& operator+=(BoxT &a, const BoxT &b) {
         return a = (a + b);
     }
 };
 
-constexpr Origin::Origin(const Box &b):x(b.left.value),y(b.top.value){}
+template<>
+constexpr Origin::OriginT(const Box &b):x(b.left.value),y(b.top.value){}
 
 constexpr Length::Length(const Box &b):Length(b.right.value-b.left.value,b.bottom.value-b.top.value){}
 
-constexpr Size::Size(const Box &b):Origin(b),Length(b){}
+template<>
+constexpr Size::SizeT(const Box &b):Origin(b),Length(b){}
 
 template<typename T>
 struct AxisT {
@@ -312,8 +338,6 @@ struct AxisT {
     constexpr AxisT(){}
     constexpr AxisT(const T &x, const T &y):x(x),y(y){}
 };
-
-using OverflowT = AxisT<Overflow>;
 
 template<typename T>
 struct ValueMinMaxT {
