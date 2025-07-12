@@ -47,6 +47,7 @@ target_include_directories(lib PUBLIC
     ../../console
     ./stubs
     .
+    ../common
 )
 
 target_link_libraries(Emulator

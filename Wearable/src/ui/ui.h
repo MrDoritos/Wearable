@@ -6,24 +6,17 @@
 #include <stdio.h>
 #include "texture.h"
 #include "displaybuffer.h"
+#include "types.h"
+#include "sizes.h"
 
 namespace wbl {
 namespace UI {
-
-typedef uint16_t uu;
-
-enum Unit : uint8_t;
+    
 struct Dimension;
 struct Origin;
 struct Length;
 struct Box;
 struct Size;
-
-enum Unit : uint8_t {
-    PX=0,
-    PERC=1,
-    NONE=2,
-};
 
 enum Display : uint8_t {
     BLOCK=0,
