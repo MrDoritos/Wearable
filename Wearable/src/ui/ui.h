@@ -4,6 +4,8 @@
 #include <cassert>
 #include <type_traits>
 #include <stdio.h>
+#include "texture.h"
+#include "displaybuffer.h"
 
 namespace wbl {
 namespace UI {
@@ -420,7 +422,7 @@ struct Style : public Size, public StyleInfo {
 
 struct Event {
     enum Type : uint8_t {
-        NONE,
+        TYPE_NONE,
         BUFFER,
         CLEAR,
         LOG,
@@ -440,7 +442,7 @@ struct Event {
     };
 
     enum Value : uint8_t {
-        NONE,
+        VALUE_NONE,
         DPAD_LEFT,
         DPAD_RIGHT,
         DPAD_UP,
@@ -450,10 +452,82 @@ struct Event {
         DISPLAY_OFF,
         DISPLAY_LOCKED,
         DISPLAY_UNLOCKED,
+        VISIBLE,
+        HIDDEN,
+        FOCUS_LOST,
+        FOCUS_GAIN,
+        FOCUS_NEXT,
+        FOCUS_EMIT,
+    };
+
+    enum Direction : uint8_t {
+        DIRECTION_NONE=0,
+        CHILDREN=1,
+        PARENT=2,
+        BROADCAST=4,
+        DIRECTION_ONLY=7,
+        SELF_FIRST=8,
+        SKIP_SELF=16,
+    };
+
+    enum State : uint8_t {
+        NORMAL=0,
+        STOP_PROPAGATION=1,
+        STOP_IMMEDIATE_PROPAGATION=2,
+        STOP_DEFAULT=4,
     };
 
     Type type;
     Value value;
+    Direction direction;
+    State state;
+
+    constexpr Event(const Type &type, const Value &value, const Direction &direction, const State &state)
+        :type(type),value(value),direction(direction),state(state){}
+    constexpr Event(const Type &type, const Value &value)
+        :Event(type, value, CHILDREN, NORMAL) {}
+    constexpr Event(const Type &type)
+        :Event(type, VALUE_NONE) {}
+
+    constexpr inline bool isSelfFirst() const {
+        return direction & SELF_FIRST;
+    }
+
+    constexpr inline bool isSkipSelf() const {
+        return direction & SKIP_SELF;
+    }
+
+    constexpr inline bool isStopping() const {
+        return state & (STOP_PROPAGATION | STOP_IMMEDIATE_PROPAGATION);
+    }
+
+    constexpr inline bool isStopPropagation() const {
+        return state & STOP_PROPAGATION;
+    }
+
+    constexpr inline bool isStopImmediate() const {
+        return state & STOP_IMMEDIATE_PROPAGATION;
+    }
+
+    constexpr inline bool isStopDefault() const {
+        return state & STOP_DEFAULT;
+    }
+
+    constexpr inline void resetPropagation() {
+        state = State(state & ~(STOP_PROPAGATION | STOP_IMMEDIATE_PROPAGATION));
+    }
+
+    constexpr inline void stopPropagation() {
+        state = State(state | STOP_PROPAGATION);
+    }
+
+    constexpr inline void stopImmediate() {
+        state = State(state | STOP_IMMEDIATE_PROPAGATION);
+    }
+
+    constexpr inline void stopDefault() {
+        state = State(state | STOP_DEFAULT);
+    }
 };
 
 struct Element : public Style {
@@ -463,8 +537,61 @@ struct Element : public Style {
     Element *sibling;
     Element *child;
 
-    constexpr Element(const char *name, Element *parent, Element *sibling, Element *child):name(name),parent(parent),sibling(sibling),child(child){}
-    constexpr Element(const char *name):Element(name,nullptr,nullptr,nullptr){}
+    TextureT<DisplayBuffer> *buffer;
+
+    virtual void handle_event(Event *event) {
+        switch (event->type) {
+            case Event::CLEAR:
+                /*
+                if (buffer)
+                    buffer->fill()
+                */
+                break;
+        }
+    }
+
+    constexpr inline void dispatch_event(Event *event) {
+        const bool skipSelf = event->isSkipSelf();
+
+        if (skipSelf)
+            event->direction = Event::Direction(event->direction & ~(Event::SKIP_SELF));
+
+        if (event->isStopping())
+            return;
+
+        if (event->isSelfFirst() && !skipSelf)
+            this->handle_event(event);
+
+        switch (event->direction & Event::DIRECTION_ONLY) {
+            case Event::PARENT:
+                if (parent)
+                    parent->dispatch_event(event);
+                break;
+            case Event::CHILDREN:
+                for (Element *cur = child; cur != nullptr; cur = cur->sibling) {
+                    cur->dispatch_event(event);
+
+                    if (event->isStopImmediate())
+                        return;
+
+                    event->resetPropagation();
+                }
+                break;
+            case Event::BROADCAST:
+                Event::Direction copy = Event::Direction(Event::SKIP_SELF | (event->direction & Event::SELF_FIRST));
+                event->direction = Event::Direction(copy | Event::CHILDREN);
+                dispatch_event(event);
+                event->direction = Event::Direction(copy | Event::PARENT);
+                dispatch_event(event);
+                break;
+        }
+
+        if (!event->isSelfFirst() && !skipSelf)
+            this->handle_event(event);
+    }
+
+    constexpr Element(const char *name, Element *parent, Element *sibling, Element *child, TextureT<DisplayBuffer> *buffer):name(name),parent(parent),sibling(sibling),child(child),buffer(buffer){}
+    constexpr Element(const char *name):Element(name,nullptr,nullptr,nullptr,nullptr){}
     constexpr Element():Element(nullptr){}
 
     constexpr inline Element &operator<<(const Origin &origin) {
