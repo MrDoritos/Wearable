@@ -1,6 +1,7 @@
 #pragma once
 
 #include <inttypes.h>
+#include <cassert>
 
 namespace wbl {
 namespace UI {
@@ -265,13 +266,48 @@ struct Element : public Style {
     Element *sibling;
     Element *child;
 
-    constexpr Element():parent(nullptr),sibling(nullptr),child(nullptr){}
+    const char *name;
+
+    constexpr Element(const char *name, Element *parent, Element *sibling, Element *child):name(name),parent(parent),sibling(sibling),child(child){}
+    constexpr Element(const char *name):Element(name,nullptr,nullptr,nullptr){}
+    constexpr Element():Element(nullptr){}
 
     constexpr void compute_layout() {
         if (!parent)
             computed = {width.getExplicitValue(), height.getExplicitValue()};
     }
+
+    constexpr inline Element *append_sibling(Element *element) {
+        assert(element && "Element null");
+
+        if (sibling)
+            element->append_sibling(sibling);
+            
+        sibling = element;
+        sibling->parent = parent;
+
+        return element;
+    }
+
+    constexpr inline Element &append_sibling(Element &element) {
+        return *append_sibling(&element);
+    }
+
+    constexpr inline Element *append_child(Element *element) {
+        assert(element && "Element null");
+        
+        if (child)
+            child->append_sibling(element);
+        else
+            child = element;
+
+        return element;
+    }
+
+    constexpr inline Element &append_child(Element &element) {
+        return *append_child(&element);
+    }
 };
 
-};
-};
+}
+}
