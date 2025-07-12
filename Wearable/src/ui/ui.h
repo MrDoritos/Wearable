@@ -66,6 +66,16 @@ struct Dimension {
         }
     }
 
+    inline constexpr explicit operator uu() {
+        return resolve(0);
+    }
+
+    friend constexpr inline Dimension operator+(const Dimension &a, const Dimension &b) {
+        return Dimension(
+            a.value + b.value
+        );
+    }
+
     friend constexpr inline bool operator==(const Dimension &a, const Dimension &b) {
         return (a.unit == b.unit) && (a.value == b.value);
     }
@@ -89,6 +99,26 @@ struct Dimension {
     }
 
     friend constexpr inline bool operator>=(const Dimension &a, const Dimension &b) {
+        return !(a > b);
+    }
+
+    friend constexpr inline bool operator>(const uu &a, const Dimension &b) {
+        if (b.unit == NONE)
+            return true;
+        if (!a && b.value)
+            return true;
+        return a > b.value;
+    }
+
+    friend constexpr inline bool operator<(const uu &a, const Dimension &b) {
+        return b > a;
+    }
+
+    friend constexpr inline bool operator<=(const uu &a, const Dimension &b) {
+        return !(a > b);
+    }
+
+    friend constexpr inline bool operator>=(const uu &a, const Dimension &b) {
         return !(a > b);
     }
 };
@@ -116,12 +146,32 @@ struct LengthT {
 
     constexpr T getWidth() { return width; }
     constexpr T getHeight() { return height; }
+
+    friend constexpr inline LengthT operator+(const LengthT &a, const LengthT &b) {
+        return LengthT(
+            a.width + b.width,
+            b.height + b.height
+        );
+    }
 };
 
 struct Length : public LengthT<uu> {
+    using LengthT<uu>::LengthT;
+
     constexpr Length(const uu &width, const uu &height):LengthT(width, height){}
     constexpr Length():Length(0,0){}
     constexpr Length(const Box &b);
+};
+
+struct LengthD : public LengthT<Dimension> {
+    using LengthT<Dimension>::LengthT;
+
+    constexpr explicit inline operator Length() {
+        return Length(
+            (uu)width,
+            (uu)height
+        );
+    }
 };
 
 struct Size : public Origin, public Length {
@@ -153,6 +203,15 @@ struct Box {
             left.resolve(major.left)
         );
         return resolved;
+    }
+
+    constexpr Box resolve(const LengthD &major) {
+        return Box(
+            top.resolve(major.height),
+            right.resolve(major.width),
+            bottom.resolve(major.height),
+            left.resolve(major.width)  
+        );
     }
 
     friend constexpr inline Box operator+(const Box &a, const Box &b) {
@@ -256,7 +315,7 @@ struct Style : public Size {
     OverflowT overflow;
 
     Length content, used;
-    LengthT<Dimension> computed;
+    LengthD computed, container;
 
     constexpr Style(){}
 };
@@ -272,9 +331,27 @@ struct Element : public Style {
     constexpr Element(const char *name):Element(name,nullptr,nullptr,nullptr){}
     constexpr Element():Element(nullptr){}
 
-    constexpr void compute_layout() {
-        if (!parent)
-            computed = {width.getExplicitValue(), height.getExplicitValue()};
+    /*
+        when units are percent, they are of the container's size with margins
+
+        I'd like computed size to be the container size, otherwise more math is done
+    */
+
+    constexpr void resolve_relative_container_sizes() {
+        if (!parent) {
+            container = {width.getExplicitValue(), height.getExplicitValue()};
+            return;
+        }
+
+        const LengthD &parent_container = parent->container;
+
+        DimensionMinMax rel_w = width.resolve(parent_container.width);
+        DimensionMinMax rel_h = height.resolve(parent_container.height);
+
+        container = {
+            rel_w.getComparedValue(content.width),
+            rel_h.getComparedValue(content.height)
+        };
     }
 
     constexpr inline Element *append_sibling(Element *element) {
@@ -307,6 +384,23 @@ struct Element : public Style {
     constexpr inline Element &append_child(Element &element) {
         return *append_child(&element);
     }
+
+    struct FlowContext {
+        uu inline_width, inline_height, block_width, block_height;
+
+        constexpr FlowContext(const uu &iw, const uu &ih, const uu &bw, const uu &bh):
+            inline_width(iw),inline_height(ih),block_width(bw),block_height(bh) {}
+        constexpr FlowContext():FlowContext(0,0,0,0){}
+
+        constexpr void append(const Element &element) {
+            LengthD total;
+
+            if (element.parent) {
+                const LengthD &parent_container = element.parent->container;
+
+            }
+        }
+    };
 };
 
 }
