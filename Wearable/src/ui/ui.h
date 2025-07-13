@@ -266,6 +266,11 @@ struct Event {
     }
 };
 
+using EventTypes = Event::Type;
+using EventValues = Event::Value;
+using EventDirection = Event::Direction;
+using EventState = Event::State;
+
 struct IElement : public Style {
     const char *name;
 
@@ -585,6 +590,41 @@ struct ElementT : public IElement {
 template<typename Buffer, typename ElementT = ElementT<Buffer>>
 struct ElementBaseT : public ElementT {
     using ElementT::ElementT;
+
+    void handle_event(Event *event) override {
+        switch (event->type) {
+            case EventTypes::CLEAR: this->on_clear(event); return;
+            case EventTypes::DRAW: this->on_draw(event); return;
+            case EventTypes::FRAME: this->on_frame(event); return;
+            case EventTypes::LAYOUT: this->on_layout(event); return;
+            case EventTypes::USER_INPUT: this->on_user_input(event); return;
+            case EventTypes::RESET: this->on_reset(event); return;
+            case EventTypes::LOG: this->on_log(event); return;
+            case EventTypes::LOAD: this->on_load(event); return;
+            case EventTypes::VISIBILITY: this->on_visibility(event); return;
+            case EventTypes::CONTENT_SIZE: this->on_content_size(event); return;
+            case EventTypes::SCREEN: this->on_screen(event); return;
+            case EventTypes::FOCUS: this->on_focus(event); return;
+            default: return;
+        }
+    }
+
+    virtual void on_clear(Event *event) {
+        this->buffer.fill(*this, 0);
+    }
+
+    virtual void on_layout(Event *event) { }
+    virtual void on_draw(Event *event) { }
+    virtual void on_frame(Event *event) { }
+    virtual void on_tick(Event *event) { }
+    virtual void on_user_input(Event *event) { }
+    virtual void on_reset(Event *event) { }
+    virtual void on_log(Event *event) { }
+    virtual void on_load(Event *event) { }
+    virtual void on_visibility(Event *event) { }
+    virtual void on_content_size(Event *event) { }
+    virtual void on_screen(Event *event) { }
+    virtual void on_focus(Event *event) { }
 };
 
 }
