@@ -266,14 +266,12 @@ struct Event {
     }
 };
 
-struct Element : public Style {
+struct IElement : public Style {
     const char *name;
 
-    Element *parent;
-    Element *sibling;
-    Element *child;
-
-    TextureT<DisplayBuffer> *buffer;
+    IElement *parent;
+    IElement *sibling;
+    IElement *child;
 
     virtual void handle_event(Event *event) {
         switch (event->type) {
@@ -306,7 +304,7 @@ struct Element : public Style {
                     parent->dispatch_event(event);
                 break;
             case Event::CHILDREN:
-                for (Element *cur = child; cur != nullptr; cur = cur->sibling) {
+                for (IElement *cur = child; cur != nullptr; cur = cur->sibling) {
                     cur->dispatch_event(event);
 
                     if (event->isStopImmediate())
@@ -331,31 +329,35 @@ struct Element : public Style {
             this->handle_event(event);
     }
 
-    constexpr Element(const char *name, Element *parent, Element *sibling, Element *child, TextureT<DisplayBuffer> *buffer):name(name),parent(parent),sibling(sibling),child(child),buffer(buffer){}
-    constexpr Element(const char *name):Element(name,nullptr,nullptr,nullptr,nullptr){}
-    constexpr Element():Element(nullptr){}
+    constexpr IElement(const char *name, IElement *parent, IElement *sibling, IElement *child):name(name),parent(parent),sibling(sibling),child(child){}
+    constexpr IElement(const char *name):IElement(name,nullptr,nullptr,nullptr){}
+    constexpr IElement():IElement(nullptr){}
 
-    constexpr inline Element &operator<<(const Origin &origin) {
+    constexpr inline IElement &operator<<(const Origin &origin) {
         *((Origin*)this) = origin;
         return *this;
     }
 
-    constexpr inline Element &operator<<(const Length &length) {
+    constexpr inline IElement &operator<<(const Length &length) {
         *((Length*)this) = length;
         return *this;
     }
 
-    constexpr inline Element &operator<<(const Style &style) {
+    constexpr inline IElement &operator<<(const Style &style) {
         *((Style*)this) = style;
         return *this;
     }
 
-    constexpr inline Element &operator<<(const StyleInfo &style) {
+    constexpr inline IElement &operator<<(const StyleInfo &style) {
         *((StyleInfo*)this) = style;
         return *this;
     }
 
-    constexpr inline Element *append_sibling(Element *element) {
+    constexpr inline IElement &operator<<(IElement &element) {
+        return append_child(element);
+    }
+
+    constexpr inline IElement *append_sibling(IElement *element) {
         assert(element && "Element null");
 
         if (sibling)
@@ -367,11 +369,11 @@ struct Element : public Style {
         return element;
     }
 
-    constexpr inline Element &append_sibling(Element &element) {
+    constexpr inline IElement &append_sibling(IElement &element) {
         return *append_sibling(&element);
     }
 
-    constexpr inline Element *append_child(Element *element) {
+    constexpr inline IElement *append_child(IElement *element) {
         assert(element && "Element null");
         
         element->parent = this;
@@ -384,7 +386,7 @@ struct Element : public Style {
         return element;
     }
 
-    constexpr inline Element &append_child(Element &element) {
+    constexpr inline IElement &append_child(IElement &element) {
         return *append_child(&element);
     }
 
@@ -440,7 +442,7 @@ struct Element : public Style {
             );
         }
 
-        constexpr void append(const Element &element) {
+        constexpr void append(const IElement &element) {
             if (!element.parent)
                 return;
 
@@ -502,7 +504,7 @@ struct Element : public Style {
     }
 
     constexpr void resolve_container_position() {
-        Element *cur = child;
+        IElement *cur = child;
 
         *this << container;
         const Size original_size = *this;
@@ -566,6 +568,23 @@ struct Element : public Style {
         if (sibling)
             sibling->resolve_container_position();
     }
+};
+
+template<typename Buffer>
+struct ElementT : public IElement {
+    using IElement::IElement;
+
+    Buffer &buffer;
+
+    constexpr ElementT(const IElement &base, Buffer &buffer):IElement(base),buffer(buffer){}
+    constexpr ElementT(Buffer &buffer, const char *name, IElement *parent, IElement *sibling, IElement *sibling):IElement(name,parent,sibling,child){}
+    constexpr ElementT(Buffer &buffer, const char *name):ElementT(buffer, name, nullptr, nullptr, nullptr){}
+    constexpr ElementT(Buffer &buffer):ElementT(buffer,nullptr){}
+};
+
+template<typename Buffer, typename ElementT = ElementT<Buffer>>
+struct ElementBaseT : public ElementT {
+    using ElementT::ElementT;
 };
 
 }
