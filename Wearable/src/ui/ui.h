@@ -378,6 +378,25 @@ struct IElement : public Style {
         return *append_sibling(&element);
     }
 
+    constexpr inline IElement *remove_child(IElement *element) {
+        assert(element && "Element null");
+
+        IElement *cur = child;
+        for (; cur != nullptr && cur->sibling != element; cur = cur->sibling);
+        
+        assert(cur && "cur in remove_child is null");
+        
+        if (!element) return element;
+
+        element->parent = nullptr;
+
+        if (!cur) return element;
+
+        cur->sibling = element->sibling;
+
+        return element;
+    }
+
     constexpr inline IElement *append_child(IElement *element) {
         assert(element && "Element null");
         
@@ -585,6 +604,11 @@ struct ElementT : public IElement {
     constexpr ElementT(Buffer &buffer, const char *name, IElement *parent, IElement *sibling, IElement *sibling):IElement(name,parent,sibling,child){}
     constexpr ElementT(Buffer &buffer, const char *name):ElementT(buffer, name, nullptr, nullptr, nullptr){}
     constexpr ElementT(Buffer &buffer):ElementT(buffer,nullptr){}
+
+    constexpr inline ElementT &operator<<(Buffer &buffer) {
+        this->buffer = buffer;
+        return *this;
+    }
 };
 
 template<typename Buffer, typename ElementT = ElementT<Buffer>>
