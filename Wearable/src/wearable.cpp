@@ -156,7 +156,11 @@ void demo() {
     test.setHeight(64);
     test.wrap = UI::WrapStyle::WRAP | UI::WrapStyle::TRIM_SPACE;
     //test.draw_text("Hello world!\n On two lines", font);
-    test.draw_sprites(&BATTERY, 1);
+    const Atlas::Sprite sprites[] = {
+        BATTERY,
+        HEART
+    };
+    test.draw_sprites(sprites, 2);
 
 
     //display.putTexture(font, 0, 0, 128, 128, 0, 0);
