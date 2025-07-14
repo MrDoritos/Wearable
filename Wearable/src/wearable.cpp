@@ -6,14 +6,15 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 
-#include "driver/gpio.h"
-#include "freertos/semphr.h"
+//#include "driver/gpio.h"
+//#include "freertos/semphr.h"
 
 #include "displaybuffer.h"
 #include "texture.h"
 #include "font.h"
 #include "ui.h"
 #include "sprites.h"
+#include "user_inputs.h"
 
 //extern const char _binary_fixedsys_bin_start[];
 //extern const char _binary_fixedsys_bin_end[];
@@ -31,32 +32,6 @@ UI::ElementBaseT<DisplayTexture> test(display);
 
 void delay(uint16_t ms) {
     vTaskDelay(ms / portTICK_PERIOD_MS);
-}
-
-const gpio_num_t button_pin{GPIO_NUM_15};
-
-SemaphoreHandle_t semaphore = nullptr;
-
-static void IRAM_ATTR button_interrupt(void *arg) {
-    xSemaphoreGiveFromISR(semaphore, nullptr);
-}
-
-void test_semaphore() {
-    semaphore = xSemaphoreCreateBinary();
-
-    gpio_config_t conf = {};
-
-    conf.intr_type = GPIO_INTR_POSEDGE;
-    conf.mode = GPIO_MODE_INPUT;
-    conf.pin_bit_mask = 1ULL << button_pin;
-    conf.pull_down_en = GPIO_PULLDOWN_DISABLE;
-    conf.pull_up_en = GPIO_PULLUP_ENABLE;
-    ESP_ERROR_CHECK(gpio_config(&conf));
-
-    ESP_ERROR_CHECK(gpio_install_isr_service(0));
-
-    ESP_ERROR_CHECK(gpio_isr_handler_add(button_pin, button_interrupt, (void*) button_pin));
-
 }
 
 void demo_pattern_() {
@@ -183,7 +158,9 @@ void demo() {
     //display.putTexture(I.src, 0, 64, 128, 128, 126, 0);
     //display.putSprite(I, {0,0});
     //display.putSprite(I, {32,32});
-    if (xSemaphoreTake(semaphore, 100 / portTICK_PERIOD_MS)) {
+    //if (xSemaphoreTake(semaphore, 100 / portTICK_PERIOD_MS)) {
+    if (dpad.enter.state || dpad.up.state || dpad.down.state || dpad.left.state || dpad.right.state) {
+        dpad.enter.update();
         display.putTexture(therock, {0,0,128,128}, {0,0});
         display.flush();
     }
@@ -210,9 +187,8 @@ void demo() {
 
 extern "C" {
 void app_main() {
-    test_semaphore();
-
     printf("test\n");
+    dpad.init();
     //memcpy(font.buffer, &_binary_fixedsys_bin_start[0], _binary_fixedsys_bin_end - _binary_fixedsys_bin_start);
     //memcpy(font.buffer, _binary_dosjpn_bin_start, font.getSize());
 
