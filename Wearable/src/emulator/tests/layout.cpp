@@ -6,6 +6,10 @@
 using namespace wbl;
 using namespace UI;
 
+using Buf = TextureT<StaticbufferT<1,1,1>>;
+Buf disbuf;
+using Element = ElementT<Buf>;
+
 template<typename T>
 std::string stringify(const T &obj) {
     return " " + std::to_string(obj);
@@ -136,9 +140,9 @@ std::string element_name(const Element &src, int levels = 0) {
 std::string print_tree(const Element &src, int levels = 0) {
     std::string ret = element_name(src, levels) + "\n";
     if (src.child)
-        ret += print_tree(*src.child, levels + 2);
+        ret += print_tree(*(Element*)src.child, levels + 2);
     if (src.sibling)
-        ret += print_tree(*src.sibling, levels);
+        ret += print_tree(*(Element*)src.sibling, levels);
     return ret;
 }
 
@@ -179,18 +183,18 @@ std::string print_layout_state(const Element &src, Stage stage, int levels=0) {
     }
 
     if (src.child)
-        ret += print_layout_state(*src.child, stage, levels + 2);
+        ret += print_layout_state(*(Element*)src.child, stage, levels + 2);
     if (src.sibling)
-        ret += print_layout_state(*src.sibling, stage, levels);
+        ret += print_layout_state(*(Element*)src.sibling, stage, levels);
 
     return ret;
 }
 
-Element root("root");
-Element screen("screen");
-Element header("header");
-Element footer("footer");
-Element scrollable("scrollable");
+Element root(disbuf, "root");
+Element screen(disbuf, "screen");
+Element header(disbuf, "header");
+Element footer(disbuf, "footer");
+Element scrollable(disbuf, "scrollable");
 
 int main() {
     root.append_child(header);

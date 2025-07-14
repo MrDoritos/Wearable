@@ -32,7 +32,7 @@ extern const FontProvider font asm("_binary_dosjpn_bin_start");
 
 DisplayTexture display;
 
-UI::Element test;
+UI::ElementT<DisplayTexture> test(display);
 
 void delay(uint16_t ms) {
     vTaskDelay(ms / portTICK_PERIOD_MS);

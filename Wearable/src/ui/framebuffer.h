@@ -46,6 +46,13 @@ struct FramebufferT : public Buffer {
         return this->SIZE;
     }
 
+    inline constexpr Length getLength() const {
+        return Length(
+            this->WIDTH,
+            this->HEIGHT
+        );
+    }
+
     inline constexpr fb getWidth() const {
         return this->WIDTH;
     }

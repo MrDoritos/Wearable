@@ -8,11 +8,14 @@ namespace wbl {
 
 struct IGraphicsContext {
     virtual inline void putPixel(const Origin &pos, const pixel &px) = 0;
+    virtual inline void putPixel(const fb &x, const fb &y, const pixel &px) = 0;
     virtual inline void fill(const Size &size, const pixel &px) = 0;
-    virtual inline pixel getPixel(const Origin &pos) = 0;
+    virtual inline pixel getPixel(const Origin &pos) const = 0;
+    virtual inline pixel getPixel(const fb &x, const fb &y) const = 0;
     virtual inline void circle(const Origin &center, const fb &radius, const pixel &px, const bool &fill=true) = 0;
-    virtual inline bool isBound(const Origin &pos) = 0;
-    virtual inline Size getSize() = 0;
+    virtual inline bool isBound(const Origin &pos) const = 0;
+    virtual inline Length getLength() const = 0;
+    virtual inline void putTexture(const IGraphicsContext *texture, const Size &texture_size, const Origin &destination_origin) = 0;
     virtual inline void line(const Origin &pos_start, const Origin &pos_end, const pixel &px) = 0;
 };
 
@@ -94,6 +97,30 @@ struct TextureT : public Buffer {
                     srcPix = ((srcPix & 1) && srcPix > 1) ? 1 : 0;
                 }
                 this->putPixel(k, l, srcPix);
+            }
+        }
+    }
+
+    template<typename T>
+    inline void putTexture(const T *texture, const Size &texture_size, const Origin &position) {
+        const Length tll = texture->getLength();
+
+        const fb tr = texture_size.getRight() <= tll.width ? texture_size.getRight() : tll.width;
+        const fb tb = texture_size.getBottom() <= tll.height ? texture_size.getBottom() : tll.height;
+        const fb tl = texture_size.getLeft();
+        const fb tt = texture_size.getTop();
+
+        const Length dll = this->getLength();
+
+        const fb dr = dll.width;
+        const fb db = dll.height;
+        const fb dl = position.x;
+        const fb dt = position.y;
+
+        for (fb dx = dl, tx = tl; dx < dr && tx < tr; dx++) {
+            for (fb dy = dt, ty = tt; dy < db && ty < tb; dy++) {
+                const pixel px = texture->getPixel(tx, ty);
+                this->putPixel(dx, dy, px);
             }
         }
     }
@@ -213,20 +240,32 @@ struct TextureGraphicsContext : protected Texture, public IGraphicsContext {
         Texture::putPixel(pos, px);
     }
 
-    inline pixel getPixel(const Origin &pos) override {
+    inline void putPixel(const fb &x, const fb &y, const pixel &px) override {
+	Texture::putPixel(x, y, px);
+    }
+
+    inline pixel getPixel(const fb &x, const fb &y) const override {
+	return Texture::getPixel(x, y);
+    }
+
+    inline pixel getPixel(const Origin &pos) const override {
         return Texture::getPixel(pos);
+    }
+
+    inline void putTexture(const IGraphicsContext *texture, const Size &texture_size, const Origin &destination_origin) override {
+        Texture::putTexture(texture, texture_size, destination_origin);
     }
 
     inline void circle(const Origin &center, const fb &radius, const pixel &px, const bool &fill = true) override {
         Texture::circle(center, radius, px, fill);
     }
 
-    inline bool isBound(const Origin &pos) override {
+    inline bool isBound(const Origin &pos) const override {
         return Texture::isBound(pos);
     }
 
-    inline Size getSize() override {
-        return Size(0,0,Texture::getWidth(), Texture::getHeight());
+    inline Length getLength() const override {
+        return Length(Texture::getWidth(), Texture::getHeight());
     }
 
     inline void line(const Origin &pos_start, const Origin &pos_end, const pixel &px) {

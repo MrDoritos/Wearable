@@ -601,7 +601,7 @@ struct ElementT : public IElement {
     Buffer &buffer;
 
     constexpr ElementT(const IElement &base, Buffer &buffer):IElement(base),buffer(buffer){}
-    constexpr ElementT(Buffer &buffer, const char *name, IElement *parent, IElement *sibling, IElement *sibling):IElement(name,parent,sibling,child){}
+    constexpr ElementT(Buffer &buffer, const char *name, IElement *parent, IElement *sibling, IElement *child):IElement(name,parent,sibling,child),buffer(buffer){}
     constexpr ElementT(Buffer &buffer, const char *name):ElementT(buffer, name, nullptr, nullptr, nullptr){}
     constexpr ElementT(Buffer &buffer):ElementT(buffer,nullptr){}
 
