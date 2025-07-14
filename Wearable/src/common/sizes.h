@@ -134,6 +134,8 @@ struct OriginT {
 
     constexpr T getOffsetX() const { return x; }
     constexpr T getOffsetY() const { return y; }
+    constexpr void setOffsetX(const T &offsetX) { x = offsetX; }
+    constexpr void setOffsetY(const T &offsetY) { y = offsetY; }
 
     friend constexpr inline OriginT operator+(const OriginT &a, const OriginT &b) {
         return OriginT(
@@ -159,6 +161,8 @@ struct LengthT {
 
     constexpr T getWidth() const { return width; }
     constexpr T getHeight() const { return height; }
+    constexpr void setWidth(const T &width) { this->width = width; }
+    constexpr void setHeight(const T &height) { this->height = height; }
 
     /*
     constexpr inline LengthT &operator=(const T &value) {

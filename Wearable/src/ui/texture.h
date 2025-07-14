@@ -120,6 +120,7 @@ struct TextureT : public Buffer {
         const fb tl = texture_size.getLeft();
         const fb tt = texture_size.getTop();
         const fb alpha = texture->getAlphaTest();
+        const fb dest = this->getValueBits();
 
         const Length dll = this->getLength();
 
@@ -132,7 +133,7 @@ struct TextureT : public Buffer {
             for (fb dy = dt, ty = tt; dy < db && ty < tb; dy++, ty++) {
                 const pixel px = texture->getPixel(tx, ty);
                 if (px > alpha)
-                    this->putPixel(dx, dy, px ? 1 : 0);
+                    this->putPixel(dx, dy, dest);
             }
         }
     }

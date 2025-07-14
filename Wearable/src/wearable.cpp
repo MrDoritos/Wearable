@@ -52,7 +52,8 @@ DisplayTexture display;
 
 //DisplayProviderCtx display;
 
-UI::ElementT<DisplayTexture> test(display);
+//UI::ElementT<DisplayTexture> test(display);
+UI::ElementBaseT<DisplayTexture> test(display);
 
 void delay(uint16_t ms) {
     vTaskDelay(ms / portTICK_PERIOD_MS);
@@ -148,13 +149,20 @@ void demo() {
     */
     display.clear();
     const auto I = font.getCharacter('M');
+    test.setWidth(64);
+    test.setOffsetX(32);
+    test.setHeight(64);
+    test.wrap = UI::WrapStyle::WRAP | UI::WrapStyle::TRIM_SPACE;
+    test.draw_text("Hello world!\n On two lines", font);
+
 
     //display.putTexture(font, 0, 0, 128, 128, 0, 0);
     //printf("%i %i %i %i %i %i\n", I.getWidth(), I.getHeight(), I.x0, I.y0, I.x1, I.y1);
     //demo_pattern();
     //display.putSprite(I, 0, 0);
-    write_characters("Hello World!",0 ,0);
-    write_characters("Mnotmworking",0,16);
+    //write_characters("Hello World!",0 ,0);
+    //write_characters("Mnotmworking",0,16);
+    //test.on_clear(nullptr);
     //write_characters("M M M 9 9 mm M", 0, 0);
     //write_characters("M M M 9 9 mm M", 0, 24);
     display.flush();

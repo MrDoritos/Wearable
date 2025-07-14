@@ -134,6 +134,10 @@ struct FramebufferT : public Buffer {
     inline constexpr fb getAlphaTest() const {
         return this->BPP - 1;
     }
+
+    inline constexpr fb getValueBits() const {
+        return this->getBitMask() ^ this->getAlphaTest();
+    }
 };
 
 }

@@ -48,6 +48,12 @@ enum Overflow : uint8_t {
     SCROLL=2,
 };
 
+enum WrapStyle : uint8_t {
+    NOWRAP = 0,
+    WRAP = 1,
+    TRIM_SPACE = 2,
+};
+
 template<typename T>
 struct AxisT {
     typedef T value_type;
@@ -137,6 +143,7 @@ struct DimensionMinMax : public ValueMinMaxT<Dimension> {
 struct StyleInfo { 
     Align align{LEFT};
     Align text_align{LEFT};
+    WrapStyle wrap{WRAP};
     Display display{BLOCK};
     Position position{STATIC};
     DimensionMinMax width, height;
@@ -149,6 +156,7 @@ struct StyleInfo {
 };
 
 struct Style : public Size, public StyleInfo {
+    using StyleInfo::StyleInfo;
     using StyleInfo::width;
     using StyleInfo::height;
 
@@ -649,6 +657,72 @@ struct ElementBaseT : public ElementT {
     virtual void on_content_size(Event *event) { }
     virtual void on_screen(Event *event) { }
     virtual void on_focus(Event *event) { }
+
+    template<typename FontProvider>
+    constexpr inline Length draw_text(const char *text, const FontProvider &font, const Origin &offset_pos = {0,0}, const bool &determine_size = false) {
+        const bool text_wrap = this->wrap & WrapStyle::WRAP;
+        const bool text_trim = this->wrap & WrapStyle::TRIM_SPACE;
+
+        const uu length = strlen(text);
+        const Origin pos = offset_pos + *this;
+        Origin cur = pos;
+        Length size;
+
+        for (uu i = 0; i < length; i++) {
+            const char character = text[i];
+
+            if (text_trim && (cur.x == pos.x || i == 0)) {
+                if (character == ' ')
+                    continue;
+                switch (character) {
+                    case ' ':
+                    case '\t':
+                    case '\n':
+                        continue;
+                    default:
+                        break;                    
+                }
+            }
+
+            if (character == '\n') {
+                cur.x = pos.x;
+                cur.y += size.height;
+                continue;
+            }
+
+            auto sprite = font.getCharacter(character);
+
+            if (cur.x + sprite.getWidth() > this->getRight()) {
+                if (text_wrap) {
+                    cur.x = pos.x;
+                    cur.y += size.height;
+                    size.height = 0;
+                }
+            }
+
+            if (determine_size && (cur.x - pos.x) + sprite.getWidth() > size.width)
+                size.width = (cur.x - pos.x) + sprite.getWidth();
+
+            if (cur.y + sprite.getHeight() > this->getBottom()) {
+                break;
+            }
+
+            if (size.height < sprite.getHeight())
+                size.height = sprite.getHeight();
+
+            this->buffer.putSprite(sprite, cur);
+
+            cur.x += sprite.getWidth();
+        }
+
+        if (determine_size)
+            return Length(
+                size.width, 
+                (cur.y - pos.y) + size.height
+            );
+        else
+            return size;
+    }
 };
 
 }

@@ -32,6 +32,7 @@ add_library(lib
 
 target_compile_options(lib PUBLIC
     -g
+    -fpermissive
 )
 
 add_executable(Emulator
@@ -61,10 +62,12 @@ target_link_libraries(Tests
 target_compile_options(Emulator PUBLIC
     -g
     -z noexecstack
+    -fpermissive
 )
 
 target_compile_options(Tests PUBLIC
     -g
     -z noexecstack
     -Wfatal-errors
+    -fpermissive
 )
