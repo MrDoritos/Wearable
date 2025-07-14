@@ -110,7 +110,7 @@ std::string stringify<Style>(const Style &v) {
 }
 
 template<>
-std::string stringify<Element>(const Element &v) {
+std::string stringify<IElement>(const IElement &v) {
     std::string ret = std::string("\nElement");
 
     if (v.name)
@@ -126,6 +126,11 @@ std::string stringify<Element>(const Element &v) {
         ret += stringify(*v.sibling);
 
     return ret;
+}
+
+template<>
+std::string stringify<Element>(const Element &e) {
+    return stringify<IElement>(*(const IElement*)(&e));
 }
 
 std::string element_name(const Element &src, int levels = 0) {
@@ -201,7 +206,7 @@ int main() {
     root.append_child(screen);
     screen.append_sibling(footer);
     screen.append_child(scrollable);
-
+/*
     root << StyleInfo {
         .width = { 20 },
         .height = { 20 },
@@ -224,7 +229,7 @@ int main() {
     footer << StyleInfo {
         .width = { 10 },
         .height = { 10 },
-    };
+    };*/
 
     std::cout << stringify(root) << std::endl;    
 

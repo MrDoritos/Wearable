@@ -18,19 +18,31 @@ using namespace wbl;
 
 using DisplayTexture = TextureT<DisplayBuffer>;
 
-using FontTexture = TextureT<FramebufferT<StaticbufferT<256, 256, 2>>>;
+using FontBuffer = FramebufferT<StaticbufferT<256, 256, 2>>;
+
+using FontTexture = TextureGraphicsContext<FontBuffer>;
+
+using FontAtlas = AtlasT<IGraphicsContext, FontTexture>;
+
+using FontProviderBase = FontProviderT<FontAtlas, char>;
 
 //using FontProvider = MonospaceFontProviderT<FontTexture, 8, 14, 0, 0, char, 32, 14>;
 
-using FontProvider = MonospaceFontProviderT<FontTexture, 6, 12, 0, 0, char, 42, 14>;
+using FontProvider = MonospaceFontProviderT<IGraphicsContext, 6, 12, 0, 0, char, 42, 14, FontProviderBase>;
 
 //extern const FontProvider font asm("_binary_fixedsys_bin_start");
 extern const FontProvider font asm("_binary_dosjpn_bin_start");
 //extern const char _binary_dosjpn_bin_start[];
-
+//using FontProviderCtx = TextureGraphicsContext<FontProvider>;
 //FontProvider font;
 
+//FontProviderCtx fontCtx;
+
 DisplayTexture display;
+
+using DisplayProviderCtx = TextureGraphicsContext<DisplayTexture>;
+
+DisplayProviderCtx displayCtx;
 
 UI::ElementT<DisplayTexture> test(display);
 
@@ -102,8 +114,9 @@ void write_characters(const char *str, const fb &x, const fb &y) {
     const fb len = strlen(str);
     fb cx = x;
     for (fb i = 0; i < len; i++) {
-        const FontProvider::Sprite sp = font.getCharacter(*(str + i));
-        display.putSprite(sp, cx, y, sp.getWidth(), sp.getHeight());
+        const auto sp = font.getCharacter(*(str + i));
+        //display.putSprite(sp, cx, y, sp.getWidth(), sp.getHeight());
+        displayCtx.putSprite(sp, {cx, y});
         cx += sp.getWidth();
     }
     display.flush();
@@ -126,7 +139,7 @@ void demo() {
     vTaskDelay(ms / portTICK_PERIOD_MS);
     */
     display.clear();
-    const FontProvider::Sprite I = font.getCharacter('M');
+    const auto I = font.getCharacter('M');
 
     //display.putTexture(font, 0, 0, 128, 128, 0, 0);
     //printf("%i %i %i %i %i %i\n", I.getWidth(), I.getHeight(), I.x0, I.y0, I.x1, I.y1);
@@ -138,7 +151,7 @@ void demo() {
     //write_characters("M M M 9 9 mm M", 0, 24);
     display.flush();
     vTaskDelay(500 / portTICK_PERIOD_MS);
-    TextureGraphicsContext<FramebufferT<Memorybuffer>> graphics(128, 128, 1, display.buffer);
+    TextureGraphicsContext<TextureT<FramebufferT<Memorybuffer>>> graphics(128, 128, 1, display.buffer);
     display.clear(0);
     display.fill({0,0,16,16}, 1);
     graphics.fill(Size{0,24,16,16}, 1);

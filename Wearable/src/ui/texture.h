@@ -6,6 +6,22 @@
 
 namespace wbl {
 
+template<typename Buffer>
+struct SpriteT : public Size {
+    const Buffer *src;
+
+    constexpr SpriteT(const Buffer *src, const Size &size)
+        :Size(size),src(src) { }
+    constexpr SpriteT(const Buffer &src, const Size &size)
+        :Size(size),src(&src) { }
+    constexpr SpriteT(const Buffer *src, const fb &x, const fb &y, const fb &w, const fb &h)
+        :Size(x,y,w,h),src(src) { }
+};
+
+struct IGraphicsContext;
+
+using Sprite = SpriteT<IGraphicsContext>;
+
 struct IGraphicsContext {
     virtual inline void putPixel(const Origin &pos, const pixel &px) = 0;
     virtual inline void putPixel(const fb &x, const fb &y, const pixel &px) = 0;
@@ -16,20 +32,8 @@ struct IGraphicsContext {
     virtual inline bool isBound(const Origin &pos) const = 0;
     virtual inline Length getLength() const = 0;
     virtual inline void putTexture(const IGraphicsContext *texture, const Size &texture_size, const Origin &destination_origin) = 0;
+    virtual inline void putSprite(const Sprite &sprite, const Origin &pos) = 0;
     virtual inline void line(const Origin &pos_start, const Origin &pos_end, const pixel &px) = 0;
-};
-
-template<typename Buffer>
-struct SpriteT {
-    const Buffer &src;
-    const fb x0, y0, x1, y1;
-
-    SpriteT(const Buffer &src, const fb &x0, const fb &y0, const fb &x1, const fb &y1)
-        :src(src),x0(x0),y0(y0),x1(x1),y1(y1) {}
-
-    inline constexpr fb getWidth() const { return x1 - x0; }
-    inline constexpr fb getHeight() const { return y1 - y0; }
-    inline constexpr auto getSize() const { return {this->getWidth(), this->getHeight()}; }
 };
 
 template<typename Buffer>
@@ -102,6 +106,11 @@ struct TextureT : public Buffer {
     }
 
     template<typename T>
+    inline void putTexture(const T *texture, const fb &dx, const fb &dy, const fb &w = 0, const fb &h = 0, const fb &sx = 0, const fb &sy = 0) {
+        putTexture(*texture, dx, dy, w, h, sx, sy);
+    }
+
+    template<typename T>
     inline void putTexture(const T *texture, const Size &texture_size, const Origin &position) {
         const Length tll = texture->getLength();
 
@@ -125,8 +134,15 @@ struct TextureT : public Buffer {
         }
     }
 
+    template<typename T>
+    inline void putTexture(const T &texture, const Size &texture_size, const Origin &position) {
+        putTexture(&texture, texture_size, position);
+    }
+
     template<typename _SpriteT = Sprite>
     inline void putSprite(const _SpriteT &sprite, const fb &x, const fb &y, const fb &w = 0, const fb &h = 0) {
+        putTexture(sprite.src, sprite, {x,y});
+        /*
         const fb width = w ? w : sprite.getWidth();
         const fb height = h ? h : sprite.getHeight();
 
@@ -142,6 +158,12 @@ struct TextureT : public Buffer {
                 this->putPixel(k, l, srcPix);
             }
         }
+        */
+    }
+
+    template<typename _SpriteT = Sprite>
+    inline void putSprite(const _SpriteT &sprite, const Origin &position) {
+        putTexture(sprite.src, sprite, position);
     }
 
     template<typename calc=short, typename CALLBACK>
@@ -228,8 +250,8 @@ struct TextureT : public Buffer {
     }
 };
 
-template<typename Buffer, typename Texture = TextureT<Buffer>>
-struct TextureGraphicsContext : protected Texture, public IGraphicsContext {
+template<typename Texture>
+struct TextureGraphicsContext : public Texture, public IGraphicsContext {
     using Texture::Texture;
 
     inline void fill(const Size &size, const pixel &px) override {
@@ -256,6 +278,10 @@ struct TextureGraphicsContext : protected Texture, public IGraphicsContext {
         Texture::putTexture(texture, texture_size, destination_origin);
     }
 
+    inline void putSprite(const Sprite &sprite, const Origin &position) override {
+        Texture::putSprite(sprite, position);
+    }
+
     inline void circle(const Origin &center, const fb &radius, const pixel &px, const bool &fill = true) override {
         Texture::circle(center, radius, px, fill);
     }
@@ -273,12 +299,12 @@ struct TextureGraphicsContext : protected Texture, public IGraphicsContext {
     }
 };
 
-template<typename Buffer>
-struct AtlasT : public TextureT<Buffer> {
+template<typename Buffer, typename Derived = TextureT<Buffer>>
+struct AtlasT : public Derived {
     using Sprite = SpriteT<Buffer>;
 
     inline constexpr Sprite getSprite(const fb &x, const fb &y, const fb &sx, const fb &sy) const {
-        return Sprite(*this, x, y, x+sx, y+sy);
+        return Sprite(this, x, y, x+sx, y+sy);
     }
 
     inline constexpr Sprite getSpriteAligned(const fb &x, const fb &y, const fb &nx, const fb &ny, const fb &sw, const fb &sh) const {

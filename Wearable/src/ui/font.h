@@ -3,21 +3,20 @@
 #include "texture.h"
 
 namespace wbl {
-    template<typename Buffer, typename CharT, typename Sprite = SpriteT<Buffer>>
+    template<typename Sprite = Sprite, typename CharT = char>
     struct FontSpriteT : public Sprite {
+        using Char = CharT;
+
         const fb font_width, font_height;
         const fb advance_x, advance_y;
 
         FontSpriteT(const Sprite &src, const fb &font_width, const fb &font_height, const fb &advance_x, const fb &advance_y)
         :Sprite(src),font_width(font_width),font_height(font_height),advance_x(advance_x),advance_y(advance_y){}
-
-        FontSpriteT(const Buffer &src, const fb &x0, const fb &y0, const fb &x1, const fb &y1, const fb &font_width, const fb &font_height, const fb &advance_x, const fb &advance_y)
-        :Sprite(src, x0, y0, x1, y1),font_width(font_width),font_height(font_height),advance_x(advance_x),advance_y(advance_y){}
     };
 
-    template<typename Buffer, typename CharT>
-    struct FontProviderT : public Buffer {
-        using FontSprite = FontSpriteT<Buffer, CharT>;
+    template<typename Atlas, typename FontSpriteT, typename CharT = FontSpriteT::Char>
+    struct FontProviderT : public Atlas {
+        using FontSprite = FontSpriteT;
 
         FontSprite getCharacter(const CharT &character);
         FontSprite *getCharacter(const CharT &character, FontSprite *in);
