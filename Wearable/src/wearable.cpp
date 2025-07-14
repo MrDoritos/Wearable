@@ -20,10 +20,8 @@ using namespace Sprites;
 
 using DisplayTexture = TextureT<DisplayBuffer>;
 
-using FontBuffer = FramebufferT<StaticbufferT<256, 256, 2>>;
 //using FontBuffer = FramebufferT<Memorybuffer>;
 
-using FontTexture = TextureT<FontBuffer>;
 //using FontTexture = TextureGraphicsContext<TextureT<FontBuffer>>;
 
 //using FontAtlas = AtlasT<FontTexture, FontTexture, Sprite>;
@@ -32,14 +30,11 @@ using FontTexture = TextureT<FontBuffer>;
 
 //using FontProvider = MonospaceFontProviderT<FontTexture, 8, 14, 0, 0, char, 32, 14>;
 
-using FontProvider = MonospaceFontProviderT<FontTexture, 6, 12, 0, 0, char, 42, 14>;
-
 //extern const FontProvider font asm("_binary_fixedsys_bin_start");
 //extern const FontBuffer font_data asm("_binary_dosjpn_bin_start");
 //extern const char _binary_dosjpn_bin_start[];
 //using FontProviderCtx = TextureGraphicsContext<FontProvider>;
 //FramebufferT<Memorybuffer> font_mem(256, 256, 2, _binary_dosjpn_bin_start);
-extern const FontProvider font asm("_binary_dosjpn_bin_start");
 
 //MonospaceFontProviderT<TextureGraphicsContext<TextureT<FramebufferT<Memorybuffer>>>, 6, 12, 0, 0, char, 42, 14, FontProviderT<>> font(256, 256, 2, (pixel*)_binary_dosjpn_bin_start);
 //FontProvider font(256, 256, 2, (pixel*)_binary_dosjpn_bin_start);
@@ -160,7 +155,8 @@ void demo() {
         BATTERY,
         HEART
     };
-    test.draw_sprites(sprites, 2);
+    //test.draw_sprites(sprites, 2);
+    test.draw_multi({0,0}, BATTERY, "50%");
 
 
     //display.putTexture(font, 0, 0, 128, 128, 0, 0);

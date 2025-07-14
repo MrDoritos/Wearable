@@ -8,6 +8,7 @@
 #include "displaybuffer.h"
 #include "types.h"
 #include "sizes.h"
+#include "sprites.h"
 
 namespace wbl {
 namespace UI {
@@ -721,8 +722,8 @@ struct ElementBaseT : public ElementT {
                 size.width, 
                 (cur.y - pos.y) + size.height
             );
-        else
-            return size;
+            
+        return Length(cur.x - pos.x, cur.y - pos.y);
     }
 
     template<typename Sprite>
@@ -765,7 +766,28 @@ struct ElementBaseT : public ElementT {
                 (cur.y - pos.y) + size.height
             );
         
-        return size;
+        return Length(cur.x - pos.x, cur.y - pos.y);
+    }
+
+    template<typename T>
+    constexpr inline Length draw_any(const T v, const Origin &offset_pos) {
+        if constexpr (std::is_same<const char*, T>::value) {
+            return this->draw_text(v, Sprites::font, offset_pos);
+        } else {
+            return this->draw_sprites(&v, 1, offset_pos);
+        }
+    }
+
+    template<typename T>
+    constexpr inline Length draw_multi(const Origin &offset_pos, const T t) {
+        return this->draw_any(t, offset_pos);
+    }
+
+    template<typename T, typename ...Ts>
+    constexpr inline Length draw_multi(const Origin &offset_pos, const T t, const Ts ...args) {
+        Origin offset = offset_pos;
+        offset += (Origin)this->draw_any(t, offset_pos);
+        return this->draw_multi(offset, args...);
     }
 };
 

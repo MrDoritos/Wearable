@@ -1,9 +1,15 @@
 #pragma once
 
+#include "font.h"
 #include "texture.h"
 
 namespace wbl {
 namespace Sprites {
+
+using FontBuffer = FramebufferT<StaticbufferT<256, 256, 2>>;
+using FontTexture = TextureT<FontBuffer>;
+using FontProvider = MonospaceFontProviderT<FontTexture, 6, 12, 0, 0, char, 42, 14>;
+extern const FontProvider font asm("_binary_dosjpn_bin_start");
 
 using AtlasBuffer = FramebufferT<StaticbufferT<256, 256, 2>>;
 using Atlas = AtlasT<AtlasBuffer>;

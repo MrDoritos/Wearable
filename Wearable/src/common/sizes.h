@@ -179,6 +179,10 @@ struct LengthT {
     friend constexpr inline LengthT &operator+=(LengthT &a, const LengthT &b) {
         return a = a + b;
     }
+
+    constexpr explicit operator OriginT<T>() {
+        return OriginT<T>(width, height);
+    }
 };
 
 struct Length : public LengthT<uu> {
