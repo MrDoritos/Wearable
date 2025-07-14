@@ -710,7 +710,8 @@ struct ElementBaseT : public ElementT {
             if (size.height < sprite.getHeight())
                 size.height = sprite.getHeight();
 
-            this->buffer.putSprite(sprite, cur);
+            if (!determine_size)
+                this->buffer.putSprite(sprite, cur);
 
             cur.x += sprite.getWidth();
         }
@@ -722,6 +723,49 @@ struct ElementBaseT : public ElementT {
             );
         else
             return size;
+    }
+
+    template<typename Sprite>
+    constexpr inline Length draw_sprites(const Sprite *sprites, const uu &length, const Origin &offset_pos = {0,0}, const bool &determine_size = false) {
+        const bool wrap = this->wrap & WrapStyle::WRAP;
+
+        const Origin pos = offset_pos + *this;
+        Origin cur = pos;
+        Length size;
+
+        for (uu i = 0; i < length; i++) {
+            const Sprite &sprite = sprites[i];
+
+            if (cur.x + sprite.getWidth() > this->getRight()) {
+                if (wrap) {
+                    cur.x = pos.x;
+                    cur.y += size.height;
+                    size.height = 0;
+                }
+            }
+
+            if (determine_size && (cur.x - pos.x) + sprite.getWidth() > size.width)
+                size.width = (cur.x - pos.x) + sprite.getWidth();
+
+            if (cur.y + sprite.getHeight() > this->getBottom())
+                break;
+
+            if (size.height < sprite.getHeight())
+                size.height = sprite.getHeight();
+
+            if (!determine_size)
+                this->buffer.putSprite(sprite, cur);
+
+            cur.x += sprite.getWidth();
+        }
+
+        if (determine_size)
+            return Length(
+                size.width,
+                (cur.y - pos.y) + size.height
+            );
+        
+        return size;
     }
 };
 

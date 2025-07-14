@@ -10,11 +10,13 @@
 #include "texture.h"
 #include "font.h"
 #include "ui.h"
+#include "sprites.h"
 
 //extern const char _binary_fixedsys_bin_start[];
 //extern const char _binary_fixedsys_bin_end[];
 
 using namespace wbl;
+using namespace Sprites;
 
 using DisplayTexture = TextureT<DisplayBuffer>;
 
@@ -153,7 +155,8 @@ void demo() {
     test.setOffsetX(32);
     test.setHeight(64);
     test.wrap = UI::WrapStyle::WRAP | UI::WrapStyle::TRIM_SPACE;
-    test.draw_text("Hello world!\n On two lines", font);
+    //test.draw_text("Hello world!\n On two lines", font);
+    test.draw_sprites(&BATTERY, 1);
 
 
     //display.putTexture(font, 0, 0, 128, 128, 0, 0);
