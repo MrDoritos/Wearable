@@ -19,30 +19,38 @@ using namespace wbl;
 using DisplayTexture = TextureT<DisplayBuffer>;
 
 using FontBuffer = FramebufferT<StaticbufferT<256, 256, 2>>;
+//using FontBuffer = FramebufferT<Memorybuffer>;
 
-using FontTexture = TextureGraphicsContext<FontBuffer>;
+using FontTexture = TextureT<FontBuffer>;
+//using FontTexture = TextureGraphicsContext<TextureT<FontBuffer>>;
 
-using FontAtlas = AtlasT<IGraphicsContext, FontTexture>;
+//using FontAtlas = AtlasT<FontTexture, FontTexture, Sprite>;
 
-using FontProviderBase = FontProviderT<FontAtlas, char>;
+//using FontProviderBase = FontProviderT<FontAtlas, char>;
 
 //using FontProvider = MonospaceFontProviderT<FontTexture, 8, 14, 0, 0, char, 32, 14>;
 
-using FontProvider = MonospaceFontProviderT<IGraphicsContext, 6, 12, 0, 0, char, 42, 14, FontProviderBase>;
+using FontProvider = MonospaceFontProviderT<FontTexture, 6, 12, 0, 0, char, 42, 14>;
 
 //extern const FontProvider font asm("_binary_fixedsys_bin_start");
-extern const FontProvider font asm("_binary_dosjpn_bin_start");
+//extern const FontBuffer font_data asm("_binary_dosjpn_bin_start");
 //extern const char _binary_dosjpn_bin_start[];
 //using FontProviderCtx = TextureGraphicsContext<FontProvider>;
+//FramebufferT<Memorybuffer> font_mem(256, 256, 2, _binary_dosjpn_bin_start);
+extern const FontProvider font asm("_binary_dosjpn_bin_start");
+
+//MonospaceFontProviderT<TextureGraphicsContext<TextureT<FramebufferT<Memorybuffer>>>, 6, 12, 0, 0, char, 42, 14, FontProviderT<>> font(256, 256, 2, (pixel*)_binary_dosjpn_bin_start);
+//FontProvider font(256, 256, 2, (pixel*)_binary_dosjpn_bin_start);
 //FontProvider font;
+//FontTexture _font(font_data);
 
 //FontProviderCtx fontCtx;
 
 DisplayTexture display;
 
-using DisplayProviderCtx = TextureGraphicsContext<DisplayTexture>;
+//using DisplayProviderCtx = TextureGraphicsContext<DisplayTexture>;
 
-DisplayProviderCtx displayCtx;
+//DisplayProviderCtx display;
 
 UI::ElementT<DisplayTexture> test(display);
 
@@ -106,7 +114,7 @@ void demo_pattern() {
                 display.putPixel(x, y, 1);
         }
     }
-    display.putTexture(buf, 0, 0, 16, 16, 0, 0);
+    //display.putTexture(buf, 0, 0, 16, 16, 0, 0);
     display.flush();
 }
 
@@ -116,7 +124,7 @@ void write_characters(const char *str, const fb &x, const fb &y) {
     for (fb i = 0; i < len; i++) {
         const auto sp = font.getCharacter(*(str + i));
         //display.putSprite(sp, cx, y, sp.getWidth(), sp.getHeight());
-        displayCtx.putSprite(sp, {cx, y});
+        display.putSprite(sp, {cx, y});
         cx += sp.getWidth();
     }
     display.flush();
@@ -157,8 +165,10 @@ void demo() {
     graphics.fill(Size{0,24,16,16}, 1);
     display.flush();
     vTaskDelay(1000 / portTICK_PERIOD_MS);
-    display.putTexture(I.src, 0, 0, 128, 64, 0, 0);
-    display.putTexture(I.src, 0, 64, 128, 128, 126, 0);
+    //display.putTexture(I.src, 0, 0, 128, 64, 0, 0);
+    //display.putTexture(I.src, 0, 64, 128, 128, 126, 0);
+    display.putSprite(I, {0,0});
+    display.putSprite(I, {32,32});
     display.flush();
     /*
     display.circle(64, 64, 24, 1, true);

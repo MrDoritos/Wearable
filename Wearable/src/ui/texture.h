@@ -34,6 +34,7 @@ struct IGraphicsContext {
     virtual inline void putTexture(const IGraphicsContext *texture, const Size &texture_size, const Origin &destination_origin) = 0;
     virtual inline void putSprite(const Sprite &sprite, const Origin &pos) = 0;
     virtual inline void line(const Origin &pos_start, const Origin &pos_end, const pixel &px) = 0;
+    virtual inline fb getAlphaTest() const = 0;
 };
 
 template<typename Buffer>
@@ -107,7 +108,7 @@ struct TextureT : public Buffer {
 
     template<typename T>
     inline void putTexture(const T *texture, const fb &dx, const fb &dy, const fb &w = 0, const fb &h = 0, const fb &sx = 0, const fb &sy = 0) {
-        putTexture(*texture, dx, dy, w, h, sx, sy);
+        putTexture(texture, {dx, dy, w, h}, {sx, sy});
     }
 
     template<typename T>
@@ -118,6 +119,7 @@ struct TextureT : public Buffer {
         const fb tb = texture_size.getBottom() <= tll.height ? texture_size.getBottom() : tll.height;
         const fb tl = texture_size.getLeft();
         const fb tt = texture_size.getTop();
+        const fb alpha = texture->getAlphaTest();
 
         const Length dll = this->getLength();
 
@@ -126,10 +128,11 @@ struct TextureT : public Buffer {
         const fb dl = position.x;
         const fb dt = position.y;
 
-        for (fb dx = dl, tx = tl; dx < dr && tx < tr; dx++) {
-            for (fb dy = dt, ty = tt; dy < db && ty < tb; dy++) {
+        for (fb dx = dl, tx = tl; dx < dr && tx < tr; dx++, tx++) {
+            for (fb dy = dt, ty = tt; dy < db && ty < tb; dy++, ty++) {
                 const pixel px = texture->getPixel(tx, ty);
-                this->putPixel(dx, dy, px);
+                if (px > alpha)
+                    this->putPixel(dx, dy, px ? 1 : 0);
             }
         }
     }
@@ -297,14 +300,19 @@ struct TextureGraphicsContext : public Texture, public IGraphicsContext {
     inline void line(const Origin &pos_start, const Origin &pos_end, const pixel &px) {
         return Texture::line(pos_start, pos_end, px);
     }
+
+    inline fb getAlphaTest() const override {
+        return Texture::getAlphaTest();
+    }
 };
 
-template<typename Buffer, typename Derived = TextureT<Buffer>>
+template<typename Buffer, typename Derived = TextureT<Buffer>, typename SpriteT = SpriteT<Derived>>
 struct AtlasT : public Derived {
-    using Sprite = SpriteT<Buffer>;
+    using Derived::Derived;
+    using Sprite = SpriteT;
 
     inline constexpr Sprite getSprite(const fb &x, const fb &y, const fb &sx, const fb &sy) const {
-        return Sprite(this, x, y, x+sx, y+sy);
+        return Sprite(this, x, y, /*x+*/sx, /*y+*/sy);
     }
 
     inline constexpr Sprite getSpriteAligned(const fb &x, const fb &y, const fb &nx, const fb &ny, const fb &sw, const fb &sh) const {

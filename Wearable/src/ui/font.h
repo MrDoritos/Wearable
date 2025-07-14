@@ -3,20 +3,21 @@
 #include "texture.h"
 
 namespace wbl {
-    template<typename Sprite = Sprite, typename CharT = char>
-    struct FontSpriteT : public Sprite {
+    template<typename SpriteT = Sprite, typename CharT = char>
+    struct FontSpriteT : public SpriteT {
         using Char = CharT;
 
         const fb font_width, font_height;
         const fb advance_x, advance_y;
 
-        FontSpriteT(const Sprite &src, const fb &font_width, const fb &font_height, const fb &advance_x, const fb &advance_y)
-        :Sprite(src),font_width(font_width),font_height(font_height),advance_x(advance_x),advance_y(advance_y){}
+        FontSpriteT(const SpriteT &src, const fb &font_width, const fb &font_height, const fb &advance_x, const fb &advance_y)
+        :SpriteT(src),font_width(font_width),font_height(font_height),advance_x(advance_x),advance_y(advance_y){}
     };
 
-    template<typename Atlas, typename FontSpriteT, typename CharT = FontSpriteT::Char>
-    struct FontProviderT : public Atlas {
+    template<typename DerivedAtlas, typename CharT = char, typename FontSpriteT = FontSpriteT<typename DerivedAtlas::Sprite, CharT>>
+    struct FontProviderT : public DerivedAtlas {
         using FontSprite = FontSpriteT;
+        using DerivedAtlas::DerivedAtlas;
 
         FontSprite getCharacter(const CharT &character);
         FontSprite *getCharacter(const CharT &character, FontSprite *in);
@@ -32,7 +33,8 @@ namespace wbl {
              fb glyphs_per_column = 8,
              typename Provider = FontProviderT<AtlasT<Buffer>, CharT>>
     struct MonospaceFontProviderT : public Provider {
-        using FontSprite = FontSpriteT<Buffer, CharT>;
+        using FontSprite = typename Provider::FontSprite;
+        using Provider::Provider;
 
         inline constexpr FontSprite *getCharacter(const CharT &character, FontSprite *in) const {
             *in = getCharacter(character);

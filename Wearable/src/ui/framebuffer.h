@@ -130,6 +130,10 @@ struct FramebufferT : public Buffer {
     }
 
     inline void flush() {}
+
+    inline constexpr fb getAlphaTest() const {
+        return this->BPP - 1;
+    }
 };
 
 }
