@@ -50,6 +50,18 @@ struct Dpad {
     Button *buttons = &enter;
 
     void init();
+
+    constexpr inline void update() {
+        for (int i = 0; i < button_count; i++)
+            buttons[i].update();
+    }
+
+    constexpr inline bool any_state() {
+        for (int i = 0; i < button_count; i++)
+            if (buttons[i].state)
+                return true;
+        return false;
+    }
 };
 
 static Dpad dpad;

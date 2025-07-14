@@ -15,6 +15,7 @@
 #include "ui.h"
 #include "sprites.h"
 #include "user_inputs.h"
+#include "driver/gpio.h"
 
 //extern const char _binary_fixedsys_bin_start[];
 //extern const char _binary_fixedsys_bin_end[];
@@ -159,8 +160,11 @@ void demo() {
     //display.putSprite(I, {0,0});
     //display.putSprite(I, {32,32});
     //if (xSemaphoreTake(semaphore, 100 / portTICK_PERIOD_MS)) {
-    if (dpad.enter.state || dpad.up.state || dpad.down.state || dpad.left.state || dpad.right.state) {
-        dpad.enter.update();
+    //if (dpad.enter.state || dpad.up.state || dpad.down.state || dpad.left.state || dpad.right.state) {
+        //dpad.enter.update();
+    //if (!gpio_get_level(GPIO_NUM_15)) {
+    if (dpad.any_state()) {
+        dpad.update();
         display.putTexture(therock, {0,0,128,128}, {0,0});
         display.flush();
     }
