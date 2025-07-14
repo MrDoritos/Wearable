@@ -3,6 +3,8 @@
 #include "font.h"
 #include "texture.h"
 
+#define THEROCK
+
 namespace wbl {
 namespace Sprites {
 
@@ -15,6 +17,13 @@ using AtlasBuffer = FramebufferT<StaticbufferT<256, 256, 2>>;
 using Atlas = AtlasT<AtlasBuffer>;
 
 extern const Atlas atlas asm("_binary_textures_bin_start");
+
+#ifdef THEROCK
+
+using RockTexture = TextureT<FramebufferT<StaticbufferT<128, 128, 2>>>;
+extern const RockTexture therock asm("_binary_therock_bin_start");
+
+#endif
 
 #define TX(name, x, y, w, h) static constexpr Atlas::Sprite name = atlas.getSprite(x, y, w, h);
 

@@ -6,6 +6,9 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 
+#include "driver/gpio.h"
+#include "freertos/semphr.h"
+
 #include "displaybuffer.h"
 #include "texture.h"
 #include "font.h"
@@ -18,32 +21,6 @@
 using namespace wbl;
 using namespace Sprites;
 
-using DisplayTexture = TextureT<DisplayBuffer>;
-
-//using FontBuffer = FramebufferT<Memorybuffer>;
-
-//using FontTexture = TextureGraphicsContext<TextureT<FontBuffer>>;
-
-//using FontAtlas = AtlasT<FontTexture, FontTexture, Sprite>;
-
-//using FontProviderBase = FontProviderT<FontAtlas, char>;
-
-//using FontProvider = MonospaceFontProviderT<FontTexture, 8, 14, 0, 0, char, 32, 14>;
-
-//extern const FontProvider font asm("_binary_fixedsys_bin_start");
-//extern const FontBuffer font_data asm("_binary_dosjpn_bin_start");
-//extern const char _binary_dosjpn_bin_start[];
-//using FontProviderCtx = TextureGraphicsContext<FontProvider>;
-//FramebufferT<Memorybuffer> font_mem(256, 256, 2, _binary_dosjpn_bin_start);
-
-//MonospaceFontProviderT<TextureGraphicsContext<TextureT<FramebufferT<Memorybuffer>>>, 6, 12, 0, 0, char, 42, 14, FontProviderT<>> font(256, 256, 2, (pixel*)_binary_dosjpn_bin_start);
-//FontProvider font(256, 256, 2, (pixel*)_binary_dosjpn_bin_start);
-//FontProvider font;
-//FontTexture _font(font_data);
-
-//FontProviderCtx fontCtx;
-
-DisplayTexture display;
 
 //using DisplayProviderCtx = TextureGraphicsContext<DisplayTexture>;
 
@@ -54,6 +31,32 @@ UI::ElementBaseT<DisplayTexture> test(display);
 
 void delay(uint16_t ms) {
     vTaskDelay(ms / portTICK_PERIOD_MS);
+}
+
+const gpio_num_t button_pin{GPIO_NUM_15};
+
+SemaphoreHandle_t semaphore = nullptr;
+
+static void IRAM_ATTR button_interrupt(void *arg) {
+    xSemaphoreGiveFromISR(semaphore, nullptr);
+}
+
+void test_semaphore() {
+    semaphore = xSemaphoreCreateBinary();
+
+    gpio_config_t conf = {};
+
+    conf.intr_type = GPIO_INTR_POSEDGE;
+    conf.mode = GPIO_MODE_INPUT;
+    conf.pin_bit_mask = 1ULL << button_pin;
+    conf.pull_down_en = GPIO_PULLDOWN_DISABLE;
+    conf.pull_up_en = GPIO_PULLUP_ENABLE;
+    ESP_ERROR_CHECK(gpio_config(&conf));
+
+    ESP_ERROR_CHECK(gpio_install_isr_service(0));
+
+    ESP_ERROR_CHECK(gpio_isr_handler_add(button_pin, button_interrupt, (void*) button_pin));
+
 }
 
 void demo_pattern_() {
@@ -175,12 +178,15 @@ void demo() {
     display.fill({0,0,16,16}, 1);
     graphics.fill(Size{0,24,16,16}, 1);
     display.flush();
-    vTaskDelay(1000 / portTICK_PERIOD_MS);
+    //vTaskDelay(1000 / portTICK_PERIOD_MS);
     //display.putTexture(I.src, 0, 0, 128, 64, 0, 0);
     //display.putTexture(I.src, 0, 64, 128, 128, 126, 0);
-    display.putSprite(I, {0,0});
-    display.putSprite(I, {32,32});
-    display.flush();
+    //display.putSprite(I, {0,0});
+    //display.putSprite(I, {32,32});
+    if (xSemaphoreTake(semaphore, 100 / portTICK_PERIOD_MS)) {
+        display.putTexture(therock, {0,0,128,128}, {0,0});
+        display.flush();
+    }
     /*
     display.circle(64, 64, 24, 1, true);
     printf("circle\n");
@@ -204,6 +210,8 @@ void demo() {
 
 extern "C" {
 void app_main() {
+    test_semaphore();
+
     printf("test\n");
     //memcpy(font.buffer, &_binary_fixedsys_bin_start[0], _binary_fixedsys_bin_end - _binary_fixedsys_bin_start);
     //memcpy(font.buffer, _binary_dosjpn_bin_start, font.getSize());

@@ -321,4 +321,8 @@ struct AtlasT : public Derived {
     }
 };
 
+using DisplayTexture = TextureT<DisplayBuffer>;
+
+DisplayTexture display;
+
 }
