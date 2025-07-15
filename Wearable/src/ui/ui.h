@@ -164,6 +164,119 @@ struct Style : public Size, public StyleInfo {
 
     constexpr Style(){}
     //Style(){}
+
+    struct ContentSize {
+        bool wrap, clip_x, clip_y;
+        Length inline_length, block_length, boundary;
+
+        constexpr ContentSize()
+            :wrap(false),clip_x(false),clip_y(true) { }
+        constexpr ContentSize(const Length &boundary, const bool &wrap=false, const bool &clip_x=false, const bool &clip_y=true)
+            :wrap(wrap),clip_x(clip_x),clip_y(clip_y),boundary(boundary) { }
+
+        constexpr inline Length getContentSize() const {
+            return Length(
+                block_length.width,
+                block_length.height + inline_length.height
+            );
+        }
+
+        constexpr inline bool add_break() {
+            if (inline_length.width > block_length.width)
+                block_length.width = inline_length.width;
+
+            inline_length.width = 0;
+
+            if (clip_y && block_length.height + inline_length.height > boundary.height)
+                return false;
+
+            block_length.height += inline_length.height;
+            inline_length.height = 0;
+
+            return true;
+        }
+
+        /*
+            @brief Add length to content size
+
+            @returns true if added to content size, false if clipped        
+        */
+        constexpr inline bool add_length(const Length &length) {
+            const auto width = length.getWidth();
+            const auto height = length.getHeight();
+
+            if (width + inline_length.width > boundary.width) {
+                if (wrap) {
+                    block_length.height += inline_length.height;
+                    inline_length = 0;
+                } else
+                if (clip_x) {
+                    return false;
+                }
+            }
+
+            if (clip_y && height + block_length.height > boundary.height)
+                return false;
+
+            if (height > inline_length.height)
+                inline_length.height = height;
+
+            inline_length.width += width;
+
+            if (inline_length.width > block_length.width)
+                block_length.width = inline_length.width;
+
+            return true;            
+        }
+
+        template<typename Sprite>
+        constexpr inline bool add_sprite(const Sprite &sprite) {
+            return add_length(sprite);
+        }
+    };
+
+    template<typename FontProvider>
+    constexpr inline Length getTextContentSize(const char *text, const Length &boundary, const FontProvider &font = Sprites::font) {
+        const bool text_wrap = this->wrap & WrapStyle::WRAP;
+        const bool text_trim = this->wrap & WrapStyle::TRIM_SPACE;
+
+        ContentSize content(boundary, text_wrap);
+        const uu text_length = strlen(text);
+
+        for (uu i = 0; i < text_length; i++) {
+            const char character = text[i];
+
+            if (text_trim && (content.inline_length.width == 0)) {
+                switch (character) {
+                    case ' ':
+                    case '\t':
+                    case '\n':
+                        continue;
+                    default: break;
+                }
+            }
+
+            if (character == '\n') {
+                content.add_break();
+                continue;
+            }
+
+            auto sprite = font.getCharacter(character);
+
+            content.add_sprite(sprite);
+        }
+
+        return content.getContentSize();
+    }
+
+    /*
+        @brief Call after layout, it depends on computed layout size    
+    */
+    template<typename FontProvider>
+    constexpr inline Length getTextContentSize(const char *text, const FontProvider &font = Sprites::font) {
+        Length boundary = *this;
+        return getTextContentSize(text, font, boundary);
+    }
 };
 
 struct Event {
