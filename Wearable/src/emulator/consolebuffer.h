@@ -61,7 +61,7 @@ void ConsoleBuffer::flushBlocks(const BLOCKSRC _blockMap, const int &w, const in
     memset(ch_buffer, ' ', blength);
 
     for (int sy = 0, cy = 0; sy < this->HEIGHT && cy < cheight; sy+=stride_y, cy++) {
-        for (int sx = 0, cx = 0; sx < this->WIDTH && cx < cwidth; sx+=stride_x, cx+=w) {
+        for (int sx = 0, cx = 0; sx < this->WIDTH && cx < (cwidth & -2); sx+=stride_x, cx+=w) {
             const int num = blockToNum(sx, sy, stride_x, stride_y);
             const char *ch = &blockMap[mapOffsets[num][0]];
             const int l = mapOffsets[num][1];
