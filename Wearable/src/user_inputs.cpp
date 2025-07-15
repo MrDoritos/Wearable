@@ -12,6 +12,8 @@
 
 #include <stdio.h>
 
+/*static */wbl::Dpad wbl::dpad = wbl::Dpad();
+
 static const char *TAG = "USER_INPUTS";
 
 static constexpr gpio_num_t pins[] = {
@@ -44,8 +46,8 @@ IRAM_ATTR static void handle_button(void *arg) {
         }
         */
         
-        //if (!(REG_READ(GPIO_IN_REG) & (1ULL << pins[i])))
-        if (!gpio_get_level(pins[i]))
+        if (!(REG_READ(GPIO_IN_REG) & (1ULL << pins[i])))
+        //if (!gpio_get_level(pins[i]))
             wbl::dpad.buttons[i].rising_edge();
         else
             wbl::dpad.buttons[i].falling_edge();
@@ -53,6 +55,7 @@ IRAM_ATTR static void handle_button(void *arg) {
 }
 
 void wbl::Dpad::init() {
+    //printf("reference init %p\n", wbl::dpad.buttons);
     printf("register\n");
     fflush(stdout);
 
@@ -63,7 +66,7 @@ void wbl::Dpad::init() {
 
     static gpio_config_t conf = {};
 
-    conf.intr_type = GPIO_INTR_POSEDGE;
+    conf.intr_type = GPIO_INTR_ANYEDGE;
     conf.mode = GPIO_MODE_INPUT;
     conf.pin_bit_mask = pin_bit_mask;
     conf.pull_down_en = GPIO_PULLDOWN_DISABLE;
@@ -71,9 +74,10 @@ void wbl::Dpad::init() {
 
     ESP_ERROR_CHECK(gpio_config(&conf));
     ESP_ERROR_CHECK(gpio_install_isr_service(ESP_INTR_FLAG_SHARED | ESP_INTR_FLAG_IRAM));
+    //ESP_ERROR_CHECK(gpio_install_isr_service(0));
     
     for (int i = 0; i < 5; i++)
-    //    ESP_ERROR_CHECK(gpio_isr_handler_add(pins[i], handle_button, (void*)pins[i]));
+        //ESP_ERROR_CHECK(gpio_isr_handler_add(pins[i], handle_button, (void*)pins[i]));
         ESP_ERROR_CHECK(gpio_intr_enable(pins[i]));
 
     static gpio_isr_handle_t handle = {};

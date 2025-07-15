@@ -134,59 +134,27 @@ void demo() {
         BATTERY,
         HEART
     };
-    //test.draw_sprites(sprites, 2);
     test.draw_multi({0,0}, BATTERY, "50%");
-
-
-    //display.putTexture(font, 0, 0, 128, 128, 0, 0);
-    //printf("%i %i %i %i %i %i\n", I.getWidth(), I.getHeight(), I.x0, I.y0, I.x1, I.y1);
-    //demo_pattern();
-    //display.putSprite(I, 0, 0);
-    //write_characters("Hello World!",0 ,0);
-    //write_characters("Mnotmworking",0,16);
-    //test.on_clear(nullptr);
-    //write_characters("M M M 9 9 mm M", 0, 0);
-    //write_characters("M M M 9 9 mm M", 0, 24);
     display.flush();
-    vTaskDelay(500 / portTICK_PERIOD_MS);
+    vTaskDelay(100 / portTICK_PERIOD_MS);
     TextureGraphicsContext<TextureT<FramebufferT<Memorybuffer>>> graphics(128, 128, 1, display.buffer);
     display.clear(0);
     display.fill({0,0,16,16}, 1);
     graphics.fill(Size{0,24,16,16}, 1);
     display.flush();
-    //vTaskDelay(1000 / portTICK_PERIOD_MS);
-    //display.putTexture(I.src, 0, 0, 128, 64, 0, 0);
-    //display.putTexture(I.src, 0, 64, 128, 128, 126, 0);
-    //display.putSprite(I, {0,0});
-    //display.putSprite(I, {32,32});
-    //if (xSemaphoreTake(semaphore, 100 / portTICK_PERIOD_MS)) {
-    //if (dpad.enter.state || dpad.up.state || dpad.down.state || dpad.left.state || dpad.right.state) {
-        //dpad.enter.update();
-    //if (!gpio_get_level(GPIO_NUM_15)) {
-    if (dpad.any_state()) {
-        dpad.update();
-        display.putTexture(therock, {0,0,128,128}, {0,0});
+    delay(500);
+    dpad.print_states();
+    if (dpad.any(Dpad::PRESSED)) {
+        display.clear();
+        if (dpad.enter.is_pressed())
+            display.putTexture(therock, {0,0,128,128}, {0,0});
+        if (dpad.up.is_pressed())
+            display.putTexture(atlas, {0,0,128,128}, {0,0});
         display.flush();
+        delay(2000);
     }
-    /*
-    display.circle(64, 64, 24, 1, true);
-    printf("circle\n");
-    vTaskDelay(1000 / portTICK_PERIOD_MS);
-    display.line(0,0,127,127,1);
-    display.flush();
-    printf("line\n");
-    vTaskDelay(1000 / portTICK_PERIOD_MS);
-    display.line(0,127,127,0,1);
-    display.flush();
-    */
-    vTaskDelay(1000 / portTICK_PERIOD_MS);
-    /*
-    display.clear(0);
-    display.flush();
-    printf("clear 0\n");
-    vTaskDelay(ms / portTICK_PERIOD_MS);
-    fflush(stdout);
-    */
+    dpad.update();
+    dpad.print_states();
 }
 
 extern "C" {
