@@ -16,6 +16,7 @@ using namespace wbl;
 using namespace Sprites;
 
 UI::ElementBaseT<DisplayTexture> test(display);
+UI::ElementInlineSpritesT<DisplayTexture, Atlas> spinline(display);
 
 void demo() {
     const TickType_t ms=300;
@@ -32,14 +33,16 @@ void demo() {
         HEART
     };
     test.draw_multi({0,0}, BATTERY, "50%");
+    spinline.on_content_size(nullptr);
+    spinline.resolve_layout();
+    spinline.on_draw(nullptr);
     display.flush();
-    vTaskDelay(100 / portTICK_PERIOD_MS);
+    vTaskDelay(500 / portTICK_PERIOD_MS);
     TextureGraphicsContext<TextureT<FramebufferT<Memorybuffer>>> graphics(128, 128, 1, display.buffer);
     display.clear(0);
     display.fill({0,0,16,16}, 1);
     graphics.fill(Size{0,24,16,16}, 1);
     display.flush();
-    delay(500);
     dpad.print_states();
     if (dpad.any(Dpad::PRESSED)) {
         puts("Any pressed");
@@ -49,15 +52,17 @@ void demo() {
         if (dpad.up.is_pressed())
             display.putTexture(atlas, {0,0,128,128}, {0,0});
         display.flush();
-        delay(2000);
+        delay(1200);
     }
     dpad.update();
     dpad.print_states();
+    delay(500);
 }
 
 extern "C" {
 void app_main() {
     printf("test\n");
+    spinline << HEART;
     dpad.init();
     if (display.init() != ESP_OK) {
         printf("Failed to initialize display\n");

@@ -197,6 +197,7 @@ struct LengthD : public LengthT<Dimension> {
     using LengthT<Dimension>::LengthT;
 
     constexpr LengthD(const LengthT<Dimension> &v):LengthT<Dimension>(v){}
+    constexpr LengthD():LengthT<Dimension>(NONEDIM){}
 
     constexpr /*explicit*/ inline operator Length() const {
         return Length(

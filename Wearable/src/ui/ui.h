@@ -4,6 +4,8 @@
 #include <cassert>
 #include <type_traits>
 #include <stdio.h>
+#include <vector>
+
 #include "texture.h"
 #include "displaybuffer.h"
 #include "types.h"
@@ -205,6 +207,8 @@ struct Style : public Size, public StyleInfo {
             const auto width = length.getWidth();
             const auto height = length.getHeight();
 
+            //fprintf(stderr, "add_length: %iw %ih\n", width, height);
+
             if (width + inline_length.width > boundary.width) {
                 if (wrap) {
                     block_length.height += inline_length.height;
@@ -276,6 +280,18 @@ struct Style : public Size, public StyleInfo {
     constexpr inline Length getTextContentSize(const char *text, const FontProvider &font = Sprites::font) {
         Length boundary = *this;
         return getTextContentSize(text, font, boundary);
+    }
+
+    template<typename Sprite>
+    constexpr inline Length getSpritesContentSize(const Sprite *sprites, const uu &length) {
+        Length boundary = *this;
+        ContentSize content(boundary, this->wrap & WrapStyle::WRAP, false, false);
+
+        for (uu i = 0; i < length; i++) {
+            content.add_sprite(sprites[i]);
+        }
+
+        return content.getContentSize();
     }
 };
 
@@ -545,9 +561,13 @@ struct IElement : public Style, public NodeMovementOpsT<IElement> {
 
     constexpr void resolve_relative_container_sizes() {
         if (!parent) {
-            container = {width.getExplicitValue(), height.getExplicitValue()};
-            resolved_width = width;
-            resolved_height = height;
+            //container = {width.getExplicitValue(), height.getExplicitValue()};
+            container = {
+                width.getComparedValue(content.width),
+                height.getComparedValue(content.height)
+            };
+            resolved_width = width.getCompared(content.width);
+            resolved_height = height.getCompared(content.height);
         } else {
             const LengthD &parent_container = parent->container;
 
@@ -567,6 +587,10 @@ struct IElement : public Style, public NodeMovementOpsT<IElement> {
             resolved_width = rel_w.getCompared(content.width);
             resolved_height = rel_h.getCompared(content.height);
         }
+
+        //fprintf(stderr, "container_sizes: %s\n", name ? name : "null");
+        //fprintf(stderr, "  container: %iw %ih\n", container.width.value, container.height.value);
+        //fprintf(stderr, "    content: %iw %ih\n", content.width, content.height);
 
         if (child)
             child->resolve_relative_container_sizes();
@@ -680,11 +704,11 @@ struct IElement : public Style, public NodeMovementOpsT<IElement> {
                     break;
             }
 
-            printf("%s -> %s\n", name, cur->name);
+            //printf("%s -> %s\n", name, cur->name);
 
             Origin child_offset = (Origin)child_margin + offset;
 
-            printf("x: %i y: %i x: %i y: %i\n", offset.x, offset.y, child_offset.x, child_offset.y);
+            //printf("x: %i y: %i x: %i y: %i\n", offset.x, offset.y, child_offset.x, child_offset.y);
             *cur << child_offset;
             //*cur << offset;
             //*cur << Origin(1,1);
@@ -714,6 +738,13 @@ struct IElement : public Style, public NodeMovementOpsT<IElement> {
             child->resolve_container_position();
         if (sibling)
             sibling->resolve_container_position();
+    }
+
+    constexpr inline void resolve_layout() {
+        resolve_relative_container_sizes();
+        FlowContext root;
+        resolve_container_growth(root);
+        resolve_container_position();
     }
 };
 
@@ -905,6 +936,35 @@ struct ElementBaseT : public ElementT {
         return this->draw_multi(offset, args...);
     }
 };
+
+template<typename Buffer, typename Atlas, typename ElementT = ElementBaseT<Buffer>>
+struct ElementInlineSpritesT : public ElementT {
+    using Sprite = typename Atlas::Sprite;
+    using ElementT::ElementT;
+    using ElementT::operator<<;
+
+    std::vector<Sprite> sprites;
+
+    constexpr inline const Sprite &add_sprite(const Sprite &sprite) {
+        sprites.push_back(sprite);
+        //fprintf(stderr, "add sprite (%i) %p: %iw %ih %p\n", sprites.size(), sprites.data()[0].src, sprite.getWidth(), sprite.getHeight(), sprite.src);
+        return sprite;
+    }
+
+    constexpr inline ElementInlineSpritesT &operator<<(const Sprite &sprite) {
+        add_sprite(sprite);
+        return *this;
+    }
+
+    void on_content_size(Event *event) override {
+        this->content = getSpritesContentSize(sprites.data(), sprites.size());
+    }
+
+    void on_draw(Event *event) override {
+        this->draw_sprites(sprites.data(), sprites.size());
+    }
+};
+
 
 }
 }
