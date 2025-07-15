@@ -67,6 +67,7 @@ struct Dpad {
     Button *buttons = &enter;
 
     esp_err_t init();
+    ~Dpad();
 
     static constexpr const char *names[] = {
         "Enter", "Up", "Right", "Down", "Left"
@@ -78,7 +79,7 @@ struct Dpad {
     constexpr inline void print_states() const {
         for (int i = 0; i < States::NUMSTATES; i++) {
             const int buflen = 50;
-            char buf[buflen];
+            char buf[buflen]={};
             int offset = 0;
             bool v = false;
             offset += snprintf(buf+offset, buflen-offset, "%s: ", states[i]);
@@ -113,6 +114,11 @@ struct Dpad {
             if (buttons[i].state & state)
                 return true;
         return false;
+    }
+
+    constexpr inline void set_states(const States &state) {
+        for (int i = 0; i < button_count; i++)
+            buttons[i].state = state;
     }
 };
 

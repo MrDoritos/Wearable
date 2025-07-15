@@ -27,6 +27,7 @@ endforeach()
 add_library(lib
     ../../console/console.ansi.cpp
     ../wearable.cpp
+    emulator_inputs.cpp
     ${GENERATED_ASSET_OBJECTS}
 )
 
@@ -49,6 +50,7 @@ target_include_directories(lib PUBLIC
     ./stubs
     .
     ../common
+    ../
 )
 
 target_link_libraries(Emulator

@@ -34,6 +34,8 @@ IRAM_ATTR static void handle_button(void *arg) {
     }
 }
 
+wbl::Dpad::~Dpad() {}
+
 esp_err_t wbl::Dpad::init() {
     volatile uint32_t pin_bit_mask = 0;
 

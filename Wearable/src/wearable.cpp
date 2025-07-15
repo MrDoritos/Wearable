@@ -15,7 +15,7 @@
 #include "ui.h"
 #include "sprites.h"
 #include "user_inputs.h"
-#include "driver/gpio.h"
+//#include "driver/gpio.h"
 
 //extern const char _binary_fixedsys_bin_start[];
 //extern const char _binary_fixedsys_bin_end[];
