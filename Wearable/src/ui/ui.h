@@ -239,12 +239,20 @@ struct Style : public Size, public StyleInfo {
         }
     };
 
+    constexpr inline ContentSize getContentSizeProvider(const Length &boundary) {
+        return ContentSize(
+            boundary,
+            this->wrap & WrapStyle::WRAP,
+            this->overflow.x & Overflow::HIDDEN,
+            this->overflow.y & Overflow::HIDDEN
+        );
+    }
+
     template<typename FontProvider>
     constexpr inline Length getTextContentSize(const char *text, const Length &boundary, const FontProvider &font = Sprites::font) {
-        const bool text_wrap = this->wrap & WrapStyle::WRAP;
         const bool text_trim = this->wrap & WrapStyle::TRIM_SPACE;
 
-        ContentSize content(boundary, text_wrap);
+        ContentSize content = getContentSizeProvider(boundary);
         const uu text_length = strlen(text);
 
         for (uu i = 0; i < text_length; i++) {
@@ -285,7 +293,7 @@ struct Style : public Size, public StyleInfo {
     template<typename Sprite>
     constexpr inline Length getSpritesContentSize(const Sprite *sprites, const uu &length) {
         Length boundary = *this;
-        ContentSize content(boundary, this->wrap & WrapStyle::WRAP, false, false);
+        ContentSize content = getContentSizeProvider(boundary);
 
         for (uu i = 0; i < length; i++) {
             content.add_sprite(sprites[i]);
@@ -964,7 +972,6 @@ struct ElementInlineSpritesT : public ElementT {
         this->draw_sprites(sprites.data(), sprites.size());
     }
 };
-
 
 }
 }

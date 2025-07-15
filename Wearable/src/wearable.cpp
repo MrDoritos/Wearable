@@ -62,7 +62,7 @@ void demo() {
 extern "C" {
 void app_main() {
     printf("test\n");
-    spinline << HEART;
+    spinline << HEART << BATTERY << UI::StyleInfo { .wrap{UI::NOWRAP} };
     dpad.init();
     if (display.init() != ESP_OK) {
         printf("Failed to initialize display\n");
