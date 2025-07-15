@@ -145,6 +145,7 @@ void demo() {
     delay(500);
     dpad.print_states();
     if (dpad.any(Dpad::PRESSED)) {
+        puts("Any pressed");
         display.clear();
         if (dpad.enter.is_pressed())
             display.putTexture(therock, {0,0,128,128}, {0,0});

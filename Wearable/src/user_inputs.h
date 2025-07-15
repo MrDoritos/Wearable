@@ -1,6 +1,8 @@
 #pragma once
 
 #include "types.h"
+#include "esp_types.h"
+#include "esp_system.h"
 
 #include <stdio.h>
 
@@ -16,21 +18,31 @@ struct Dpad {
     };
 
     struct Button {
-        States state{NONE};
+        volatile States state{NONE};
 
         constexpr inline void rising_edge() {
-            if (state & ~(States::PRESSED))
+            if (state & ~States::PRESSED || !state)
                 state |= States::PRESSED;
         }
 
         constexpr inline void falling_edge() {
-            if (state & ~(States::RELEASED))
+            if (state & ~States::RELEASED)
                 state |= States::RELEASED;
         }
 
+        /*
+            @brief Call after using values
+
+            Call after using values, like after distributing UI events for user input
+
+            Required to reset pressed and released events, as well 
+                as provide the ability to detect held buttons.
+        */
         constexpr inline void update() {
-            if (state & States::PRESSED) 
-                state = States::HELD;
+            if (state & States::PRESSED) {
+                state ^= States::PRESSED;
+                state |= States::HELD;
+            }
             if (state & States::RELEASED)
                 state = States::NONE;
         }
@@ -54,7 +66,7 @@ struct Dpad {
 
     Button *buttons = &enter;
 
-    void init();
+    esp_err_t init();
 
     static constexpr const char *names[] = {
         "Enter", "Up", "Right", "Down", "Left"
@@ -63,7 +75,7 @@ struct Dpad {
         "Pressed", "Held", "Released"
     };
     
-    constexpr inline void print_states() {
+    constexpr inline void print_states() const {
         for (int i = 0; i < States::NUMSTATES; i++) {
             const int buflen = 50;
             char buf[buflen];
@@ -81,24 +93,6 @@ struct Dpad {
                 fwrite(buf, 1, offset, stdout);
             }
         }
-        /*
-        for (int i = 0; i < button_count; i++) {
-            const Button &button = buttons[i];
-            const States &state = button.state;
-            const int buflen = 50;
-            char buf[buflen];
-            int offset = snprintf(buf, buflen, "%s: ", names[i]);
-            bool v = false;
-            for (int j = 0; j < 3; j++) {
-                if (state & (1<<j)) {
-                    offset += snprintf(buf+offset, buflen-offset, "%s%s", (v?"| ":""),states[j]);
-                    v = true;
-                }
-            }
-            offset+=snprintf(buf+offset, buflen-offset, "\n");
-            fwrite(buf, 1, offset, stdout);
-        }
-        */
         fflush(stdout);
     }
 
@@ -107,14 +101,14 @@ struct Dpad {
             buttons[i].update();
     }
 
-    constexpr inline bool any_state() {
+    constexpr inline bool any_state() const {
         for (int i = 0; i < button_count; i++)
             if (buttons[i].state)
                 return true;
         return false;
     }
 
-    constexpr inline bool any(const States &state) {
+    constexpr inline bool any(const States &state) const {
         for (int i = 0; i < button_count; i++)
             if (buttons[i].state & state)
                 return true;
