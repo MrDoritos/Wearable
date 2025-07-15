@@ -6,8 +6,9 @@
 
 namespace wbl {
 
-template<typename Buffer>
+template<typename BufferT>
 struct SpriteT : public Size {
+    using Buffer = BufferT;
     const Buffer *src;
 
     constexpr SpriteT(const Buffer *src, const Size &size)

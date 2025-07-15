@@ -238,6 +238,15 @@ struct Style : public Size, public StyleInfo {
         constexpr inline bool add_sprite(const Sprite &sprite) {
             return add_length(sprite);
         }
+
+        template<typename FontSprite>
+        constexpr inline bool add_glyph(const FontSprite &sprite) {
+            const Length sprite_size(
+                sprite.font_width + sprite.advance_x,
+                sprite.font_height + sprite.advance_y  
+            );
+            return add_length(sprite_size);
+        }
     };
 
     constexpr inline ContentSize getContentSizeProvider(const Length &boundary) {
@@ -276,7 +285,8 @@ struct Style : public Size, public StyleInfo {
 
             auto sprite = font.getCharacter(character);
 
-            content.add_sprite(sprite);
+            //content.add_sprite(sprite);
+            content.add_glyph(sprite);
         }
 
         return content.getContentSize();
@@ -850,7 +860,12 @@ struct ElementBaseT : public ElementT {
 
             auto sprite = font.getCharacter(character);
 
-            if (cur.x + sprite.getWidth() > this->getRight()) {
+            const Length glyph_size(
+                sprite.font_width + sprite.advance_x,
+                sprite.font_height + sprite.advance_y
+            );
+
+            if (cur.x + glyph_size.width > this->getRight()) {
                 if (text_wrap) {
                     cur.x = pos.x;
                     cur.y += size.height;
@@ -858,20 +873,20 @@ struct ElementBaseT : public ElementT {
                 }
             }
 
-            if (determine_size && (cur.x - pos.x) + sprite.getWidth() > size.width)
-                size.width = (cur.x - pos.x) + sprite.getWidth();
+            if (determine_size && (cur.x - pos.x) + glyph_size.width > size.width)
+                size.width = (cur.x - pos.x) + glyph_size.width;
 
-            if (cur.y + sprite.getHeight() > this->getBottom()) {
+            if (cur.y + glyph_size.height > this->getBottom()) {
                 break;
             }
 
-            if (size.height < sprite.getHeight())
-                size.height = sprite.getHeight();
+            if (size.height < glyph_size.height)
+                size.height = glyph_size.height;
 
             if (!determine_size)
                 this->buffer.putSprite(sprite, cur);
 
-            cur.x += sprite.getWidth();
+            cur.x += glyph_size.width;
         }
 
         if (determine_size)

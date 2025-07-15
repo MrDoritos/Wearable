@@ -17,7 +17,7 @@ using namespace Sprites;
 
 UI::ElementBaseT<DisplayTexture> test(display);
 UI::ElementInlineSpritesT<DisplayTexture, Atlas> spinline(display);
-UI::ElementInlineTextT<DisplayTexture> TEXT(display, Sprites::font);
+UI::ElementInlineTextT<DisplayTexture, MinifontProvider> TEXT(display, minifont);
 
 void demo() {
     const TickType_t ms=300;
@@ -41,6 +41,7 @@ void demo() {
     TEXT.resolve_layout();
     spinline.on_draw(nullptr);
     TEXT.on_draw(nullptr);
+    display.putSprite(minifont.getCharacter('A'), {0,0});
     display.flush();
     vTaskDelay(800 / portTICK_PERIOD_MS);
     TextureGraphicsContext<TextureT<FramebufferT<Memorybuffer>>> graphics(128, 128, 1, display.buffer);

@@ -6,18 +6,22 @@ namespace wbl {
     template<typename SpriteT = Sprite, typename CharT = char>
     struct FontSpriteT : public SpriteT {
         using Char = CharT;
+        using Buffer = typename SpriteT::Buffer;
 
         const fb font_width, font_height;
         const fb advance_x, advance_y;
 
-        FontSpriteT(const SpriteT &src, const fb &font_width, const fb &font_height, const fb &advance_x, const fb &advance_y)
+        constexpr FontSpriteT(const SpriteT &src, const fb &font_width, const fb &font_height, const fb &advance_x, const fb &advance_y)
         :SpriteT(src),font_width(font_width),font_height(font_height),advance_x(advance_x),advance_y(advance_y){}
+        constexpr FontSpriteT(const Buffer &src, const fb &x, const fb &y, const fb &font_width, const fb &font_height, const fb &advance_x, const fb &advance_y)
+        :SpriteT(&src,x,y,font_width,font_height),font_width(font_width),font_height(font_height),advance_x(advance_x),advance_y(advance_y){}
     };
 
     template<typename DerivedAtlas, typename CharT = char, typename FontSpriteT = FontSpriteT<typename DerivedAtlas::Sprite, CharT>>
     struct FontProviderT : public DerivedAtlas {
         using FontSprite = FontSpriteT;
         using DerivedAtlas::DerivedAtlas;
+        using Atlas = DerivedAtlas;
 
         FontSprite getCharacter(const CharT &character);
         FontSprite *getCharacter(const CharT &character, FontSprite *in);
