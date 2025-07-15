@@ -28,6 +28,7 @@ add_library(lib
     ../../console/console.ansi.cpp
     ../wearable.cpp
     emulator_inputs.cpp
+    emu_func.cpp
     ${GENERATED_ASSET_OBJECTS}
 )
 
