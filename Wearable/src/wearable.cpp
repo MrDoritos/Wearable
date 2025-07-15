@@ -17,6 +17,7 @@ using namespace Sprites;
 
 UI::ElementBaseT<DisplayTexture> test(display);
 UI::ElementInlineSpritesT<DisplayTexture, Atlas> spinline(display);
+UI::ElementInlineTextT<DisplayTexture> TEXT(display, Sprites::font);
 
 void demo() {
     const TickType_t ms=300;
@@ -34,10 +35,14 @@ void demo() {
     };
     test.draw_multi({0,0}, BATTERY, "50%");
     spinline.on_content_size(nullptr);
+    TEXT << Origin { 12, 16 };
+    TEXT.on_content_size(nullptr);
     spinline.resolve_layout();
+    TEXT.resolve_layout();
     spinline.on_draw(nullptr);
+    TEXT.on_draw(nullptr);
     display.flush();
-    vTaskDelay(500 / portTICK_PERIOD_MS);
+    vTaskDelay(800 / portTICK_PERIOD_MS);
     TextureGraphicsContext<TextureT<FramebufferT<Memorybuffer>>> graphics(128, 128, 1, display.buffer);
     display.clear(0);
     display.fill({0,0,16,16}, 1);
@@ -63,6 +68,7 @@ extern "C" {
 void app_main() {
     printf("test\n");
     spinline << HEART << BATTERY << UI::StyleInfo { .wrap{UI::NOWRAP} };
+    TEXT.text = "Hello UI";
     dpad.init();
     if (display.init() != ESP_OK) {
         printf("Failed to initialize display\n");

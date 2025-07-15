@@ -165,6 +165,7 @@ struct Style : public Size, public StyleInfo {
     using StyleInfo::height;
 
     constexpr Style(){}
+    constexpr Style(const StyleInfo &style):StyleInfo(style){}
     //Style(){}
 
     struct ContentSize {
@@ -252,7 +253,7 @@ struct Style : public Size, public StyleInfo {
     constexpr inline Length getTextContentSize(const char *text, const Length &boundary, const FontProvider &font = Sprites::font) {
         const bool text_trim = this->wrap & WrapStyle::TRIM_SPACE;
 
-        ContentSize content = getContentSizeProvider(boundary);
+        ContentSize content = this->getContentSizeProvider(boundary);
         const uu text_length = strlen(text);
 
         for (uu i = 0; i < text_length; i++) {
@@ -287,13 +288,13 @@ struct Style : public Size, public StyleInfo {
     template<typename FontProvider>
     constexpr inline Length getTextContentSize(const char *text, const FontProvider &font = Sprites::font) {
         Length boundary = *this;
-        return getTextContentSize(text, font, boundary);
+        return this->getTextContentSize(text, boundary, font);
     }
 
     template<typename Sprite>
     constexpr inline Length getSpritesContentSize(const Sprite *sprites, const uu &length) {
         Length boundary = *this;
-        ContentSize content = getContentSizeProvider(boundary);
+        ContentSize content = this->getContentSizeProvider(boundary);
 
         for (uu i = 0; i < length; i++) {
             content.add_sprite(sprites[i]);
@@ -484,6 +485,7 @@ struct IElement : public Style, public NodeMovementOpsT<IElement> {
     constexpr IElement(const char *name, IElement *parent, IElement *sibling, IElement *child):name(name),parent(parent),sibling(sibling),child(child){}
     constexpr IElement(const char *name):IElement(name,nullptr,nullptr,nullptr){}
     constexpr IElement():IElement(nullptr){}
+    constexpr IElement(const StyleInfo &styleInfo):Style(styleInfo),name(nullptr),parent(nullptr),sibling(nullptr),child(nullptr){}
 
     constexpr inline IElement &operator<<(const Origin &origin) {
         *((Origin*)this) = origin;
@@ -767,6 +769,7 @@ struct ElementT : public IElement {
     constexpr ElementT(Buffer &buffer, const char *name, IElement *parent, IElement *sibling, IElement *child):IElement(name,parent,sibling,child),buffer(buffer){}
     constexpr ElementT(Buffer &buffer, const char *name):ElementT(buffer, name, nullptr, nullptr, nullptr){}
     constexpr ElementT(Buffer &buffer):ElementT(buffer,nullptr){}
+    constexpr ElementT(Buffer &buffer, const StyleInfo &styleInfo):IElement(styleInfo),buffer(buffer){}
 
     constexpr inline ElementT &operator<<(Buffer &buffer) {
         this->buffer = buffer;
@@ -965,11 +968,33 @@ struct ElementInlineSpritesT : public ElementT {
     }
 
     void on_content_size(Event *event) override {
-        this->content = getSpritesContentSize(sprites.data(), sprites.size());
+        this->content = this->getSpritesContentSize(sprites.data(), sprites.size());
     }
 
     void on_draw(Event *event) override {
         this->draw_sprites(sprites.data(), sprites.size());
+    }
+};
+
+template<typename Buffer, typename FontProvider = Sprites::FontProvider, typename ElementT = ElementBaseT<Buffer>>
+struct ElementInlineTextT : public ElementT {
+    //using ElementT::ElementT;
+    using ElementT::operator<<;
+
+    const char *text;
+    const FontProvider &font;
+
+    constexpr ElementInlineTextT(const char *text, const FontProvider &font):text(text),font(font){}
+    constexpr ElementInlineTextT(const char *text):ElementInlineTextT(text, Sprites::font){}
+    constexpr ElementInlineTextT():ElementInlineTextT(""){}
+    constexpr ElementInlineTextT(Buffer &buffer, const FontProvider &font):ElementT(buffer, StyleInfo{.wrap{NOWRAP}}),text(""),font(font){}
+
+    void on_content_size(Event *event) override {
+        this->content = this->getTextContentSize(text, font);
+    }
+
+    void on_draw(Event *event) override {
+        this->draw_text(text, font);
     }
 };
 
