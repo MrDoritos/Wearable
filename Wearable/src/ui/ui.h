@@ -512,6 +512,11 @@ struct IElement : public Style, public NodeMovementOpsT<IElement> {
         return *this;
     }
 
+    constexpr inline IElement &operator<<(const Size &size) {
+        *((Size*)this) = size;
+        return *this;
+    }
+
     constexpr inline IElement &operator<<(const StyleInfo &style) {
         *((StyleInfo*)this) = style;
         return *this;
