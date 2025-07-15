@@ -607,6 +607,7 @@ struct IElement : public Style, public NodeMovementOpsT<IElement> {
 template<typename Buffer>
 struct ElementT : public IElement {
     using IElement::IElement;
+    using IElement::operator<<;
 
     Buffer &buffer;
 

@@ -20,6 +20,8 @@ UI::ElementBaseT<DisplayTexture> test(display);
 void demo() {
     const TickType_t ms=300;
     display.clear();
+    test << display;
+    test << Origin { 4, 30 };
     const auto I = font.getCharacter('M');
     test.setWidth(64);
     test.setOffsetX(32);
