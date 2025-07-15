@@ -9,6 +9,7 @@
 #include "types.h"
 #include "sizes.h"
 #include "sprites.h"
+#include "node_iterator.h"
 
 namespace wbl {
 namespace UI {
@@ -280,7 +281,7 @@ using EventValues = Event::Value;
 using EventDirection = Event::Direction;
 using EventState = Event::State;
 
-struct IElement : public Style {
+struct IElement : public Style, public NodeMovementOpsT<IElement> {
     const char *name;
 
     IElement *parent;
