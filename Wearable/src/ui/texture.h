@@ -63,29 +63,30 @@ struct TextureT : public Buffer {
         fill(size.x, size.y, size.x + size.width, size.y + size.height, px);
     }
 
-    template<typename CALLBACK, typename IType=fb>
+    template<typename IType=fb, typename CALLBACK>
     constexpr inline void fill_callback(CALLBACK callback, const IType &x0, const IType &y0, const IType &x1, const IType &y1) {
         for (IType x = x0; x < x1; x++)
             for (IType y = y0; y < y1; y++)
                 callback(x, y);
     }
 
-    inline void circle(const Origin &center, const fb &radius, const pixel &px, const bool fill=true) {
-        circle(center.x, center.y, px, fill);
+    template<typename calc=short, typename FType=fb, typename ORIGIN_T=Origin, typename IType= typename ORIGIN_T::value_type>
+    constexpr inline void circle(const ORIGIN_T &center, const FType &radius, const pixel &px, const bool fill=true) {
+        circle<calc,IType,FType>(center.x, center.y, radius, px, fill);
     }
 
-    template<typename CALLBACK, typename calc=short, typename IType=fb>
-    constexpr inline void circle_callback(CALLBACK callback, const IType &cx, const IType &cy, const IType &radius, const bool &fill=false) {
+    template<typename calc=short, typename IType=fb, typename FType=fb, typename CALLBACK>
+    constexpr inline void circle_callback(CALLBACK callback, const IType &cx, const IType &cy, const FType &radius, const bool &fill=true) {
         const calc r = calc(radius);
         const calc r2 = r * r;
 
         for (IType x = cx - r; x < cx + r + 1; x++) {
             for (IType y = cy - r; y < cy + r + 1; y++) {
-                const calc xd = x - cx;
-                const calc yd = y - cy;
+                const calc xd = calc(x) - cx;
+                const calc yd = calc(y) - cy;
                 const calc xy2 = (xd * xd) + (yd * yd);
                 const calc xyd = xy2 - r2;
-                if (!fill && (xyd >= 0 ? xyd : -xyd) > 2)
+                if (!fill && (xyd >= 0 ? xyd : -xyd) > (r*2))
                     continue;
                 if (xy2 < r2)
                     callback(x, y);
@@ -93,14 +94,15 @@ struct TextureT : public Buffer {
         }
     }
 
-    inline void circle(const fb &cx, const fb &cy, const fb &r, const pixel &px, const bool fill=true) {
-        const fb r2 = r * r;
+    template<typename calc=short,typename IType=fb,typename FType=short>
+    inline void circle(const IType &cx, const IType &cy, const FType &r, const pixel &px, const bool fill=true) {
+        const FType r2 = r * r;
 
-        for (fb x = cx - r; x < cx + r + 1; x++) {
-            for (fb y = cy - r; y < cy + r + 1; y++) {
-                const fb xy2 = (x-cx) * (x-cx) + (y-cy) * (y-cy);
-                //if (!fill && ((xy2 - r2) > 2 || (xy2 - r2) < -2))
-                if (!fill && abs(xy2 - r2) > 2)
+        for (IType x = cx - r; x < cx + r + 1; x++) {
+            for (IType y = cy - r; y < cy + r + 1; y++) {
+                const calc xy2 = (calc(x-cx) * calc(x-cx)) + (calc(y-cy) * calc(y-cy));
+                const calc xyd = r2 - xy2;
+                if (!fill && (xyd >= 0 ? xyd : -xyd) > (r*2))
                     continue;
                 if (xy2 < r2)
                     this->putPixel(x, y, px);
@@ -280,10 +282,17 @@ struct TextureT : public Buffer {
         line(start.x, start.y, end.x, end.y, px);
     }
 
-    template<typename CALLBACK, typename calc=short, typename IType=fb>
-    inline void stroke_line_callback(const IType &x1, const IType &y1, const IType &x2, const IType &y2, const IType &width, CALLBACK callback) { 
-        line_callback(x1, y1, x2, y2, [&width,&callback](const IType &x, const IType &y) {
-            circle_callback(callback, x, y, width, true);
+    template<typename calc=short, typename IType=fb, typename FType=fb, typename CALLBACK>
+    inline void stroke_line_callback(const IType &x1, const IType &y1, const IType &x2, const IType &y2, const FType &width, CALLBACK callback) { 
+        line_callback<calc>(x1, y1, x2, y2, [this,&width,&callback](const IType &x, const IType &y) {
+            this->circle_callback<calc,IType,FType>(callback, x, y, width, true);
+        });
+    }
+
+    template<typename calc=short, typename IType=fb, typename FType=fb>
+    inline void stroke_line(const IType &x1, const IType &y1, const IType &x2, const IType &y2, const FType &width, const pixel &px) {
+        stroke_line_callback<calc,IType,FType>(x1, y1, x2, y2, width, [this, &px](const IType &x, const IType &y) {
+            this->putPixelBound(x, y, px);
         });
     }
 };

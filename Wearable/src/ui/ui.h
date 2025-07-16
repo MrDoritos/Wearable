@@ -5,6 +5,7 @@
 #include <type_traits>
 #include <stdio.h>
 #include <vector>
+#include <time.h>
 
 #include "texture.h"
 #include "displaybuffer.h"
@@ -790,6 +791,10 @@ struct ElementT : public IElement {
         this->buffer = buffer;
         return *this;
     }
+
+    constexpr inline void clear(const pixel &px = 0) {
+        this->buffer.fill(*this, px);
+    }
 };
 
 template<typename Buffer, typename ElementT = ElementT<Buffer>>
@@ -1015,6 +1020,88 @@ struct ElementInlineTextT : public ElementT {
 
     void on_draw(Event *event) override {
         this->draw_text(text, font);
+    }
+};
+
+template<typename Buffer, typename ElementT = ElementBaseT<Buffer>>
+struct ScreenClockT : public ElementT {
+    using ElementT::ElementT;
+    using ElementT::operator<<;
+
+    void on_draw(Event *event) override {
+        using calc = float;
+
+        const auto polar_to_rectilinear_coordinates 
+            = [](const calc &radians, const calc &radius, const Origin &center = 0) {
+                return Origin(
+                    radius * cosf(radians) + calc(center.x),
+                    radius * sinf(radians) + calc(center.y)
+                );
+        };
+
+        const auto polar_line
+            = [this,&polar_to_rectilinear_coordinates](const calc &radians, const calc &radius, const calc &width, const pixel &px, const Origin &center) {
+                const Origin end = polar_to_rectilinear_coordinates(radians, radius, center);
+                this->buffer.template stroke_line<calc,calc,calc>(center.x, center.y, end.x, end.y, width, px);
+        };
+
+        const auto radius_polar_line
+            = [this,&polar_to_rectilinear_coordinates](const calc &radians, const calc &radius_minor, const calc &radius_major, const calc &width, const pixel &px, const Origin &center) {
+                const Origin start = polar_to_rectilinear_coordinates(radians, radius_minor, center);
+                const Origin end = polar_to_rectilinear_coordinates(radians, radius_major, center);
+                this->buffer.template stroke_line<calc,calc,calc>(start.x, start.y, end.x, end.y, width, px);
+                //this->buffer.line(start.x, start.y, end.x, end.y, px);
+        };
+
+        const auto tick_marks
+            = [this,&radius_polar_line](const calc &num_ticks, const calc &radius_minor, const calc &radius_major, const calc &width, const pixel &px, const Origin &center) {
+                constexpr const calc D_PI = M_PI * 2;
+                const calc tick_step = D_PI * (1/num_ticks);
+                for (calc i = 0.001; i < D_PI-0.001; i+=tick_step)
+                    radius_polar_line(i, radius_minor, radius_major, width, px, center);
+        };
+
+        time_t now;
+
+        time(&now);
+
+        const time_t seconds = 60;
+        const time_t minutes_per_hour = seconds * 60;
+        const time_t hours_per_day = minutes_per_hour * 12;
+
+        const time_t seconds_abs_now = now % seconds;
+        const time_t minutes_abs_now = now % minutes_per_hour;
+        const time_t hours_abs_now = now % hours_per_day;
+
+        const calc seconds_rel_now = seconds_abs_now * calc(1.0f/seconds);
+        const calc minutes_rel_now = minutes_abs_now * calc(1.0f/minutes_per_hour);
+        const calc hours_rel_now = hours_abs_now * calc(1.0f/hours_per_day);
+
+        const calc mult = M_PI * calc(2);
+        const calc sub = M_PI * calc(0.5f);
+        const calc seconds_rad_now = seconds_rel_now * mult - sub;
+        const calc minutes_rad_now = minutes_rel_now * mult - sub;
+        const calc hours_rad_now = hours_rel_now * mult - sub;
+
+        const fb min = this->getMinLength();
+        const Origin mp = this->getMidpoint();
+
+        const calc rd = min * calc(0.5);
+
+        this->clear();
+
+        //this->buffer.circle(mp.x, mp.y, rd, 1, false);
+
+        polar_line(seconds_rad_now, rd * 0.75f, 1.0f, 1, mp);
+        polar_line(minutes_rad_now, rd * 0.8f, 1.5f, 1, mp);
+        polar_line(hours_rad_now, rd * 0.9f, 1.7f, 1, mp);
+
+
+        tick_marks(60, rd * 0.91f, rd, 1, 1, mp);
+        tick_marks(12, rd * 0.87f, rd, 1.3, 1, mp);
+
+        this->buffer.circle(mp.x, mp.y, 3, 1, true);
+        this->buffer.circle(mp.x, mp.y, 1, 0, true);
     }
 };
 

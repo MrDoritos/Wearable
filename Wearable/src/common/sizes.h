@@ -127,6 +127,8 @@ static constexpr Dimension NONEDIM = Dimension(0, NONE);
 
 template<typename T>
 struct OriginT {
+    typedef T value_type;
+
     T x, y;
     constexpr OriginT():x(0),y(0){}
     constexpr OriginT(const T &x, const T &y):x(x),y(y){}
@@ -168,6 +170,14 @@ struct LengthT {
     constexpr inline LengthT &operator=(const T &value) {
 
     }*/
+
+    constexpr inline T getMinLength() const {
+        return width > height ? height : width;
+    }
+
+    constexpr inline T getMaxLength() const {
+        return width > height ? width : height;
+    }
 
     friend constexpr inline LengthT operator+(const LengthT &a, const LengthT &b) {
         return LengthT(
@@ -224,6 +234,13 @@ struct SizeT : public Origin, public Length {
     constexpr T getTop() const { return this->y; }
     constexpr T getRight() const { return this->x + this->width; }
     constexpr T getBottom() const { return this->y + this->height; }
+
+    constexpr inline Origin getMidpoint() const {
+        return Origin(
+            this->x + (this->width * 0.5),
+            this->y + (this->height * 0.5)
+        );
+    }
 };
 
 template<typename T>

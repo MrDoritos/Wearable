@@ -18,6 +18,7 @@ using namespace Sprites;
 UI::ElementBaseT<DisplayTexture> test(display);
 UI::ElementInlineSpritesT<DisplayTexture, Atlas> spinline(display);
 UI::ElementInlineTextT<DisplayTexture, MinifontProvider> TEXT(display, minifont);
+UI::ScreenClockT<DisplayTexture> uiclock(display);
 
 void demo() {
     const TickType_t ms=300;
@@ -42,8 +43,8 @@ void demo() {
     spinline.on_draw(nullptr);
     TEXT.on_draw(nullptr);
     display.putSprite(minifont.getCharacter('A'), {0,0});
-    display.flush();
-    vTaskDelay(100 / portTICK_PERIOD_MS);
+    //display.flush();
+    //vTaskDelay(100 / portTICK_PERIOD_MS);
     TextureGraphicsContext<TextureT<FramebufferT<Memorybuffer>>> graphics(128, 128, 1, display.buffer);
     display.clear(0);
     display.fill({0,0,16,16}, 1);
@@ -53,6 +54,8 @@ void demo() {
     txt << Size { 32, 64, 64, 64 };
     txt << UI::StyleInfo { .wrap{UI::WRAP} };
     txt.on_draw(nullptr);
+    uiclock << Size { 16, 0, 97, 97 };
+    uiclock.on_draw(nullptr);
     display.flush();
     dpad.print_states();
     if (dpad.any(Dpad::PRESSED)) {
@@ -67,7 +70,7 @@ void demo() {
     }
     dpad.update();
     dpad.print_states();
-    delay(1000);
+    delay(300);
 }
 
 extern "C" {
