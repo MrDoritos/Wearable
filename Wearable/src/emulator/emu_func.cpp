@@ -8,13 +8,26 @@ using DUR = CLK::duration;
 
 TP start = CLK::now();
 
-int64_t micros() {
+template<typename RATIO>
+int64_t get_duration() {
     TP now = CLK::now();
 
-    const DUR elap = now - start;
-    using MDUR = std::chrono::duration<int64_t, std::micro>;
-    const MDUR melap = std::chrono::duration_cast<MDUR>(elap);
-    return melap.count();
+    return std::chrono::duration_cast
+        <std::chrono::duration<int64_t, RATIO>>
+            (now - start)
+                .count();
+}
+
+int64_t micros() {
+    return get_duration<std::micro>();
+}
+
+int64_t millis() {
+    return get_duration<std::milli>();
+}
+
+int64_t seconds() {
+    return get_duration<std::ratio<1>>();    
 }
 
 void vTaskDelay(TickType_t delay) {

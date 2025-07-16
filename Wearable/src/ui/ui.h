@@ -1180,15 +1180,15 @@ struct ElementRootT : public ElementT {
             reset_log_time();
     }
 
-    inline void flush_log(const bool &display_flush = true, const bool &clear_text_boundary=true) {
+    inline void flush_log(const bool &display_flush = true, const bool &clear_text_boundary=true, const Origin &position={0}) {
         if (!debug) return;
 
         if (clear_text_boundary) {
             Length len = this->getTextContentSize(debug_log, Sprites::minifont);
-            this->buffer.fill({{},len},0);
+            this->buffer.fill({position,len},0);
         }
 
-        this->draw_text(debug_log, Sprites::minifont);
+        this->draw_text(debug_log, Sprites::minifont, position);
         
         if (display_flush)
             this->buffer.flush();
@@ -1211,6 +1211,34 @@ struct ElementRootT : public ElementT {
 
     inline void setDebug(const bool &debug_state=true) {
         this->debug = debug_state;
+    }
+};
+
+template<typename Buffer, typename ElementT = ElementBaseT<Buffer>>
+struct ElementBatteryT : public ElementT {
+    using ElementT::ElementT;
+    using ElementT::operator<<;
+
+    bool show_percentage = true;
+    ub current_level = 50;
+    Sprites::Atlas::Sprite battery_sprite = Sprites::BATTERY_5x10;
+
+    void set_battery_level(const ub &level) {
+        this->current_level = level;
+    }
+
+    void on_draw(Event *event) override {
+        this->clear();
+        const int buflen = 10;
+        char buf[buflen];
+        int count = snprintf(buf, buflen, "%i%%", current_level);
+        Origin pos = *this;
+        this->draw_multi(pos, battery_sprite, (const char*)buf);
+        const ub sheight = battery_sprite.getHeight();
+        const ub swidth = battery_sprite.getWidth();
+        int nheight = sheight*(current_level/100.0f);
+        //this->buffer.fill(pos.x+1,pos.y+nheight+1,pos.x+swidth-1,pos.y+sheight-1,1);
+        this->buffer.fill(pos.x+1,pos.y+sheight-nheight,pos.x+swidth-1,pos.y+sheight-1,1);
     }
 };
 

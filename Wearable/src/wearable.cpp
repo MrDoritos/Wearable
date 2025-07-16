@@ -21,6 +21,7 @@ UI::ElementInlineTextT<DisplayTexture, MinifontProvider> TEXT(display, minifont)
 UI::ScreenClockT<DisplayTexture> uiclock(display);
 UI::ElementRootT<DisplayTexture> uiroot(display);
 auto txt = UI::ElementInlineTextT<DisplayTexture, MinifontProvider>(display, minifont);
+UI::ElementBatteryT<DisplayTexture> uibattery(display);
 
 const Atlas::Sprite sprites[] = {
     BATTERY,
@@ -37,6 +38,7 @@ void demo() {
     uiclock.on_draw(nullptr);
     display.flush();
     */
+    uibattery.set_battery_level((millis()%5000)/50);
     uiroot.reset_log();
     //display.clear();
     uiroot.log_time("BUFCLR");
@@ -46,9 +48,11 @@ void demo() {
     //uiroot.log_time("SET0  ");
     uiclock.on_draw(nullptr);
     uiroot.log_time("CLOCK ");
+    uibattery.on_draw(nullptr);
+    uiroot.log_time("BATT  ");
 
 
-    uiroot.flush_log();
+    uiroot.flush_log(true,true,{0,32});
     //uiroot.once();
 
     if (dpad.any(Dpad::PRESSED)) {
@@ -78,6 +82,7 @@ void init() {
     test.wrap = UI::WrapStyle::WRAP | UI::WrapStyle::TRIM_SPACE;
     test << Size { 32, 30, 64, 64 };
     spinline << HEART << BATTERY << UI::StyleInfo { .wrap{UI::NOWRAP} };
+    uibattery << Size {0,0,32,16};
 
     TEXT.text = "Hello UI";
     txt.text = "SOME TEST TEXT\n VERY FINE text\n for very small values 0123456789 \% voltage 4.2v !\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~";
