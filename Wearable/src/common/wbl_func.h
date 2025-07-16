@@ -8,3 +8,7 @@ inline void delay(TickType_t ms) {
 }
 
 int64_t micros();
+
+int64_t millis();
+
+int64_t seconds();

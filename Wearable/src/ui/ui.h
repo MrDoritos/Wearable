@@ -1044,8 +1044,20 @@ struct ScreenClockT : public ElementT {
     using ElementT::ElementT;
     using ElementT::operator<<;
 
+    int64_t prev_draw_time = 0;
+    bool use_milliseconds = false;
+
     void on_draw(Event *event) override {
         using calc = float;
+
+        const int64_t now = use_milliseconds ? millis() : seconds();    
+    
+        if (now == prev_draw_time)
+            return;
+    
+        this->clear();
+
+        prev_draw_time = now;
 
         const auto polar_to_rectilinear_coordinates 
             = [](const calc &radians, const calc &radius, const Origin &center = 0) {
@@ -1077,11 +1089,8 @@ struct ScreenClockT : public ElementT {
                     radius_polar_line(i, radius_minor, radius_major, width, px, center);
         };
 
-        time_t now;
-
-        time(&now);
-
-        const time_t seconds = 60;
+        const time_t milliseconds = use_milliseconds ? 1000 : 1;
+        const time_t seconds = milliseconds * 60;
         const time_t minutes_per_hour = seconds * 60;
         const time_t hours_per_day = minutes_per_hour * 12;
 
@@ -1103,10 +1112,6 @@ struct ScreenClockT : public ElementT {
         const Origin mp = this->getMidpoint();
 
         const calc rd = min * calc(0.5);
-
-        //this->clear();
-
-        //this->buffer.circle(mp.x, mp.y, rd, 1, false);
 
         polar_line(seconds_rad_now, rd * 0.75f, 1.0f, 1, mp);
         polar_line(minutes_rad_now, rd * 0.8f, 1.5f, 1, mp);

@@ -38,12 +38,12 @@ void demo() {
     display.flush();
     */
     uiroot.reset_log();
-    display.clear();
+    //display.clear();
     uiroot.log_time("BUFCLR");
-    display.fill(uiroot, 1);
-    uiroot.log_time("SET1  ");
-    display.fill(uiroot, 0);
-    uiroot.log_time("SET0  ");
+    //display.fill(uiroot, 1);
+    //uiroot.log_time("SET1  ");
+    //display.fill(uiroot, 0);
+    //uiroot.log_time("SET0  ");
     uiclock.on_draw(nullptr);
     uiroot.log_time("CLOCK ");
 
@@ -62,7 +62,7 @@ void demo() {
         delay(1000);
     }
     dpad.update();
-    delay(300);
+    delay(1);
 }
 
 void init() {
