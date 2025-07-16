@@ -43,7 +43,7 @@ struct DimensionT {
     constexpr DimensionT(const T &v, const Unit &unit=PX):unit(unit),value(v){}
     
     template<typename RType=T, typename CALC=float>
-    constexpr RType resolve(const DimensionT &major) const {
+    constexpr inline RType resolve(const DimensionT &major) const {
         switch (unit) {
             case PX:
                 return RType(value);
@@ -55,7 +55,7 @@ struct DimensionT {
     }
 
     template<typename RType=T, typename CALC=float>
-    constexpr RType resolve(const T &major) const {
+    constexpr inline RType resolve(const T &major) const {
         return resolve(DimensionT(major));
     }
 
@@ -134,10 +134,10 @@ struct OriginT {
     constexpr OriginT(const T &x, const T &y):x(x),y(y){}
     constexpr OriginT(const Box &b);
 
-    constexpr T getOffsetX() const { return x; }
-    constexpr T getOffsetY() const { return y; }
-    constexpr void setOffsetX(const T &offsetX) { x = offsetX; }
-    constexpr void setOffsetY(const T &offsetY) { y = offsetY; }
+    constexpr inline T getOffsetX() const { return x; }
+    constexpr inline T getOffsetY() const { return y; }
+    constexpr inline void setOffsetX(const T &offsetX) { x = offsetX; }
+    constexpr inline void setOffsetY(const T &offsetY) { y = offsetY; }
 
     friend constexpr inline OriginT operator+(const OriginT &a, const OriginT &b) {
         return OriginT(
@@ -161,10 +161,10 @@ struct LengthT {
     constexpr LengthT(const T &value):width(value),height(value){}
     constexpr LengthT(){}
 
-    constexpr T getWidth() const { return width; }
-    constexpr T getHeight() const { return height; }
-    constexpr void setWidth(const T &width) { this->width = width; }
-    constexpr void setHeight(const T &height) { this->height = height; }
+    constexpr inline T getWidth() const { return width; }
+    constexpr inline T getHeight() const { return height; }
+    constexpr inline void setWidth(const T &width) { this->width = width; }
+    constexpr inline void setHeight(const T &height) { this->height = height; }
 
     /*
     constexpr inline LengthT &operator=(const T &value) {
@@ -190,7 +190,7 @@ struct LengthT {
         return a = a + b;
     }
 
-    constexpr explicit operator OriginT<T>() {
+    constexpr inline explicit operator OriginT<T>() {
         return OriginT<T>(width, height);
     }
 };
@@ -230,10 +230,10 @@ struct SizeT : public Origin, public Length {
     constexpr SizeT(const Origin &o, const Length &l):Origin(o),Length(l){}
     constexpr SizeT(const Box &b);
 
-    constexpr T getLeft() const { return this->x; }
-    constexpr T getTop() const { return this->y; }
-    constexpr T getRight() const { return this->x + this->width; }
-    constexpr T getBottom() const { return this->y + this->height; }
+    constexpr inline T getLeft() const { return this->x; }
+    constexpr inline T getTop() const { return this->y; }
+    constexpr inline T getRight() const { return this->x + this->width; }
+    constexpr inline T getBottom() const { return this->y + this->height; }
 
     constexpr inline Origin getMidpoint() const {
         return Origin(
@@ -252,7 +252,7 @@ struct BoxT {
     constexpr BoxT(const T &v):BoxT(v){}
     constexpr BoxT(const Size &s):top(s.y),right(s.x+s.width),bottom(s.y+s.height),left(s.x){}
     
-    constexpr BoxT resolve(const BoxT &major) const {
+    constexpr inline BoxT resolve(const BoxT &major) const {
         const BoxT resolved(
             top.resolve(major.top),
             right.resolve(major.right),
@@ -262,7 +262,7 @@ struct BoxT {
         return resolved;
     }
 
-    constexpr BoxT resolve(const LengthD &major) const {
+    constexpr inline BoxT resolve(const LengthD &major) const {
         return BoxT(
             top.resolve(major.height),
             right.resolve(major.width),

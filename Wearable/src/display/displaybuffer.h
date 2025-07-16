@@ -20,13 +20,18 @@ struct FramebufferPageT : public FramebufferT<StaticbufferT<WIDTH, HEIGHT, BPP>>
         return this->getBitMask() << this->getBitOffset(x, y);
     }
 
-    inline void putPixel(const fb &x, const fb &y, const pixel &px) {
-        const fb offset = this->getOffset(x, y);
-        const fb bits = this->getBitOffset(x, y);
-        const fb bitmask = this->getBitMask();
-        const fb bytemask = bitmask << bits;
-        this->buffer[offset] &= ~bytemask;
-        this->buffer[offset] |= (px & bitmask) << bits;
+    inline constexpr void putPixel(const fb &x, const fb &y, const pixel &px) {
+        const fb offset=(y/8)*this->WIDTH+x;
+        const fb shift=(y&7);
+        this->buffer[offset] &= ~(1<<shift);
+        this->buffer[offset] |= (px<<shift);
+        //this->buffer[offset] 
+        //const fb offset = this->getOffset(x, y);
+        //const fb bits = this->getBitOffset(x, y);
+        //const fb bitmask = this->getBitMask();
+        //const fb bytemask = bitmask << bits;
+        //this->buffer[offset] &= ~bytemask;
+        //this->buffer[offset] |= (px & bitmask) << bits;
     }
 
     inline constexpr pixel getPixel(const fb &x, const fb &y) const {

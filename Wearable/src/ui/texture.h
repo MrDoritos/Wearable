@@ -55,8 +55,8 @@ struct TextureT : public Buffer {
     }
 
     constexpr inline void fill(const fb &x0, const fb &y0, const fb &x1, const fb &y1, const pixel &px) {
-        for (fb x = x0; x < x1; x++)
-            for (fb y = y0; y < y1; y++)
+        for (fb x = x0; x < x1; ++x)
+            for (fb y = y0; y < y1; ++y)
                 this->putPixel(x, y, px);
     }
 

@@ -9,6 +9,7 @@ target_compile_options(${COMPONENT_LIB} PRIVATE
     -Wno-type-limits
     -Wno-missing-field-initializers
     -fpermissive
+    --coverage
 )
 
 set(ASSET_DIR "../assets")
