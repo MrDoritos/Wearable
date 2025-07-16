@@ -1126,38 +1126,67 @@ struct ElementRootT : public ElementT {
     using ElementT::ElementT;
     using ElementT::operator<<;
 
-    static constexpr const ub debug_log_length = 512;
+    static constexpr const short debug_log_length = 512;
     bool debug = false;
-    ub debug_log_offset = 0;
+    int64_t utime;
+    short debug_log_offset = 0;
     char debug_log[debug_log_length];
 
-    template<typename ...Args>
-    constexpr inline int log(const char *format, const Args&...args) {
+    template<typename FORMAT, typename ...Args>
+    inline int log(FORMAT format, const Args&...args) {
         if (debug) {
-            int count = snprintf(debug_log+debug_log_offset, debug_log_length-debug_log_offset, format, args...);
-            if (count)
+            int count;
+            if constexpr (sizeof...(args) < 1) {
+                count = snprintf(debug_log+debug_log_offset, debug_log_length-debug_log_offset, "%s", format);
+            } else {
+                count = snprintf(debug_log+debug_log_offset, debug_log_length-debug_log_offset, format, args...);
+            }
+            if (count > 0)
                 debug_log_offset += count;
+            //debug_log_offset = strlen(debug_log);
             return count;
         }
         return 0;
     }
 
-    constexpr inline void once() {
-        debug_log_offset=0;
-        int64_t start = micros();
-        dispatch(Event::TICK);
-        log("TICK:  %ius\n", micros()-start);
-        this->dispatch(EventTypes::CLEAR);
-        log("CLEAR: %ius\n", micros()-start);
-        this->dispatch(EventTypes::DRAW);
-        log("DRAW:  %ius\n", micros()-start);
-        this->buffer.flush();
-        log("FLUSH: %ius\n", micros()-start);
-        this->draw_text(debug_log, Sprites::minifont);
-        this->buffer.flush();
+    template<typename ...Args>
+    inline int log_time(const char *name, const Args&...args) {
+        if (!debug) return 0;
+
+        int64_t now = micros();
+        log("%s:%5llius", name, now-utime);
+        utime=now;
+
+        if constexpr (sizeof...(args) > 1) {
+            log(std::forward(args)...);
+        } else {
+            log("%s", "\n");
+        }
+        return 0;
     }
 
-    constexpr inline void setDebug(const bool &debug_state=true) {
+    inline void once() {
+        debug_log_offset=0;
+        log_time("ELAPSED");
+        utime = micros();
+        this->dispatch(Event::TICK);
+        log_time("TICK ");
+        this->dispatch(EventTypes::CLEAR);
+        log_time("CLEAR");
+        this->dispatch(EventTypes::DRAW);
+        log_time("DRAW.");
+        this->buffer.flush();
+        log_time("FLUSH");
+        if (debug) {
+            Length len = this->getTextContentSize(debug_log, Sprites::minifont);
+            this->buffer.fill({{},len},0);
+            this->draw_text(&debug_log[0], Sprites::minifont);
+            this->buffer.flush();
+        }
+        //this->buffer.flush();
+    }
+
+    inline void setDebug(const bool &debug_state=true) {
         this->debug = debug_state;
     }
 };

@@ -37,9 +37,9 @@ void demo() {
     uiclock.on_draw(nullptr);
     display.flush();
     */
+    display.clear();
     uiclock.on_draw(nullptr);
     uiroot.once();
-    display.flush();
 
     if (dpad.any(Dpad::PRESSED)) {
         puts("Any pressed");
@@ -58,7 +58,8 @@ void demo() {
 void init() {
     uiroot.setDebug(true);
 
-    uiroot << UI::StyleInfo { .width{128}, .height{128} };
+    //uiroot << UI::StyleInfo { .width{128}, .height{128} };
+    uiroot << Size { 0, 0, 128, 128 };
     test << Origin { 4, 30 };
     txt << Size { 32, 64, 64, 64 };
     txt << UI::StyleInfo { .wrap{UI::WRAP} };
@@ -76,6 +77,8 @@ void init() {
 
     spinline.resolve_layout();
     TEXT.resolve_layout();
+
+    //uiroot.resolve_layout();
 }
 
 extern "C" {
