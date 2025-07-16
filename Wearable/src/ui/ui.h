@@ -13,6 +13,7 @@
 #include "sizes.h"
 #include "sprites.h"
 #include "node_iterator.h"
+#include "wbl_func.h"
 
 namespace wbl {
 namespace UI {
@@ -353,6 +354,8 @@ struct Event {
         FOCUS_GAIN,
         FOCUS_NEXT,
         FOCUS_EMIT,
+        CHANGE,
+        REQUEST,
     };
 
     enum Direction : uint8_t {
@@ -491,6 +494,19 @@ struct IElement : public Style, public NodeMovementOpsT<IElement> {
 
         if (!event->isSelfFirst() && !skipSelf)
             this->handle_event(event);
+    }
+
+    constexpr inline void dispatch_event(Event &event) {
+        this->dispatch_event(&event);
+    }
+
+    constexpr inline void dispatch(const EventTypes &event_type, const EventValues &event_value, const EventDirection &event_direction) {
+        Event event(event_type, event_value, event_direction, EventState::NORMAL);
+        this->dispatch_event(&event);
+    }
+
+    constexpr inline void dispatch(const EventTypes &event_type) {
+        this->dispatch(event_type, EventValues::VALUE_NONE, EventDirection::BROADCAST|EventDirection::SELF_FIRST|EventDirection::SKIP_SELF);
     }
 
     constexpr IElement(const char *name, IElement *parent, IElement *sibling, IElement *child):name(name),parent(parent),sibling(sibling),child(child){}
@@ -1088,7 +1104,7 @@ struct ScreenClockT : public ElementT {
 
         const calc rd = min * calc(0.5);
 
-        this->clear();
+        //this->clear();
 
         //this->buffer.circle(mp.x, mp.y, rd, 1, false);
 
@@ -1102,6 +1118,47 @@ struct ScreenClockT : public ElementT {
 
         this->buffer.circle(mp.x, mp.y, 3, 1, true);
         this->buffer.circle(mp.x, mp.y, 1, 0, true);
+    }
+};
+
+template<typename Buffer, typename ElementT = ElementBaseT<Buffer>>
+struct ElementRootT : public ElementT {
+    using ElementT::ElementT;
+    using ElementT::operator<<;
+
+    static constexpr const ub debug_log_length = 512;
+    bool debug = false;
+    ub debug_log_offset = 0;
+    char debug_log[debug_log_length];
+
+    template<typename ...Args>
+    constexpr inline int log(const char *format, const Args&...args) {
+        if (debug) {
+            int count = snprintf(debug_log+debug_log_offset, debug_log_length-debug_log_offset, format, args...);
+            if (count)
+                debug_log_offset += count;
+            return count;
+        }
+        return 0;
+    }
+
+    constexpr inline void once() {
+        debug_log_offset=0;
+        int64_t start = micros();
+        dispatch(Event::TICK);
+        log("TICK:  %ius\n", micros()-start);
+        this->dispatch(EventTypes::CLEAR);
+        log("CLEAR: %ius\n", micros()-start);
+        this->dispatch(EventTypes::DRAW);
+        log("DRAW:  %ius\n", micros()-start);
+        this->buffer.flush();
+        log("FLUSH: %ius\n", micros()-start);
+        this->draw_text(debug_log, Sprites::minifont);
+        this->buffer.flush();
+    }
+
+    constexpr inline void setDebug(const bool &debug_state=true) {
+        this->debug = debug_state;
     }
 };
 

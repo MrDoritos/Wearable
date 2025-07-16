@@ -19,45 +19,28 @@ UI::ElementBaseT<DisplayTexture> test(display);
 UI::ElementInlineSpritesT<DisplayTexture, Atlas> spinline(display);
 UI::ElementInlineTextT<DisplayTexture, MinifontProvider> TEXT(display, minifont);
 UI::ScreenClockT<DisplayTexture> uiclock(display);
+UI::ElementRootT<DisplayTexture> uiroot(display);
+auto txt = UI::ElementInlineTextT<DisplayTexture, MinifontProvider>(display, minifont);
+
+const Atlas::Sprite sprites[] = {
+    BATTERY,
+    HEART
+};
+const auto I = font.getCharacter('M');
 
 void demo() {
-    const TickType_t ms=300;
+    /*
     display.clear();
-    test << display;
-    test << Origin { 4, 30 };
-    const auto I = font.getCharacter('M');
-    test.setWidth(64);
-    test.setOffsetX(32);
-    test.setHeight(64);
-    test.wrap = UI::WrapStyle::WRAP | UI::WrapStyle::TRIM_SPACE;
-    const Atlas::Sprite sprites[] = {
-        BATTERY,
-        HEART
-    };
     test.draw_multi({0,0}, BATTERY, "50%");
-    spinline.on_content_size(nullptr);
-    TEXT << Origin { 12, 16 };
-    TEXT.on_content_size(nullptr);
-    spinline.resolve_layout();
-    TEXT.resolve_layout();
     spinline.on_draw(nullptr);
     TEXT.on_draw(nullptr);
-    display.putSprite(minifont.getCharacter('A'), {0,0});
-    //display.flush();
-    //vTaskDelay(100 / portTICK_PERIOD_MS);
-    TextureGraphicsContext<TextureT<FramebufferT<Memorybuffer>>> graphics(128, 128, 1, display.buffer);
-    display.clear(0);
-    display.fill({0,0,16,16}, 1);
-    graphics.fill(Size{0,24,16,16}, 1);
-    auto txt = UI::ElementInlineTextT<DisplayTexture, MinifontProvider>(display, minifont);
-    txt.text = "SOME TEST TEXT\n VERY FINE text\n for very small values 0123456789 \% voltage 4.2v !\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~";
-    txt << Size { 32, 64, 64, 64 };
-    txt << UI::StyleInfo { .wrap{UI::WRAP} };
-    txt.on_draw(nullptr);
-    uiclock << Size { 16, 0, 97, 97 };
     uiclock.on_draw(nullptr);
     display.flush();
-    dpad.print_states();
+    */
+    uiclock.on_draw(nullptr);
+    uiroot.once();
+    display.flush();
+
     if (dpad.any(Dpad::PRESSED)) {
         puts("Any pressed");
         display.clear();
@@ -69,23 +52,42 @@ void demo() {
         delay(1000);
     }
     dpad.update();
-    dpad.print_states();
     delay(300);
+}
+
+void init() {
+    uiroot.setDebug(true);
+
+    uiroot << UI::StyleInfo { .width{128}, .height{128} };
+    test << Origin { 4, 30 };
+    txt << Size { 32, 64, 64, 64 };
+    txt << UI::StyleInfo { .wrap{UI::WRAP} };
+    uiclock << Size { 16, 0, 97, 97 };
+    TEXT << Origin { 12, 16 };
+    test.wrap = UI::WrapStyle::WRAP | UI::WrapStyle::TRIM_SPACE;
+    test << Size { 32, 30, 64, 64 };
+    spinline << HEART << BATTERY << UI::StyleInfo { .wrap{UI::NOWRAP} };
+
+    TEXT.text = "Hello UI";
+    txt.text = "SOME TEST TEXT\n VERY FINE text\n for very small values 0123456789 \% voltage 4.2v !\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~";
+
+    spinline.on_content_size(nullptr);
+    TEXT.on_content_size(nullptr);
+
+    spinline.resolve_layout();
+    TEXT.resolve_layout();
 }
 
 extern "C" {
 void app_main() {
-    printf("test\n");
-    spinline << HEART << BATTERY << UI::StyleInfo { .wrap{UI::NOWRAP} };
-    TEXT.text = "Hello UI";
     dpad.init();
+    init();
     if (display.init() != ESP_OK) {
         printf("Failed to initialize display\n");
     } else {
         printf("Display initialized\n");
-        display.clear(1);
+        display.clear(0);
         display.flush();
-        vTaskDelay(100 / portTICK_PERIOD_MS);
         while (1) {
             demo();
             vPortYield();
