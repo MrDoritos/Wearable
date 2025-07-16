@@ -37,9 +37,19 @@ void demo() {
     uiclock.on_draw(nullptr);
     display.flush();
     */
+    uiroot.reset_log();
     display.clear();
+    uiroot.log_time("BUFCLR");
+    display.fill(uiroot, 1);
+    uiroot.log_time("SET1  ");
+    display.fill(uiroot, 0);
+    uiroot.log_time("SET0  ");
     uiclock.on_draw(nullptr);
-    uiroot.once();
+    uiroot.log_time("CLOCK ");
+
+
+    uiroot.flush_log();
+    //uiroot.once();
 
     if (dpad.any(Dpad::PRESSED)) {
         puts("Any pressed");
@@ -58,12 +68,12 @@ void demo() {
 void init() {
     uiroot.setDebug(true);
 
-    //uiroot << UI::StyleInfo { .width{128}, .height{128} };
-    uiroot << Size { 0, 0, 128, 128 };
+    uiroot << UI::StyleInfo { .width{128}, .height{128} };
+    //uiroot << Size { 0, 0, 128, 128 };
     test << Origin { 4, 30 };
     txt << Size { 32, 64, 64, 64 };
     txt << UI::StyleInfo { .wrap{UI::WRAP} };
-    uiclock << Size { 16, 0, 97, 97 };
+    uiclock << Size { 16, 16, 97, 97 };
     TEXT << Origin { 12, 16 };
     test.wrap = UI::WrapStyle::WRAP | UI::WrapStyle::TRIM_SPACE;
     test << Size { 32, 30, 64, 64 };
@@ -78,7 +88,7 @@ void init() {
     spinline.resolve_layout();
     TEXT.resolve_layout();
 
-    //uiroot.resolve_layout();
+    uiroot.resolve_layout();
 }
 
 extern "C" {

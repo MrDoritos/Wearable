@@ -44,22 +44,23 @@ struct TextureT : public Buffer {
 
     using Sprite = SpriteT<Buffer>;
 
-    inline void clear(const pixel &px = 0) {
+    constexpr inline void clear(const pixel &px = 0) {
+        const fb len = this->getSize();
         pixel d = 0;
         for (fb i = 0; i < this->PXPERBYTE; i++)
             d |= px << (this->BPP * i);
-        for (fb i = 0; i < this->getSize(); i++) {
+        for (fb i = 0; i < len; i++) {
             this->buffer[i] = d;
         }
     }
 
-    inline void fill(const fb &x0, const fb &y0, const fb &x1, const fb &y1, const pixel &px) {
+    constexpr inline void fill(const fb &x0, const fb &y0, const fb &x1, const fb &y1, const pixel &px) {
         for (fb x = x0; x < x1; x++)
             for (fb y = y0; y < y1; y++)
                 this->putPixel(x, y, px);
     }
 
-    inline void fill(const Size &size, const pixel &px) {
+    constexpr inline void fill(const Size &size, const pixel &px) {
         fill(size.x, size.y, size.x + size.width, size.y + size.height, px);
     }
 
@@ -95,7 +96,7 @@ struct TextureT : public Buffer {
     }
 
     template<typename calc=short,typename IType=fb,typename FType=short>
-    inline void circle(const IType &cx, const IType &cy, const FType &r, const pixel &px, const bool fill=true) {
+    constexpr inline void circle(const IType &cx, const IType &cy, const FType &r, const pixel &px, const bool fill=true) {
         const FType r2 = r * r;
 
         for (IType x = cx - r; x < cx + r + 1; x++) {
@@ -110,13 +111,13 @@ struct TextureT : public Buffer {
         }
     }
 
-    inline void putPixelBound(const fb &x, const fb &y, const pixel &px) {
+    constexpr inline void putPixelBound(const fb &x, const fb &y, const pixel &px) {
         if (this->isBound(x, y))
             this->putPixel(x, y, px);
     }
 
     template<typename T>
-    inline void putTexture(const T &texture, const fb &dx, const fb &dy, const fb &w = 0, const fb &h = 0, const fb &sx = 0, const fb &sy = 0) {
+    constexpr inline void putTexture(const T &texture, const fb &dx, const fb &dy, const fb &w = 0, const fb &h = 0, const fb &sx = 0, const fb &sy = 0) {
         const fb width = w ? w : texture.getWidth();
         const fb height = h ? h : texture.getHeight();
 
@@ -136,12 +137,12 @@ struct TextureT : public Buffer {
     }
 
     template<typename T>
-    inline void putTexture(const T *texture, const fb &dx, const fb &dy, const fb &w = 0, const fb &h = 0, const fb &sx = 0, const fb &sy = 0) {
+    constexpr inline void putTexture(const T *texture, const fb &dx, const fb &dy, const fb &w = 0, const fb &h = 0, const fb &sx = 0, const fb &sy = 0) {
         putTexture(texture, {dx, dy, w, h}, {sx, sy});
     }
 
     template<typename T>
-    inline void putTexture(const T *texture, const Size &texture_size, const Origin &position) {
+    constexpr inline void putTexture(const T *texture, const Size &texture_size, const Origin &position) {
         const Length tll = texture->getLength();
 
         const fb tr = texture_size.getRight() <= tll.width ? texture_size.getRight() : tll.width;
@@ -168,12 +169,12 @@ struct TextureT : public Buffer {
     }
 
     template<typename T>
-    inline void putTexture(const T &texture, const Size &texture_size, const Origin &position) {
+    constexpr inline void putTexture(const T &texture, const Size &texture_size, const Origin &position) {
         putTexture(&texture, texture_size, position);
     }
 
     template<typename _SpriteT = Sprite>
-    inline void putSprite(const _SpriteT &sprite, const fb &x, const fb &y, const fb &w = 0, const fb &h = 0) {
+    constexpr inline void putSprite(const _SpriteT &sprite, const fb &x, const fb &y, const fb &w = 0, const fb &h = 0) {
         putTexture(sprite.src, sprite, {x,y});
         /*
         const fb width = w ? w : sprite.getWidth();
@@ -195,12 +196,12 @@ struct TextureT : public Buffer {
     }
 
     template<typename _SpriteT = Sprite>
-    inline void putSprite(const _SpriteT &sprite, const Origin &position) {
+    constexpr inline void putSprite(const _SpriteT &sprite, const Origin &position) {
         putTexture(sprite.src, sprite, position);
     }
 
     template<typename calc=short, typename CALLBACK>
-    inline void line_callback(const fb &x1, const fb &y1, const fb &x2, const fb &y2, CALLBACK callback) {
+    constexpr inline void line_callback(const fb &x1, const fb &y1, const fb &x2, const fb &y2, CALLBACK callback) {
         calc x,y,dx,dy,dx1,dy1,px,py,xe,ye,i;
 		
 		dx=calc(x2)-x1;
@@ -272,25 +273,25 @@ struct TextureT : public Buffer {
 		}
     }
 
-    inline void line(const fb &x1, const fb &y1, const fb &x2, const fb &y2, const pixel &px) {
+    constexpr inline void line(const fb &x1, const fb &y1, const fb &x2, const fb &y2, const pixel &px) {
         line_callback(x1, y1, x2, y2, 
             [this, px](const fb &x, const fb &y) { this->putPixelBound(x, y, px); }
         );
     }
 
-    inline void line(const Origin &start, const Origin &end, const pixel &px) {
+    constexpr inline void line(const Origin &start, const Origin &end, const pixel &px) {
         line(start.x, start.y, end.x, end.y, px);
     }
 
     template<typename calc=short, typename IType=fb, typename FType=fb, typename CALLBACK>
-    inline void stroke_line_callback(const IType &x1, const IType &y1, const IType &x2, const IType &y2, const FType &width, CALLBACK callback) { 
+    constexpr inline void stroke_line_callback(const IType &x1, const IType &y1, const IType &x2, const IType &y2, const FType &width, CALLBACK callback) { 
         line_callback<calc>(x1, y1, x2, y2, [this,&width,&callback](const IType &x, const IType &y) {
             this->circle_callback<calc,IType,FType>(callback, x, y, width, true);
         });
     }
 
     template<typename calc=short, typename IType=fb, typename FType=fb>
-    inline void stroke_line(const IType &x1, const IType &y1, const IType &x2, const IType &y2, const FType &width, const pixel &px) {
+    constexpr inline void stroke_line(const IType &x1, const IType &y1, const IType &x2, const IType &y2, const FType &width, const pixel &px) {
         stroke_line_callback<calc,IType,FType>(x1, y1, x2, y2, width, [this, &px](const IType &x, const IType &y) {
             this->putPixelBound(x, y, px);
         });

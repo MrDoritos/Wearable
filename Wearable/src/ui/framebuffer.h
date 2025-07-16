@@ -102,7 +102,7 @@ struct FramebufferT : public Buffer {
         return (1 << this->BPP) - 1;
     }
 
-    inline void putPixel(const fb& x, const fb& y, const pixel& px) {
+    inline constexpr void putPixel(const fb& x, const fb& y, const pixel& px) {
         const fb offset = this->getOffset(x, y);
         const fb bits = this->getBitOffset(x, y);
         const fb bytemask = this->getByteMask(x, y);
@@ -112,7 +112,7 @@ struct FramebufferT : public Buffer {
         this->buffer[offset] |= pxbyte;
     }
 
-    inline void putPixel(const Origin &pos, const pixel &px) {
+    inline constexpr void putPixel(const Origin &pos, const pixel &px) {
         putPixel(pos.x, pos.y, px);
     }
 

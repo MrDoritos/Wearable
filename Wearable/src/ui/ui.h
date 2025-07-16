@@ -1134,19 +1134,19 @@ struct ElementRootT : public ElementT {
 
     template<typename FORMAT, typename ...Args>
     inline int log(FORMAT format, const Args&...args) {
-        if (debug) {
-            int count;
-            if constexpr (sizeof...(args) < 1) {
-                count = snprintf(debug_log+debug_log_offset, debug_log_length-debug_log_offset, "%s", format);
-            } else {
-                count = snprintf(debug_log+debug_log_offset, debug_log_length-debug_log_offset, format, args...);
-            }
-            if (count > 0)
-                debug_log_offset += count;
-            //debug_log_offset = strlen(debug_log);
-            return count;
+        if (!debug || debug_log_offset > debug_log_length-20)
+            return 0;
+        
+        int count;
+        if constexpr (sizeof...(args) < 1) {
+            count = snprintf(debug_log+debug_log_offset, debug_log_length-debug_log_offset, "%s", format);
+        } else {
+            count = snprintf(debug_log+debug_log_offset, debug_log_length-debug_log_offset, format, args...);
         }
-        return 0;
+        if (count > 0)
+            debug_log_offset += count;
+
+        return count;
     }
 
     template<typename ...Args>
@@ -1165,10 +1165,34 @@ struct ElementRootT : public ElementT {
         return 0;
     }
 
-    inline void once() {
-        debug_log_offset=0;
-        log_time("ELAPSED");
+    inline void reset_log_time() {
         utime = micros();
+    }
+
+    inline void reset_log(const bool &reset_time=true) {
+        debug_log_offset = 0;
+        if (reset_time)
+            reset_log_time();
+    }
+
+    inline void flush_log(const bool &display_flush = true, const bool &clear_text_boundary=true) {
+        if (!debug) return;
+
+        if (clear_text_boundary) {
+            Length len = this->getTextContentSize(debug_log, Sprites::minifont);
+            this->buffer.fill({{},len},0);
+        }
+
+        this->draw_text(debug_log, Sprites::minifont);
+        
+        if (display_flush)
+            this->buffer.flush();
+    }
+
+    inline void once() {
+        reset_log(false);
+        log_time("ELAPSED");
+        reset_log_time();
         this->dispatch(Event::TICK);
         log_time("TICK ");
         this->dispatch(EventTypes::CLEAR);
@@ -1177,13 +1201,7 @@ struct ElementRootT : public ElementT {
         log_time("DRAW.");
         this->buffer.flush();
         log_time("FLUSH");
-        if (debug) {
-            Length len = this->getTextContentSize(debug_log, Sprites::minifont);
-            this->buffer.fill({{},len},0);
-            this->draw_text(&debug_log[0], Sprites::minifont);
-            this->buffer.flush();
-        }
-        //this->buffer.flush();
+        flush_log();
     }
 
     inline void setDebug(const bool &debug_state=true) {
