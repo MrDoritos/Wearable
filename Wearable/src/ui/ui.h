@@ -1044,7 +1044,7 @@ struct ScreenClockT : public ElementT {
     using ElementT::ElementT;
     using ElementT::operator<<;
 
-    int64_t prev_draw_time = 0;
+    int64_t prev_draw_time = -1;
     bool use_milliseconds = false;
 
     void on_draw(Event *event) override {
@@ -1221,7 +1221,7 @@ struct ElementBatteryT : public ElementT {
 
     bool show_percentage = true;
     ub current_level = 50;
-    Sprites::Atlas::Sprite battery_sprite = Sprites::BATTERY_5x10;
+    Sprites::Atlas::Sprite battery_sprite = Sprites::BATTERY_5x10_PAD;
 
     void set_battery_level(const ub &level) {
         this->current_level = level;
@@ -1238,7 +1238,7 @@ struct ElementBatteryT : public ElementT {
         const ub swidth = battery_sprite.getWidth();
         int nheight = sheight*(current_level/100.0f);
         //this->buffer.fill(pos.x+1,pos.y+nheight+1,pos.x+swidth-1,pos.y+sheight-1,1);
-        this->buffer.fill(pos.x+1,pos.y+sheight-nheight,pos.x+swidth-1,pos.y+sheight-1,1);
+        this->buffer.fill(pos.x+2,pos.y+sheight-nheight,pos.x+swidth-1,pos.y+sheight-1,1);
     }
 };
 

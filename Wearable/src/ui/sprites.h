@@ -35,6 +35,7 @@ extern const RockTexture therock asm("_binary_therock_bin_start");
 TX(BATTERY_4x8, 0, 10, 4, 8)
 TX(BATTERY_5x10, 0, 18, 5, 10)
 TX(BATTERY_13x6, 5, 11, 13, 6)
+TX(BATTERY_5x10_PAD, 5, 18, 6, 11)
 
 #define BATTERY BATTERY_5x10
 

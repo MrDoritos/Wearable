@@ -38,7 +38,7 @@ void demo() {
     uiclock.on_draw(nullptr);
     display.flush();
     */
-    uibattery.set_battery_level((millis()%5000)/50);
+    uibattery.set_battery_level((millis()%10000)/100);
     uiroot.reset_log();
     //display.clear();
     uiroot.log_time("BUFCLR");
@@ -52,7 +52,7 @@ void demo() {
     uiroot.log_time("BATT  ");
 
 
-    uiroot.flush_log(true,true,{0,32});
+    uiroot.flush_log(true,true,{0,20});
     //uiroot.once();
 
     if (dpad.any(Dpad::PRESSED)) {
@@ -66,7 +66,7 @@ void demo() {
         delay(1000);
     }
     dpad.update();
-    delay(1);
+    delay(100);
 }
 
 void init() {
