@@ -63,8 +63,34 @@ struct TextureT : public Buffer {
         fill(size.x, size.y, size.x + size.width, size.y + size.height, px);
     }
 
+    template<typename CALLBACK, typename IType=fb>
+    constexpr inline void fill_callback(CALLBACK callback, const IType &x0, const IType &y0, const IType &x1, const IType &y1) {
+        for (IType x = x0; x < x1; x++)
+            for (IType y = y0; y < y1; y++)
+                callback(x, y);
+    }
+
     inline void circle(const Origin &center, const fb &radius, const pixel &px, const bool fill=true) {
         circle(center.x, center.y, px, fill);
+    }
+
+    template<typename CALLBACK, typename calc=short, typename IType=fb>
+    constexpr inline void circle_callback(CALLBACK callback, const IType &cx, const IType &cy, const IType &radius, const bool &fill=false) {
+        const calc r = calc(radius);
+        const calc r2 = r * r;
+
+        for (IType x = cx - r; x < cx + r + 1; x++) {
+            for (IType y = cy - r; y < cy + r + 1; y++) {
+                const calc xd = x - cx;
+                const calc yd = y - cy;
+                const calc xy2 = (xd * xd) + (yd * yd);
+                const calc xyd = xy2 - r2;
+                if (!fill && (xyd >= 0 ? xyd : -xyd) > 2)
+                    continue;
+                if (xy2 < r2)
+                    callback(x, y);
+            }
+        }
     }
 
     inline void circle(const fb &cx, const fb &cy, const fb &r, const pixel &px, const bool fill=true) {
@@ -252,6 +278,13 @@ struct TextureT : public Buffer {
 
     inline void line(const Origin &start, const Origin &end, const pixel &px) {
         line(start.x, start.y, end.x, end.y, px);
+    }
+
+    template<typename CALLBACK, typename calc=short, typename IType=fb>
+    inline void stroke_line_callback(const IType &x1, const IType &y1, const IType &x2, const IType &y2, const IType &width, CALLBACK callback) { 
+        line_callback(x1, y1, x2, y2, [&width,&callback](const IType &x, const IType &y) {
+            circle_callback(callback, x, y, width, true);
+        });
     }
 };
 
