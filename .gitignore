@@ -9,3 +9,5 @@ Arm
 ghidra
 *.1
 *.old
+coverage.*
+*.log
