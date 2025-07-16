@@ -86,8 +86,46 @@ static constexpr const AtlasFontSprite GLYPHS_ALPHA_3x5[] = {
 };
 
 static constexpr const AtlasFontSprite GLYPHS_SPECIAL_3x5[] = {
-    FT35(0,5), // %
+    //FT35(0,5), // %
     FT35(191,0), // SPACE
+    FT(196,0,1,5), // !
+    FT35(198,0), // "
+    FT(202,0,5,5), // #
+    FT35(207,0), // $
+
+    FT35(210,0), // %
+    FT35(213,0), // &
+    FT(217,0,1,5), // '
+    FT35(219,0), // (
+    FT35(223,0), // )
+
+    FT35(227,0), // *
+    FT35(231,0), // +
+    FT35(235,0), // ,
+    FT35(238,0), // -
+    FT(242,0,1,5), // .
+
+    FT35(244,0), // /
+    FT(248,0,1,5), // :
+    FT(250,0,2,5), // ;
+    FT35(71,30), // >
+    FT35(75,30), // =
+
+    FT35(79,30), // <
+    FT35(83,30), // ?
+    FT(87,30,4,5), // @
+    FT(92,30,2,5), // [
+    FT35(95,30), // BACKSLASH
+
+    FT(99,30,2,5), // ]
+    FT35(102,30), // ^
+    FT35(106,30), // _
+    FT35(110,30), // `
+    FT(114,30,2,5), // {
+
+    FT(117,30,1,5), // |
+    FT(119,30,2,5), // }
+    FT(122,30,4,5), // ~
 };
 
 #undef TX
@@ -145,10 +183,14 @@ struct MinifontProvider : public TextureT<FramebufferT<Memorybuffer>> {
             return convSrc(GLYPHS_ALPHA_3x5[character-'a']);
         if (character >= 'A' && character <= 'Z')
             return convSrc(GLYPHS_ALPHA_3x5[character-'A']);
-        if (character == '%')
-            return convSrc(GLYPHS_SPECIAL_3x5[character-'%']);
-        if (character == ' ')
-            return convSrc(GLYPHS_SPECIAL_3x5[1]);
+        if (character >= ' ' && character <= '/')
+            return convSrc(GLYPHS_SPECIAL_3x5[character-' ']);
+        if (character >= ':' && character <= '@')
+            return convSrc(GLYPHS_SPECIAL_3x5[character-':'+16]);
+        if (character >= '[' && character <= '`')
+            return convSrc(GLYPHS_SPECIAL_3x5[character-'['+23]);
+        if (character >= '{' && character <= '~')
+            return convSrc(GLYPHS_SPECIAL_3x5[character-'{'+29]);
         return convSrc(font.getCharacter(character));
     }
 };

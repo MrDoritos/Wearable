@@ -43,13 +43,13 @@ void demo() {
     TEXT.on_draw(nullptr);
     display.putSprite(minifont.getCharacter('A'), {0,0});
     display.flush();
-    vTaskDelay(800 / portTICK_PERIOD_MS);
+    vTaskDelay(100 / portTICK_PERIOD_MS);
     TextureGraphicsContext<TextureT<FramebufferT<Memorybuffer>>> graphics(128, 128, 1, display.buffer);
     display.clear(0);
     display.fill({0,0,16,16}, 1);
     graphics.fill(Size{0,24,16,16}, 1);
     auto txt = UI::ElementInlineTextT<DisplayTexture, MinifontProvider>(display, minifont);
-    txt.text = "SOME TEST TEXT\n VERY FINE text\n for very small values 0123456789 \% voltage 4.2v";
+    txt.text = "SOME TEST TEXT\n VERY FINE text\n for very small values 0123456789 \% voltage 4.2v !\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~";
     txt << Size { 32, 64, 64, 64 };
     txt << UI::StyleInfo { .wrap{UI::WRAP} };
     txt.on_draw(nullptr);
@@ -67,7 +67,7 @@ void demo() {
     }
     dpad.update();
     dpad.print_states();
-    delay(800);
+    delay(1000);
 }
 
 extern "C" {
