@@ -60,6 +60,18 @@ struct TextureT : public Buffer {
                 this->putPixel(x, y, px);
     }
 
+    constexpr inline void border(const Size &size, const pixel &px) {
+        for (fb x = size.x; x < size.x + size.width; x++) {
+            this->putPixel(x, size.y, px);
+            this->putPixel(x, size.y+size.height-1, px);
+        }
+
+        for (fb y = size.y + 1; y < size.y + size.height;y++) {
+            this->putPixel(size.x, y, px);
+            this->putPixel(size.x+size.width-1,y,px);
+        }
+    }
+
     constexpr inline void fill(const Size &size, const pixel &px) {
         fill(size.x, size.y, size.x + size.width, size.y + size.height, px);
     }
