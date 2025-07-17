@@ -64,7 +64,7 @@ void demo() {
     //uiroot.flush_log(true,true,{60,80});
     //display.flush();
     uiroot.once();
-    //uiroot.overlay_tree_positions(true);
+    //uiroot.overlay_tree_positions();
 
     if (dpad.any(Dpad::PRESSED)) {
         puts("Any pressed");
@@ -78,11 +78,11 @@ void demo() {
         display.clear();
     }
     dpad.update();
-    delay(100);
+    //delay(100);
 }
 
 void init() {
-    uiroot.setDebug(true);
+    //uiroot.setDebug(true);
     using namespace UI;
     using DElem = UI::ElementT<DisplayTexture>;
     static DElem block(display, "block");
@@ -123,7 +123,8 @@ void init() {
     test << Origin { 4, 30 };
     txt << Size { 32, 64, 64, 64 };
     txt << UI::StyleInfo { .wrap{UI::WRAP} };
-    uiclock << Size { 16, 16, 97, 97 };
+    //uiclock << Size { 16, 16, 97, 97 };
+    uiclock << StyleInfo { .width{97}, .height{97}, .margin{16,4} };
     TEXT << Origin { 12, 16 };
     test.wrap = UI::WrapStyle::WRAP | UI::WrapStyle::TRIM_SPACE;
     test << Size { 32, 30, 64, 64 };
@@ -134,6 +135,7 @@ void init() {
     uidatetime << UI::StyleInfo { .align{RIGHT}, .wrap{NOWRAP}, .display{INLINE}, .overflow{AUTO} };
     boxtest << Size { 8, 13, 5, 5 };
     boxtest2 << Size { 9, 14, 3, 3 };
+    uiclock.use_milliseconds = true;
 
     TEXT.text = "Hello UI";
     txt.text = "SOME TEST TEXT\n VERY FINE text\n for very small values 0123456789 \% voltage 4.2v !\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~";
@@ -146,6 +148,7 @@ void init() {
 
     uiroot << uibattery;
     uiroot << uidatetime;
+    uiroot << uiclock;
 
     uiroot.dispatch(EventTypes::CONTENT_SIZE);
     uiroot.resolve_layout();

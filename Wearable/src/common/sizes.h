@@ -275,6 +275,7 @@ struct BoxT {
     constexpr BoxT(){}
     constexpr BoxT(const T &t, const T &r, const T &b, const T &l):top(t),right(r),bottom(b),left(l){}
     constexpr BoxT(const T &v):BoxT(v,v,v,v){}
+    constexpr BoxT(const T &x, const T &y):BoxT(y,x,y,x){}
     constexpr BoxT(const Size &s):top(s.y),right(s.x+s.width),bottom(s.y+s.height),left(s.x){}
     
     constexpr inline T getWidth() const { return right-left; }

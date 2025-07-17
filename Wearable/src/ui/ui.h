@@ -788,6 +788,8 @@ struct IElement : public Style, public NodeMovementOpsT<IElement> {
 
             switch (cur->align) {
                 case LEFT: // No change
+                    child_offset.x = remaining_size.x + (uu)child_box.getLeft();
+                    child_offset.y = remaining_size.y + (uu)child_box.getTop();
                     remaining_size.x += child_use.width;
                     remaining_size.width -= child_use.width;
                     break;
@@ -1134,6 +1136,10 @@ struct ScreenClockT : public ElementT {
     int64_t prev_draw_time = -1;
     bool use_milliseconds = false;
 
+    void on_clear(Event *event) override {
+
+    }
+
     void on_draw(Event *event) override {
         using calc = float;
 
@@ -1272,13 +1278,16 @@ struct ElementRootT : public ElementT {
 
         Origin pos = position;
 
+        Length len = this->getTextContentSize(debug_log, Sprites::minifont);
+
         if (after_last_child) {
             if (this->child)
                 pos = {0,this->last_child()->getBottom()};
+            if (pos.y + len.height > this->getBottom())
+                pos.y = this->getBottom()-len.height;
         }
 
         if (clear_text_boundary) {
-            Length len = this->getTextContentSize(debug_log, Sprites::minifont);
             this->buffer.fill({pos,len},0);
         }
 
@@ -1405,7 +1414,7 @@ struct ElementRootT : public ElementT {
         log_time("DRAW.");
         this->buffer.flush();
         log_time("FLUSH");
-        //flush_log();
+        flush_log();
     }
 
     inline void setDebug(const bool &debug_state=true) {
@@ -1431,7 +1440,7 @@ struct ElementBatteryT : public ElementT {
     }
 
     inline void update() {
-        int count = snprintf(buf, buflen, "%i%%", current_level);
+        int count = snprintf(buf, buflen, "%i%% ", current_level);
     }
 
     void on_content_size(Event *event) override {
@@ -1481,11 +1490,13 @@ struct ElementDateTimeT : public ElementT {
         time_t now = time(nullptr);
         tm date = *localtime(&now);
 
+        /*
         date.tm_mday = seconds() % 32;
         date.tm_hour = seconds() % 24;
         date.tm_min = seconds() % 60;
         date.tm_wday = seconds() % 7;
         date.tm_mon = seconds() % 12;
+        */
 
         return date;
     }
@@ -1515,11 +1526,13 @@ struct ElementDateTimeT : public ElementT {
     }
 
     inline bool is_interval_tick() {
-        return (this->tick % 5) == 0;
+        //return (this->tick % 5) == 0;
+        return (millis() % 500) <= 100;
     }
 
     inline bool is_major_tick() {
-        return this->tick > 4;
+        //return this->tick > 4;
+        return (millis() % 1000) >= 500;
     }
 
     void on_tick(Event *event) override {
