@@ -1155,8 +1155,8 @@ struct ScreenClockT : public ElementT {
         const auto polar_to_rectilinear_coordinates 
             = [](const calc &radians, const calc &radius, const Origin &center = 0) {
                 return Origin(
-                    radius * cosf(radians) + calc(center.x),
-                    radius * sinf(radians) + calc(center.y)
+                    radius * cosf(radians) + calc(center.x) - 0.5,
+                    radius * sinf(radians) + calc(center.y) - 0.5
                 );
         };
 
@@ -1170,13 +1170,13 @@ struct ScreenClockT : public ElementT {
             = [this,&polar_to_rectilinear_coordinates](const calc &radians, const calc &radius_minor, const calc &radius_major, const calc &width, const pixel &px, const Origin &center) {
                 const Origin start = polar_to_rectilinear_coordinates(radians, radius_minor, center);
                 const Origin end = polar_to_rectilinear_coordinates(radians, radius_major, center);
-                this->buffer.template stroke_line<calc,calc,calc>(start.x, start.y, end.x, end.y, width, px);
-                //this->buffer.line(start.x, start.y, end.x, end.y, px);
+                this->buffer.template stroke_line<calc,short,calc>(start.x, start.y, end.x, end.y, width, px);
+                //this->buffer.template line<calc,calc>(start.x, start.y, end.x, end.y, px);
         };
 
         const auto tick_marks
             = [this,&radius_polar_line](const calc &num_ticks, const calc &radius_minor, const calc &radius_major, const calc &width, const pixel &px, const Origin &center) {
-                constexpr const calc D_PI = M_PI * 2;
+                constexpr const calc D_PI = M_PI * 2.0f;
                 const calc tick_step = D_PI * (1/num_ticks);
                 for (calc i = 0.001; i < D_PI-0.001; i+=tick_step)
                     radius_polar_line(i, radius_minor, radius_major, width, px, center);
@@ -1383,7 +1383,7 @@ struct ElementRootT : public ElementT {
         this->draw_text(buf, Sprites::minifont, *node, false, true);
     }
 
-    inline void overlay_tree_positions(const bool &detailed=false) {
+    inline void overlay_tree_positions(const bool &detailed=false, const bool &do_not_flush=false) {
         for (auto &child : this->rdepthfirst()) {
             this->buffer.border(child, 1);
             if (detailed) {
@@ -1396,25 +1396,33 @@ struct ElementRootT : public ElementT {
             snprintf(buf, buflen, "%s\n%i,%i\n%i,%i", child.name?child.name:"", child.x, child.y, child.getWidth(), child.getHeight());
             this->draw_text(buf, Sprites::minifont, child, false, true);
         }
+        if (!do_not_flush) {
+            if (debug)
+                this->flush_log();
+            else
+                this->buffer.flush();
+        }
     }
 
-    inline void once() {
+    inline void once(const bool &do_not_flush=false) {
         reset_log(false);
-        log_time("ELAPSED");
+        log_time("ELPSD");
         reset_log_time();
         this->dispatch(Event::TICK);
         log_time("TICK ");
         this->dispatch(Event::CONTENT_SIZE);
-        log_time("CNTSZ");
+        log_time("CTSZE");
         this->resolve_layout();
-        log_time("LAYOUT");
+        log_time("LYOUT");
         this->dispatch(EventTypes::CLEAR);
         log_time("CLEAR");
         this->dispatch(EventTypes::DRAW);
         log_time("DRAW.");
-        this->buffer.flush();
-        log_time("FLUSH");
-        flush_log();
+        if (!do_not_flush) {
+            this->buffer.flush();
+            log_time("FLUSH");
+        }
+        flush_log(!do_not_flush);
     }
 
     inline void setDebug(const bool &debug_state=true) {

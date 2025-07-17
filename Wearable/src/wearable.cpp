@@ -63,10 +63,14 @@ void demo() {
     //boxtest2.clear();
     //uiroot.flush_log(true,true,{60,80});
     //display.flush();
-    uiroot.once();
-    //uiroot.overlay_tree_positions();
+    uiroot.setDebug(dpad.right.is_held());
+    uiroot.once(uiroot.debug);
+    if (uiroot.debug) {
+        uiroot.overlay_tree_positions();
+        uiroot.clear();
+    }
 
-    if (dpad.any(Dpad::PRESSED)) {
+    if (dpad.enter.is_pressed() || dpad.up.is_pressed()) {
         puts("Any pressed");
         display.clear();
         if (dpad.enter.is_pressed())
@@ -124,7 +128,7 @@ void init() {
     txt << Size { 32, 64, 64, 64 };
     txt << UI::StyleInfo { .wrap{UI::WRAP} };
     //uiclock << Size { 16, 16, 97, 97 };
-    uiclock << StyleInfo { .width{97}, .height{97}, .margin{16,4} };
+    uiclock << StyleInfo { .width{96}, .height{96}, .margin{16,4} };
     TEXT << Origin { 12, 16 };
     test.wrap = UI::WrapStyle::WRAP | UI::WrapStyle::TRIM_SPACE;
     test << Size { 32, 30, 64, 64 };

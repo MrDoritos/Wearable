@@ -222,8 +222,8 @@ struct TextureT : public Buffer {
         putTexture(sprite.src, sprite, position);
     }
 
-    template<typename calc=short, typename CALLBACK>
-    constexpr inline void line_callback(const fb &x1, const fb &y1, const fb &x2, const fb &y2, CALLBACK callback) {
+    template<typename calc=short, typename IType=fb, typename CALLBACK>
+    constexpr inline void line_callback(const IType &x1, const IType &y1, const fb &x2, const fb &y2, CALLBACK callback) {
         calc x,y,dx,dy,dx1,dy1,px,py,xe,ye,i;
 		
 		dx=calc(x2)-x1;
@@ -295,9 +295,10 @@ struct TextureT : public Buffer {
 		}
     }
 
-    constexpr inline void line(const fb &x1, const fb &y1, const fb &x2, const fb &y2, const pixel &px) {
-        line_callback(x1, y1, x2, y2, 
-            [this, px](const fb &x, const fb &y) { this->putPixelBound(x, y, px); }
+    template<typename calc=short, typename IType=fb>
+    constexpr inline void line(const IType &x1, const IType &y1, const IType &x2, const IType &y2, const pixel &px) {
+        line_callback<calc, IType>(x1, y1, x2, y2, 
+            [this, px](const IType &x, const IType &y) { this->putPixelBound(x, y, px); }
         );
     }
 
@@ -308,7 +309,7 @@ struct TextureT : public Buffer {
     template<typename calc=short, typename IType=fb, typename FType=fb, typename CALLBACK>
     constexpr inline void stroke_line_callback(const IType &x1, const IType &y1, const IType &x2, const IType &y2, const FType &width, CALLBACK callback) { 
         line_callback<calc>(x1, y1, x2, y2, [this,&width,&callback](const IType &x, const IType &y) {
-            this->circle_callback<calc,IType,FType>(callback, x, y, width, true);
+            this->circle_callback<calc,IType,FType>(callback, x, y, width, false);
         });
     }
 
