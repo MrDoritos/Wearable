@@ -699,7 +699,17 @@ struct IElement : public Style, public NodeMovementOpsT<IElement> {
         if (child)
             child->resolve_container_growth(context);
         
-        const Length grow = context;
+        Length grow = context;
+
+        switch (display) {
+            case BLOCK:
+                if (position == STATIC) {
+                    grow.width = (uu)resolved_width.getComparedValue(container.width);
+                }
+                break;
+            default:
+                break;
+        }
 
         /*
         if (grow.width > container.width)
@@ -1193,12 +1203,97 @@ struct ElementRootT : public ElementT {
             this->buffer.flush();
     }
 
-    inline void overlay_tree_positions() {
+    inline void overlay_detailed(IElement *node) {
+        const int buflen = 100;
+        char buf[buflen];
+        int offset=0;
+
+        const auto s_dim = [&](const Dimension &v) {
+            const char *ex;
+            switch (v.unit) {
+                case PERC: ex = "%"; break;
+                default: ex = ""; break;
+            }
+            switch (v.unit) {
+                case NONE:
+                    offset += snprintf(buf+offset, buflen-offset, "N");
+                    break;
+                default:
+                    offset += snprintf(buf+offset, buflen-offset, "%i%s", v.value, ex);
+                    break;
+            }
+        };
+
+        const auto s_s = [&](const char *v) {
+            offset += snprintf(buf+offset, buflen-offset, "%s", v);
+        };
+
+        const auto s_i = [&](const uu &v) {
+            offset += snprintf(buf+offset, buflen-offset, "%i", v);  
+        };
+
+        const auto s_dimminmax = [&](const DimensionMinMax &v) {
+            s_s("v");
+            s_dim(v.value);
+            s_s("m");
+            s_dim(v.min);
+            s_s("M");
+            s_dim(v.max);
+        };
+
+        const auto s_lengthd = [&](const LengthD &v) {
+            s_s("w");
+            s_dim(v.width);
+            s_s("h");
+            s_dim(v.height);
+        };
+
+        const auto s_length = [&](const Length &v) {
+            s_s("w");
+            s_i(v.width);
+            s_s("h");
+            s_i(v.height);
+        };
+
+        const auto s_size = [&](const Size &v) {
+            s_i(v.x);
+            s_s(",");
+            s_i(v.y);
+            s_s(" ");  
+            s_i(v.width);
+            s_s(",");
+            s_i(v.height);
+        };
+
+
+        s_s(node->name);
+        s_size(*node);
+
+        s_s("\nctnr:");
+        s_lengthd(node->container);
+        s_s(",comp:");
+        s_lengthd(node->computed);
+        s_s(",used:");
+        s_length(node->used);
+        s_s("\nwid:");
+        s_dimminmax(node->width);
+        s_s(",hei:");
+        s_dimminmax(node->height);
+
+        this->draw_text(buf, Sprites::minifont, *node, false, true);
+    }
+
+    inline void overlay_tree_positions(const bool &detailed=false) {
         for (auto &child : this->children()) {
             this->buffer.border(child, 1);
+            if (detailed) {
+                this->overlay_detailed(&child);
+                continue;
+            }
+
             const int buflen = 20;
             char buf[buflen];
-            snprintf(buf, buflen, "%s\n%i,%i\n%i,%i", child.name ? child.name : "", child.x, child.y, child.getWidth(), child.getHeight());
+            snprintf(buf, buflen, "%s\n%i,%i\n%i,%i", child.name, child.x, child.y, child.getWidth(), child.getHeight());
             this->draw_text(buf, Sprites::minifont, child, false, true);
         }
     }

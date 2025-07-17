@@ -58,11 +58,11 @@ void demo() {
     uiroot.log_time("DATE  ");
 
     //uiroot.buffer.border(uiroot, 1);
-    uiroot.overlay_tree_positions();
+    uiroot.overlay_tree_positions(true);
     ///boxtest.buffer.border(boxtest, 1);
     //boxtest.clear(1);
     //boxtest2.clear();
-    uiroot.flush_log(true,true,{0,64});
+    uiroot.flush_log(true,true,{60,64});
     //display.flush();
     //uiroot.once();
 
@@ -90,11 +90,11 @@ void init() {
     static DElem inlineblock2(display, "sprites");
     static DElem block3(display, "after");
 
-    block << UI::StyleInfo { .height{16} };
-    block2 << UI::StyleInfo { .width{32}, .height{16} };
-    inlineblock << UI::StyleInfo { .display{INLINE}, .width {40}, .height{16} };
-    inlineblock2 << UI::StyleInfo { .display{INLINE}, .width {32}, .height{16} };
-    block3 << StyleInfo { .width {30}, .height{8} };
+    block << UI::StyleInfo { .height{20} };
+    block2 << UI::StyleInfo { .width{32}, .height{20} };
+    inlineblock << UI::StyleInfo { .display{INLINE}, .width {40}, .height{20} };
+    inlineblock2 << UI::StyleInfo { .display{INLINE}, .width {32}, .height{20} };
+    block3 << StyleInfo { .width {30}, .height{20} };
 
     uiroot << UI::StyleInfo { .width{128}, .height{128} };
 
