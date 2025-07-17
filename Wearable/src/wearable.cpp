@@ -58,7 +58,7 @@ void demo() {
     uiroot.log_time("DATE  ");
 
     //uiroot.buffer.border(uiroot, 1);
-    uiroot.overlay_tree_positions(true);
+    uiroot.overlay_tree_positions();
     ///boxtest.buffer.border(boxtest, 1);
     //boxtest.clear(1);
     //boxtest2.clear();
@@ -85,18 +85,22 @@ void init() {
     using namespace UI;
     using DElem = UI::ElementT<DisplayTexture>;
     static DElem block(display, "block");
+    static DElem inner(display, "inner");
     static DElem block2(display, "area");
     static DElem inlineblock(display, "inline");
     static DElem inlineblock2(display, "sprites");
     static DElem block3(display, "after");
 
     block << UI::StyleInfo { .height{26} };
+    inner << StyleInfo {.height {14}};
     block2 << UI::StyleInfo { .width{32}, .height{26} };
     inlineblock << UI::StyleInfo { .display{INLINE}, .width {40}, .height{26} };
-    inlineblock2 << UI::StyleInfo { .display{INLINE}, .width {32}, .height{20} };
+    inlineblock2 << UI::StyleInfo { .display{INLINE}, .width {32}, .height{20}, .margin{1} };
     block3 << StyleInfo { .width {30}, .height{20} };
 
     uiroot << UI::StyleInfo { .width{128}, .height{128} };
+
+    block << inner;
 
     uiroot << block;
     uiroot << block2;

@@ -1297,7 +1297,7 @@ struct ElementRootT : public ElementT {
     }
 
     inline void overlay_tree_positions(const bool &detailed=false) {
-        for (auto &child : this->children()) {
+        for (auto &child : this->rdepthfirst()) {
             this->buffer.border(child, 1);
             if (detailed) {
                 this->overlay_detailed(&child);
