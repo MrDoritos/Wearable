@@ -82,16 +82,19 @@ void demo() {
 
 void init() {
     uiroot.setDebug(true);
+    using namespace UI;
     using DElem = UI::ElementT<DisplayTexture>;
     static DElem block(display, "block");
     static DElem block2(display, "area");
     static DElem inlineblock(display, "inline");
     static DElem inlineblock2(display, "sprites");
+    static DElem block3(display, "after");
 
     block << UI::StyleInfo { .height{16} };
     block2 << UI::StyleInfo { .width{32}, .height{16} };
-    inlineblock << UI::StyleInfo { .width {24}, .height{16} };
-    inlineblock2 << UI::StyleInfo { .width {40}, .height{16} };
+    inlineblock << UI::StyleInfo { .display{INLINE}, .width {40}, .height{16} };
+    inlineblock2 << UI::StyleInfo { .display{INLINE}, .width {24}, .height{16} };
+    block3 << StyleInfo { .width {30}, .height{8} };
 
     uiroot << UI::StyleInfo { .width{128}, .height{128} };
 
@@ -99,6 +102,7 @@ void init() {
     uiroot << block2;
     uiroot << inlineblock;
     uiroot << inlineblock2;
+    uiroot << block3;
 
     uiroot.resolve_layout();
 

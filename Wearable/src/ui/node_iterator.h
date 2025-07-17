@@ -22,6 +22,10 @@ struct NodeMovementT {
         return node;
     }
 
+    static constexpr inline Node *last_child(Node *node) {
+        return last_sibling(node->child);
+    }
+
     static constexpr inline Node *root_node(Node *node) {
         while (node->parent) node = node->parent;
         return node;
@@ -185,6 +189,7 @@ struct NodeMovementOpsT : public NodeMovementT<Derived> {
 
     constexpr inline Derived *last_sibling() { return last_sibling(super); }
     constexpr inline Derived *deepest_child() { return deepest_child(super); }
+    constexpr inline Derived *last_child() { return Movement::last_child(super); }
     constexpr inline Derived *root_node() { return root_node(super); }
     constexpr inline Derived *previous_sibling() { return previous_sibling(super); }
     constexpr inline Derived *depth_first_next() { return depth_first_next(super); }

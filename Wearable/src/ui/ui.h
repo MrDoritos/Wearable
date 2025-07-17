@@ -584,7 +584,7 @@ struct IElement : public Style, public NodeMovementOpsT<IElement> {
         element->parent = this;
 
         if (child)
-            child->append_sibling(element);
+            this->last_child()->sibling = element;
         else
             child = element;
 
