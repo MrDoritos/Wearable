@@ -1248,28 +1248,76 @@ struct ElementDateTimeT : public ElementT {
     using ElementT::ElementT;
     using ElementT::operator<<;
 
-    void on_draw(Event *event) override {
-        this->clear();
+    static constexpr const char *weekdays[] = {
+        "Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"
+    };
 
-        const int bufsize = 4;
-        char sweekday[bufsize], smonth[bufsize], sday[bufsize],
-             shour[bufsize], smin[bufsize];
+    static constexpr const int bufsize = 4;
+    char s_weekday[bufsize], s_month[bufsize], s_day[bufsize], s_hour[bufsize], s_min[bufsize];
+    tm last_draw_tm = {0};
+    ub tick = 0;
 
-        const char *weekdays[] = {
-            "Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"
-        };
-
+    inline tm get_date() const {
         time_t now = time(nullptr);
         tm date = *localtime(&now);
 
-        snprintf(smonth, bufsize, "%2i", date.tm_mon + 1);
-        snprintf(sday, bufsize, "%i ", date.tm_mday);
-        snprintf(shour, bufsize, "%2i", date.tm_hour);
-        snprintf(smin, bufsize, "%02i", date.tm_min);
-        snprintf(sweekday, bufsize, "%s ", weekdays[date.tm_wday&7]);
+        date.tm_mday = seconds() % 32;
+        date.tm_hour = seconds() % 24;
+        date.tm_min = seconds() % 60;
+        date.tm_wday = seconds() % 7;
+        date.tm_mon = seconds() % 12;
 
-        this->draw_multi({}, sweekday, smonth, Sprites::SLASH, sday, shour, Sprites::VERT_BAR, smin);
-        this->buffer.border(*this, 1);
+        return date;
+    }
+
+    inline bool is_stale() const {
+        tm now = this->get_date();
+        const tm &last = this->last_draw_tm;
+        
+        return 
+            now.tm_min != last.tm_min ||
+            now.tm_hour != last.tm_hour ||
+            now.tm_mon != last.tm_mon ||
+            now.tm_mday != last.tm_mday ||
+            now.tm_wday != last.tm_wday;
+    }
+
+    inline tm update() {
+        tm date = this->get_date();
+
+        snprintf(s_month, bufsize, "%i", date.tm_mon + 1);
+        snprintf(s_day, bufsize, "%i ", date.tm_mday);
+        snprintf(s_hour, bufsize, "%02i", date.tm_hour);
+        snprintf(s_min, bufsize, "%02i", date.tm_min);
+        snprintf(s_weekday, bufsize, "%s ", weekdays[date.tm_wday&7]);
+
+        return date;
+    }
+
+    inline bool is_interval_tick() {
+        return (this->tick % 5) == 0;
+    }
+
+    inline bool is_major_tick() {
+        return this->tick > 4;
+    }
+
+    void on_tick(Event *event) override {
+        this->tick++;
+        this->tick %= 10;
+    }
+
+    void on_draw(Event *event) override {
+        if (!this->is_stale()) {
+            if (!this->is_interval_tick())
+                return;
+        } else {
+            last_draw_tm = this->update();
+        }
+
+        this->clear();
+
+        this->draw_multi({}, s_weekday, s_month, Sprites::SLASH, s_day, s_hour, (this->is_major_tick()) ? Sprites::VERT_BAR : Sprites::VERT_BAR_NONE, s_min);
     }
 };
 

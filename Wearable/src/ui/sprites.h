@@ -45,7 +45,9 @@ TX(HEART_SMALL, 32, 13, 9, 8)
 #define HEART HEART_SMALL
 
 TX(VERT_BAR, 25, 23, 2, 11)
+TX(VERT_BAR_NONE, 27, 23, 2, 11)
 TX(SLASH, 31, 23, 4, 11)
+TX(DUMMY, 0, 0, 0, 0)
 
 static constexpr const AtlasFontSprite GLYPHS_NUM_3x5[] = {
     FT35(0,0),

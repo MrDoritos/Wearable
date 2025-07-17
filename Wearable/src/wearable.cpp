@@ -54,11 +54,13 @@ void demo() {
     uibattery.on_draw(nullptr);
     uiroot.log_time("BATT  ");
     uidatetime.on_draw(nullptr);
+    uidatetime.on_tick(nullptr);
     uiroot.log_time("DATE  ");
 
     uiroot.buffer.border(uiroot, 1);
-    boxtest.buffer.border(boxtest, 1);
-    boxtest.buffer.
+    ///boxtest.buffer.border(boxtest, 1);
+    boxtest.clear(1);
+    boxtest2.clear();
     uiroot.flush_log(true,true,{0,20});
     //display.flush();
     //uiroot.once();
@@ -92,7 +94,8 @@ void init() {
     spinline << HEART << BATTERY << UI::StyleInfo { .wrap{UI::NOWRAP} };
     uibattery << Size {0,0,32,16};
     uidatetime << Size {49, 0, 79, 12} << UI::StyleInfo {.wrap{UI::WRAP}};
-    boxtest << Size { 8, 13, 3, 3 };
+    boxtest << Size { 8, 13, 5, 5 };
+    boxtest2 << Size { 9, 14, 3, 3 };
 
     TEXT.text = "Hello UI";
     txt.text = "SOME TEST TEXT\n VERY FINE text\n for very small values 0123456789 \% voltage 4.2v !\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~";

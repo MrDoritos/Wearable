@@ -8,6 +8,7 @@ target_compile_options(${COMPONENT_LIB} PRIVATE
     -Wno-narrowing
     -Wno-type-limits
     -Wno-missing-field-initializers
+    -Wno-format-truncation
     -fpermissive
 )
 
