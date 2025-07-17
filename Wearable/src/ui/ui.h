@@ -803,8 +803,10 @@ struct IElement : public Style, public NodeMovementOpsT<IElement> {
                     remaining_size.width -= child_use.width;
                     child_offset.x = remaining_size.getRight() + (uu)child_box.getLeft();
                     //child_offset.y = offset.y;
-                    child_offset.y = remaining_size.y;
+                    //child_offset.y = remaining_size.y;
+                    child_offset.y = remaining_size.getTop() + (uu)child_box.getTop();
                     //child_offset = Origin(remaining_size.getLength()) + remaining_size.getOffset();
+                    //child_offset = (Origin)child_margin + remaining_size.getOffset();
                     break;
                 case BOTTOM:
                     remaining_size.height -= child_use.height;

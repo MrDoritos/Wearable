@@ -111,6 +111,7 @@ void init() {
     uiroot << inlineblock;
     uiroot << inlineblock2;
     uiroot << inlineblock3;
+    uiroot << inlineblock4;
     uiroot << block3;
 
     uiroot.resolve_layout();
