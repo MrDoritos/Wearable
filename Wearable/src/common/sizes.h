@@ -134,6 +134,7 @@ struct OriginT {
     constexpr OriginT(const T &x, const T &y):x(x),y(y){}
     constexpr OriginT(const Box &b);
 
+    constexpr inline OriginT getOffset() const { return *this; }
     constexpr inline T getOffsetX() const { return x; }
     constexpr inline T getOffsetY() const { return y; }
     constexpr inline void setOffsetX(const T &offsetX) { x = offsetX; }
@@ -161,6 +162,7 @@ struct LengthT {
     constexpr LengthT(const T &value):width(value),height(value){}
     constexpr LengthT(){}
 
+    constexpr inline LengthT getLength() const { return *this; }
     constexpr inline T getWidth() const { return width; }
     constexpr inline T getHeight() const { return height; }
     constexpr inline void setWidth(const T &width) { this->width = width; }

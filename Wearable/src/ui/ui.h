@@ -967,9 +967,10 @@ struct ElementBaseT : public ElementT {
         return Length(cur.x - pos.x, cur.y - pos.y);
     }
 
-    template<typename T>
+    template<typename T, typename BASETYPE=std::decay_t<T>>
     constexpr inline Length draw_any(const T v, const Origin &offset_pos) {
-        if constexpr (std::is_same<const char*, T>::value) {
+        //if constexpr (std::is_same<const char*, T>::value) {
+        if constexpr (std::is_same_v<char*, BASETYPE> || std::is_same_v<const char*, BASETYPE>) {
             return this->draw_text(v, Sprites::font, offset_pos);
         } else {
             return this->draw_sprites(&v, 1, offset_pos);
@@ -1180,7 +1181,7 @@ struct ElementRootT : public ElementT {
             reset_log_time();
     }
 
-    inline void flush_log(const bool &display_flush = true, const bool &clear_text_boundary=true, const Origin &position={0}) {
+    inline void flush_log(const bool &display_flush = true, const bool &clear_text_boundary=true, const Origin &position={}) {
         if (!debug) return;
 
         if (clear_text_boundary) {
@@ -1233,12 +1234,42 @@ struct ElementBatteryT : public ElementT {
         char buf[buflen];
         int count = snprintf(buf, buflen, "%i%%", current_level);
         Origin pos = *this;
-        this->draw_multi(pos, battery_sprite, (const char*)buf);
+        this->draw_multi({}, battery_sprite, (const char*)buf);
         const ub sheight = battery_sprite.getHeight();
         const ub swidth = battery_sprite.getWidth();
         int nheight = sheight*(current_level/100.0f);
         //this->buffer.fill(pos.x+1,pos.y+nheight+1,pos.x+swidth-1,pos.y+sheight-1,1);
         this->buffer.fill(pos.x+2,pos.y+sheight-nheight,pos.x+swidth-1,pos.y+sheight-1,1);
+    }
+};
+
+template<typename Buffer, typename ElementT = ElementBaseT<Buffer>>
+struct ElementDateTimeT : public ElementT {
+    using ElementT::ElementT;
+    using ElementT::operator<<;
+
+    void on_draw(Event *event) override {
+        this->clear();
+
+        const int bufsize = 4;
+        char sweekday[bufsize], smonth[bufsize], sday[bufsize],
+             shour[bufsize], smin[bufsize];
+
+        const char *weekdays[] = {
+            "Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"
+        };
+
+        time_t now = time(nullptr);
+        tm date = *localtime(&now);
+
+        snprintf(smonth, bufsize, "%2i", date.tm_mon + 1);
+        snprintf(sday, bufsize, "%i ", date.tm_mday);
+        snprintf(shour, bufsize, "%2i", date.tm_hour);
+        snprintf(smin, bufsize, "%02i", date.tm_min);
+        snprintf(sweekday, bufsize, "%s ", weekdays[date.tm_wday&7]);
+
+        this->draw_multi({}, sweekday, smonth, Sprites::SLASH, sday, shour, Sprites::VERT_BAR, smin);
+        this->buffer.border(*this, 1);
     }
 };
 
