@@ -1204,8 +1204,10 @@ struct ElementRootT : public ElementT {
     inline void overlay_tree_positions() {
         for (auto &child : this->children()) {
             this->buffer.border(child, 1);
-            if (child.name)
-                this->draw_text(child.name, Sprites::minifont, child, false, true);
+            const int buflen = 20;
+            char buf[buflen];
+            snprintf(buf, buflen, "%s\n%i,%i\n%i,%i", child.name ? child.name : "", child.x, child.y, child.getWidth(), child.getHeight());
+            this->draw_text(buf, Sprites::minifont, child, false, true);
         }
     }
 

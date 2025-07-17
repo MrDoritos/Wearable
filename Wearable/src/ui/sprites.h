@@ -107,7 +107,7 @@ static constexpr const AtlasFontSprite GLYPHS_SPECIAL_3x5[] = {
 
     FT35(227,0), // *
     FT35(231,0), // +
-    FT35(235,0), // ,
+    FT(235,0,2,5), // ,
     FT35(238,0), // -
     FT(242,0,1,5), // .
 
@@ -126,7 +126,7 @@ static constexpr const AtlasFontSprite GLYPHS_SPECIAL_3x5[] = {
     FT(99,30,2,5), // ]
     FT35(102,30), // ^
     FT35(106,30), // _
-    FT35(110,30), // `
+    FT(110,30,2,5), // `
     FT(114,30,2,5), // {
 
     FT(117,30,1,5), // |

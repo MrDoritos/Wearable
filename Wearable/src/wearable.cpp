@@ -60,9 +60,9 @@ void demo() {
     //uiroot.buffer.border(uiroot, 1);
     uiroot.overlay_tree_positions();
     ///boxtest.buffer.border(boxtest, 1);
-    boxtest.clear(1);
-    boxtest2.clear();
-    uiroot.flush_log(true,true,{0,20});
+    //boxtest.clear(1);
+    //boxtest2.clear();
+    uiroot.flush_log(true,true,{0,64});
     //display.flush();
     //uiroot.once();
 
@@ -84,10 +84,21 @@ void init() {
     uiroot.setDebug(true);
     using DElem = UI::ElementT<DisplayTexture>;
     static DElem block(display, "block");
+    static DElem block2(display, "area");
+    static DElem inlineblock(display, "inline");
+    static DElem inlineblock2(display, "sprites");
+
+    block << UI::StyleInfo { .height{16} };
+    block2 << UI::StyleInfo { .width{32}, .height{16} };
+    inlineblock << UI::StyleInfo { .width {24}, .height{16} };
+    inlineblock2 << UI::StyleInfo { .width {40}, .height{16} };
 
     uiroot << UI::StyleInfo { .width{128}, .height{128} };
 
     uiroot << block;
+    uiroot << block2;
+    uiroot << inlineblock;
+    uiroot << inlineblock2;
 
     uiroot.resolve_layout();
 

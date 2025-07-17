@@ -61,6 +61,9 @@ struct TextureT : public Buffer {
     }
 
     constexpr inline void border(const Size &size, const pixel &px) {
+        if (!size.height || !size.width)
+            return;
+        
         for (fb x = size.x; x < size.x + size.width; x++) {
             this->putPixel(x, size.y, px);
             this->putPixel(x, size.y+size.height-1, px);
