@@ -62,7 +62,7 @@ void demo() {
     ///boxtest.buffer.border(boxtest, 1);
     //boxtest.clear(1);
     //boxtest2.clear();
-    uiroot.flush_log(true,true,{60,64});
+    uiroot.flush_log(true,true,{60,80});
     //display.flush();
     //uiroot.once();
 
@@ -89,13 +89,17 @@ void init() {
     static DElem block2(display, "area");
     static DElem inlineblock(display, "inline");
     static DElem inlineblock2(display, "sprites");
+    static DElem inlineblock3(display, "right");
+    static DElem inlineblock4(display, "left");
     static DElem block3(display, "after");
 
     block << UI::StyleInfo { .height{26} };
     inner << StyleInfo {.height {14}};
     block2 << UI::StyleInfo { .width{32}, .height{26} };
     inlineblock << UI::StyleInfo { .display{INLINE}, .width {40}, .height{26} };
-    inlineblock2 << UI::StyleInfo { .display{INLINE}, .width {32}, .height{20}, .margin{1} };
+    inlineblock2 << UI::StyleInfo { .align{RIGHT}, .display{INLINE}, .width {32}, .height{20}, .margin{2} };
+    inlineblock3 << UI::StyleInfo { .align{RIGHT}, .display{INLINE}, .width {20}, .height{10}, .margin{2} };
+    inlineblock4 << UI::StyleInfo { .display{INLINE}, .width{20}, .height{30}, .margin{2} };
     block3 << StyleInfo { .width {30}, .height{20} };
 
     uiroot << UI::StyleInfo { .width{128}, .height{128} };
@@ -106,6 +110,7 @@ void init() {
     uiroot << block2;
     uiroot << inlineblock;
     uiroot << inlineblock2;
+    uiroot << inlineblock3;
     uiroot << block3;
 
     uiroot.resolve_layout();

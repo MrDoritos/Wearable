@@ -511,8 +511,8 @@ struct IElement : public Style, public NodeMovementOpsT<IElement> {
 
     constexpr IElement(const char *name, IElement *parent, IElement *sibling, IElement *child):name(name),parent(parent),sibling(sibling),child(child){}
     constexpr IElement(const char *name):IElement(name,nullptr,nullptr,nullptr){}
-    constexpr IElement():IElement(nullptr){}
-    constexpr IElement(const StyleInfo &styleInfo):Style(styleInfo),name(nullptr),parent(nullptr),sibling(nullptr),child(nullptr){}
+    constexpr IElement():IElement(""){}
+    constexpr IElement(const StyleInfo &styleInfo):Style(styleInfo),name(""),parent(nullptr),sibling(nullptr),child(nullptr){}
 
     constexpr inline IElement &operator<<(const Origin &origin) {
         *((Origin*)this) = origin;
@@ -736,16 +736,34 @@ struct IElement : public Style, public NodeMovementOpsT<IElement> {
         const Origin original_origin = *this;
         Length inline_size;
         Origin offset = original_origin;
+        Size remaining_size = original_size;
+
+        /*
+            Floated blocks become inline
+        
+            Floated blocks offset in accordance with tree order
+            
+            For simplicity, only inline will float (align) left or right
+
+            Both will float (align) top or bottom
+
+            Floating left or right should be okay when they are after block siblings, it will include the break
+        */
 
         while (cur) {
             Box child_margin = cur->margin.resolve(container);
             Box child_padding = cur->padding.resolve(container);
             Box child_box = child_margin + child_padding;
+            Length child_boxuse((uu)(child_box.left+child_box.right),(uu)(child_box.top+child_box.bottom));
 
             switch (cur->display) {
                 case BLOCK:
-                    offset.x = original_origin.x;
-                    offset.y += inline_size.height;
+                    //offset.x = original_origin.x;
+                    //offset.y += inline_size.height;
+                    remaining_size.x = original_origin.x;
+                    remaining_size.width = original_size.width;
+                    remaining_size.y += inline_size.height;
+                    remaining_size.height -= inline_size.height;
                     inline_size = 0;
                     if (cur->position == STATIC) {
                         if (cur->container.width == NONEDIM) {
@@ -761,24 +779,71 @@ struct IElement : public Style, public NodeMovementOpsT<IElement> {
                     break;
             }
 
-            Length child_use = child_box + cur->container;
+            Length child_use = (LengthT<uu>)child_boxuse + (LengthT<uu>)cur->container;
 
-            Origin child_offset = (Origin)child_margin + offset;
+            Origin child_offset;
+
+            child_offset = (Origin)child_margin + remaining_size.getOffset();
+
+            switch (cur->align) {
+                case LEFT: // No change
+                    remaining_size.x += child_use.width;
+                    remaining_size.width -= child_use.width;
+                    break;
+                case TOP: // No change. Based on tree order
+                    //child_offset = (Origin)child_margin + offset;
+                    //child_offset = (Origin)child_margin + (Origin)remaining_size;
+                    //remaining_size.y += child_use.height;
+                    //remaining_size.width -= child_use.width;
+                    //remaining_size.height -= child_use.height;
+                    //remaining_size.y += child_use.height;
+                    //remaining_size.height -= child_use.height;
+                    break;
+                case RIGHT:
+                    remaining_size.width -= child_use.width;
+                    child_offset.x = remaining_size.getRight() + (uu)child_box.getLeft();
+                    //child_offset.y = offset.y;
+                    child_offset.y = remaining_size.y;
+                    //child_offset = Origin(remaining_size.getLength()) + remaining_size.getOffset();
+                    break;
+                case BOTTOM:
+                    remaining_size.height -= child_use.height;
+                    //child_offset.x = offset.x;
+                    child_offset.x = remaining_size.x;
+                    child_offset.y = remaining_size.getBottom() + (uu)child_box.getTop();
+                    //child_offset = Origin(remaining_size.getLength()) + remaining_size.getOffset();
+                    break;
+                case VCENTER:
+                    break;
+                case HCENTER:
+                    break;
+                default:
+                    break;
+            }
+
+            //Origin child_offset = (Origin)child_margin + offset;
 
             *cur << child_offset;
 
             switch (cur->display) {
                 case BLOCK:
-                    offset.y += child_use.height;
-                    offset.x = original_origin.x;
+                    ////offset.y += child_use.height;
+                    ////offset.x = original_origin.x;
+                    remaining_size.y += child_use.height;
+                    remaining_size.height -= child_use.height;
+                    //remaining_size.x = original_origin.x;
                     inline_size = 0;
+                    remaining_size.x = original_size.x;
+                    remaining_size.width = original_size.width;
                     break;
                 case INLINE:
                 case INLINE_BLOCK:
                     inline_size += {child_use.width,0};
                     if (child_use.height > inline_size.height)
                         inline_size.height = child_use.height;
-                    offset.x += child_use.width;
+                    ////offset.x += child_use.width;
+                    //remaining_size.x += child_use.width;
+                    //remaining_size.width -= child_use.width;
                     break;
                 default:
                     break;
@@ -1275,7 +1340,7 @@ struct ElementRootT : public ElementT {
         };
 
 
-        s_s(node->name);
+        s_s(node->name?node->name:"");
         s_size(*node);
 
         s_s("\nctnr:");
@@ -1306,7 +1371,7 @@ struct ElementRootT : public ElementT {
 
             const int buflen = 20;
             char buf[buflen];
-            snprintf(buf, buflen, "%s\n%i,%i\n%i,%i", child.name, child.x, child.y, child.getWidth(), child.getHeight());
+            snprintf(buf, buflen, "%s\n%i,%i\n%i,%i", child.name?child.name:"", child.x, child.y, child.getWidth(), child.getHeight());
             this->draw_text(buf, Sprites::minifont, child, false, true);
         }
     }

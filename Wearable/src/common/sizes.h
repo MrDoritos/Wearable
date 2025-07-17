@@ -213,6 +213,7 @@ struct LengthT {
 struct Length : public LengthT<uu> {
     using LengthT<uu>::LengthT;
 
+    constexpr Length(const LengthT<uu> &v):LengthT(v){}
     constexpr Length(const uu &width, const uu &height):LengthT(width, height){}
     constexpr Length():Length(0,0){}
     constexpr Length(const Box &b);
@@ -231,11 +232,12 @@ struct LengthD : public LengthT<Dimension> {
         );
     }
 
-    /*
-    constexpr inline operator LengthT<Dimension>() const {
-        return *this;
+    constexpr inline operator LengthT<uu>() const {
+        return LengthT<uu>(
+            (uu)width,
+            (uu)height
+        );
     }
-    */
 };
 
 template<typename T, typename Origin = OriginT<T>, typename Length = LengthT<T>>
@@ -277,6 +279,10 @@ struct BoxT {
     
     constexpr inline T getWidth() const { return right-left; }
     constexpr inline T getHeight() const { return bottom-top; }
+    constexpr inline T getTop() const { return top; }
+    constexpr inline T getRight() const { return right; }
+    constexpr inline T getBottom() const { return bottom; }
+    constexpr inline T getLeft() const { return left; }
 
     constexpr inline BoxT resolve(const BoxT &major) const {
         const BoxT resolved(
