@@ -68,6 +68,7 @@ struct AxisT {
 
     constexpr AxisT(){}
     constexpr AxisT(const T &x, const T &y):x(x),y(y){}
+    constexpr AxisT(const T &v):x(v),y(v){}
 };
 
 template<typename T>
@@ -909,6 +910,7 @@ struct ElementBaseT : public ElementT {
             case EventTypes::CONTENT_SIZE: this->on_content_size(event); return;
             case EventTypes::SCREEN: this->on_screen(event); return;
             case EventTypes::FOCUS: this->on_focus(event); return;
+            case EventTypes::TICK: this->on_tick(event); return;
             default: return;
         }
     }
@@ -1265,15 +1267,22 @@ struct ElementRootT : public ElementT {
             reset_log_time();
     }
 
-    inline void flush_log(const bool &display_flush = true, const bool &clear_text_boundary=true, const Origin &position={}) {
+    inline void flush_log(const bool &display_flush = true, const bool &clear_text_boundary=true, const Origin &position={}, const bool &after_last_child=true) {
         if (!debug) return;
+
+        Origin pos = position;
+
+        if (after_last_child) {
+            if (this->child)
+                pos = {0,this->last_child()->getBottom()};
+        }
 
         if (clear_text_boundary) {
             Length len = this->getTextContentSize(debug_log, Sprites::minifont);
-            this->buffer.fill({position,len},0);
+            this->buffer.fill({pos,len},0);
         }
 
-        this->draw_text(debug_log, Sprites::minifont, position);
+        this->draw_text(debug_log, Sprites::minifont, pos);
         
         if (display_flush)
             this->buffer.flush();
@@ -1359,6 +1368,8 @@ struct ElementRootT : public ElementT {
         s_dimminmax(node->resolved_width);
         s_s("rh:");
         s_dimminmax(node->resolved_height);
+        s_s("\ncont:");
+        s_length(node->content);
 
         this->draw_text(buf, Sprites::minifont, *node, false, true);
     }
@@ -1384,13 +1395,17 @@ struct ElementRootT : public ElementT {
         reset_log_time();
         this->dispatch(Event::TICK);
         log_time("TICK ");
+        this->dispatch(Event::CONTENT_SIZE);
+        log_time("CNTSZ");
+        this->resolve_layout();
+        log_time("LAYOUT");
         this->dispatch(EventTypes::CLEAR);
         log_time("CLEAR");
         this->dispatch(EventTypes::DRAW);
         log_time("DRAW.");
         this->buffer.flush();
         log_time("FLUSH");
-        flush_log();
+        //flush_log();
     }
 
     inline void setDebug(const bool &debug_state=true) {
@@ -1403,19 +1418,41 @@ struct ElementBatteryT : public ElementT {
     using ElementT::ElementT;
     using ElementT::operator<<;
 
+    static constexpr const int buflen = 10;
+    char buf[buflen];
+
     bool show_percentage = true;
     ub current_level = 50;
+    ub last_draw_level = 101;
     Sprites::Atlas::Sprite battery_sprite = Sprites::BATTERY_5x10_PAD;
 
     void set_battery_level(const ub &level) {
         this->current_level = level;
     }
 
-    void on_draw(Event *event) override {
-        this->clear();
-        const int buflen = 10;
-        char buf[buflen];
+    inline void update() {
         int count = snprintf(buf, buflen, "%i%%", current_level);
+    }
+
+    void on_content_size(Event *event) override {
+        if (last_draw_level == current_level)
+            return;
+        this->update();
+        this->content = this->getSpritesContentSize(&battery_sprite, 1) + this->getTextContentSize((const char*)buf, Sprites::font);
+        this->content.height = 12;
+    }
+
+    void on_clear(Event *event) override {
+
+    }
+
+    void on_draw(Event *event) override {
+        if (last_draw_level == current_level)
+            return;
+        last_draw_level = current_level;
+
+        this->clear();
+        this->update();
         Origin pos = *this;
         this->draw_multi({}, battery_sprite, (const char*)buf);
         const ub sheight = battery_sprite.getHeight();
@@ -1435,9 +1472,9 @@ struct ElementDateTimeT : public ElementT {
         "Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"
     };
 
-    static constexpr const int bufsize = 4;
+    static constexpr const int bufsize = 6;
     char s_weekday[bufsize], s_month[bufsize], s_day[bufsize], s_hour[bufsize], s_min[bufsize];
-    tm last_draw_tm = {0};
+    tm last_draw_tm = {.tm_mon=13};
     ub tick = 0;
 
     inline tm get_date() const {
@@ -1472,7 +1509,7 @@ struct ElementDateTimeT : public ElementT {
         snprintf(s_day, bufsize, "%i ", date.tm_mday);
         snprintf(s_hour, bufsize, "%02i", date.tm_hour);
         snprintf(s_min, bufsize, "%02i", date.tm_min);
-        snprintf(s_weekday, bufsize, "%s ", weekdays[date.tm_wday&7]);
+        snprintf(s_weekday, bufsize, " %s ", weekdays[date.tm_wday&7]);
 
         return date;
     }
@@ -1490,6 +1527,10 @@ struct ElementDateTimeT : public ElementT {
         this->tick %= 10;
     }
 
+    void on_clear(Event *event) override {
+
+    }
+
     void on_draw(Event *event) override {
         if (!this->is_stale()) {
             if (!this->is_interval_tick())
@@ -1501,6 +1542,29 @@ struct ElementDateTimeT : public ElementT {
         this->clear();
 
         this->draw_multi({}, s_weekday, s_month, Sprites::SLASH, s_day, s_hour, (this->is_major_tick()) ? Sprites::VERT_BAR : Sprites::VERT_BAR_NONE, s_min);
+    }
+
+    void on_content_size(Event *event) override {
+        if (!this->is_stale())
+            return;
+
+        //last_draw_tm =
+         this->update();
+
+        const char *texts[] = {
+            s_weekday, s_month, s_day, s_hour, s_min
+        };
+        const Sprites::Atlas::Sprite sprites[] = {
+            Sprites::SLASH, Sprites::VERT_BAR
+        };
+
+        Length sum;
+        for (int i = 0; i < sizeof(texts)/sizeof(texts[0]); i++)
+            sum += this->getTextContentSize((const char*)texts[i], Sprites::font);
+        sum += this->getSpritesContentSize(&sprites[0], sizeof(sprites)/sizeof(sprites[0]));
+        sum.width+=1;
+        sum.height=12;
+        this->content = sum;
     }
 };
 

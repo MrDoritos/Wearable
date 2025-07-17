@@ -44,27 +44,27 @@ void demo() {
     uibattery.set_battery_level((millis()%10000)/100);
     uiroot.reset_log();
     //display.clear();
-    uiroot.log_time("BUFCLR");
+    //uiroot.log_time("BUFCLR");
     //display.fill(uiroot, 1);
     //uiroot.log_time("SET1  ");
     //display.fill(uiroot, 0);
     //uiroot.log_time("SET0  ");
-    uiclock.on_draw(nullptr);
-    uiroot.log_time("CLOCK ");
-    uibattery.on_draw(nullptr);
-    uiroot.log_time("BATT  ");
-    uidatetime.on_draw(nullptr);
-    uidatetime.on_tick(nullptr);
-    uiroot.log_time("DATE  ");
+    //uiclock.on_draw(nullptr);
+    //uiroot.log_time("CLOCK ");
+    //uibattery.on_draw(nullptr);
+    //uiroot.log_time("BATT  ");
+    //uidatetime.on_draw(nullptr);
+    //uidatetime.on_tick(nullptr);
+    //uiroot.log_time("DATE  ");
 
     //uiroot.buffer.border(uiroot, 1);
-    uiroot.overlay_tree_positions();
     ///boxtest.buffer.border(boxtest, 1);
     //boxtest.clear(1);
     //boxtest2.clear();
-    uiroot.flush_log(true,true,{60,80});
+    //uiroot.flush_log(true,true,{60,80});
     //display.flush();
-    //uiroot.once();
+    uiroot.once();
+    //uiroot.overlay_tree_positions(true);
 
     if (dpad.any(Dpad::PRESSED)) {
         puts("Any pressed");
@@ -75,6 +75,7 @@ void demo() {
             display.putTexture(atlas, {0,0,128,128}, {0,0});
         display.flush();
         delay(1000);
+        display.clear();
     }
     dpad.update();
     delay(100);
@@ -106,6 +107,7 @@ void init() {
 
     block << inner;
 
+    /*
     uiroot << block;
     uiroot << block2;
     uiroot << inlineblock;
@@ -115,7 +117,7 @@ void init() {
     uiroot << block3;
 
     uiroot.resolve_layout();
-
+    */
 
     //uiroot << Size { 0, 0, 128, 128 };
     test << Origin { 4, 30 };
@@ -126,8 +128,10 @@ void init() {
     test.wrap = UI::WrapStyle::WRAP | UI::WrapStyle::TRIM_SPACE;
     test << Size { 32, 30, 64, 64 };
     spinline << HEART << BATTERY << UI::StyleInfo { .wrap{UI::NOWRAP} };
-    uibattery << Size {0,0,32,16};
-    uidatetime << Size {49, 0, 79, 12} << UI::StyleInfo {.wrap{UI::WRAP}};
+    //uibattery << Size {0,0,32,16};
+    //uidatetime << Size {49, 0, 79, 12} << UI::StyleInfo {.wrap{UI::WRAP}};
+    uibattery << UI::StyleInfo { .align{LEFT}, .wrap{NOWRAP}, .display{INLINE}, .overflow{AUTO} };
+    uidatetime << UI::StyleInfo { .align{RIGHT}, .wrap{NOWRAP}, .display{INLINE}, .overflow{AUTO} };
     boxtest << Size { 8, 13, 5, 5 };
     boxtest2 << Size { 9, 14, 3, 3 };
 
@@ -140,6 +144,11 @@ void init() {
     spinline.resolve_layout();
     TEXT.resolve_layout();
 
+    uiroot << uibattery;
+    uiroot << uidatetime;
+
+    uiroot.dispatch(EventTypes::CONTENT_SIZE);
+    uiroot.resolve_layout();
 }
 
 extern "C" {
