@@ -93,7 +93,7 @@ void init() {
     block << UI::StyleInfo { .height{16} };
     block2 << UI::StyleInfo { .width{32}, .height{16} };
     inlineblock << UI::StyleInfo { .display{INLINE}, .width {40}, .height{16} };
-    inlineblock2 << UI::StyleInfo { .display{INLINE}, .width {24}, .height{16} };
+    inlineblock2 << UI::StyleInfo { .display{INLINE}, .width {32}, .height{16} };
     block3 << StyleInfo { .width {30}, .height{8} };
 
     uiroot << UI::StyleInfo { .width{128}, .height{128} };

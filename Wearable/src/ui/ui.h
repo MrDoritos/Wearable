@@ -733,8 +733,6 @@ struct IElement : public Style, public NodeMovementOpsT<IElement> {
 
             switch (cur->display) {
                 case BLOCK:
-                    //offset += {0,inline_size.height};
-                    //offset.x = original_origin.x;
                     offset.x = original_origin.x;
                     offset.y += inline_size.height;
                     inline_size = 0;
@@ -746,19 +744,12 @@ struct IElement : public Style, public NodeMovementOpsT<IElement> {
                     break;
             }
 
-            //printf("%s -> %s\n", name, cur->name);
-
             Origin child_offset = (Origin)child_margin + offset;
 
-            //printf("x: %i y: %i x: %i y: %i\n", offset.x, offset.y, child_offset.x, child_offset.y);
             *cur << child_offset;
-            //*cur << offset;
-            //*cur << Origin(1,1);
 
             switch (cur->display) {
                 case BLOCK:
-                    //offset += {0,child_use.height};
-                    //offset.x = original_origin.x;
                     offset.y += child_use.height;
                     offset.x = original_origin.x;
                     inline_size = 0;
@@ -768,6 +759,7 @@ struct IElement : public Style, public NodeMovementOpsT<IElement> {
                     inline_size += {child_use.width,0};
                     if (child_use.height > inline_size.height)
                         inline_size.height = child_use.height;
+                    offset.x += child_use.width;
                     break;
                 default:
                     break;
