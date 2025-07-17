@@ -57,7 +57,8 @@ void demo() {
     uidatetime.on_tick(nullptr);
     uiroot.log_time("DATE  ");
 
-    uiroot.buffer.border(uiroot, 1);
+    //uiroot.buffer.border(uiroot, 1);
+    uiroot.overlay_tree_positions();
     ///boxtest.buffer.border(boxtest, 1);
     boxtest.clear(1);
     boxtest2.clear();
@@ -81,8 +82,16 @@ void demo() {
 
 void init() {
     uiroot.setDebug(true);
+    using DElem = UI::ElementT<DisplayTexture>;
+    static DElem block(display, "block");
 
     uiroot << UI::StyleInfo { .width{128}, .height{128} };
+
+    uiroot << block;
+
+    uiroot.resolve_layout();
+
+
     //uiroot << Size { 0, 0, 128, 128 };
     test << Origin { 4, 30 };
     txt << Size { 32, 64, 64, 64 };
@@ -106,7 +115,6 @@ void init() {
     spinline.resolve_layout();
     TEXT.resolve_layout();
 
-    uiroot.resolve_layout();
 }
 
 extern "C" {

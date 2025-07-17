@@ -853,7 +853,7 @@ struct ElementBaseT : public ElementT {
     virtual void on_focus(Event *event) { }
 
     template<typename FontProvider>
-    constexpr inline Length draw_text(const char *text, const FontProvider &font, const Origin &offset_pos = {0,0}, const bool &determine_size = false) {
+    constexpr inline Length draw_text(const char *text, const FontProvider &font, const Origin &offset_pos = {0,0}, const bool &determine_size = false, const bool &clear_sprite_area = false) {
         const bool text_wrap = this->wrap & WrapStyle::WRAP;
         const bool text_trim = this->wrap & WrapStyle::TRIM_SPACE;
 
@@ -909,6 +909,9 @@ struct ElementBaseT : public ElementT {
             if (size.height < glyph_size.height)
                 size.height = glyph_size.height;
 
+            if (clear_sprite_area)
+                this->buffer.fill(cur.x, cur.y, cur.x+glyph_size.width, cur.y+glyph_size.height, 0);
+
             if (!determine_size)
                 this->buffer.putSprite(sprite, cur);
 
@@ -925,7 +928,7 @@ struct ElementBaseT : public ElementT {
     }
 
     template<typename Sprite>
-    constexpr inline Length draw_sprites(const Sprite *sprites, const uu &length, const Origin &offset_pos = {0,0}, const bool &determine_size = false) {
+    constexpr inline Length draw_sprites(const Sprite *sprites, const uu &length, const Origin &offset_pos = {0,0}, const bool &determine_size = false, const bool &clear_sprite_area = false) {
         const bool wrap = this->wrap & WrapStyle::WRAP;
 
         const Origin pos = offset_pos + *this;
@@ -951,6 +954,9 @@ struct ElementBaseT : public ElementT {
 
             if (size.height < sprite.getHeight())
                 size.height = sprite.getHeight();
+
+            if (clear_sprite_area)
+                this->buffer.fill(Size(cur, sprite), 0);
 
             if (!determine_size)
                 this->buffer.putSprite(sprite, cur);
@@ -1193,6 +1199,14 @@ struct ElementRootT : public ElementT {
         
         if (display_flush)
             this->buffer.flush();
+    }
+
+    inline void overlay_tree_positions() {
+        for (auto &child : this->children()) {
+            this->buffer.border(child, 1);
+            if (child.name)
+                this->draw_text(child.name, Sprites::minifont, child, false, true);
+        }
     }
 
     inline void once() {

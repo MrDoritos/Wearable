@@ -72,6 +72,13 @@ struct TextureT : public Buffer {
         }
     }
 
+    constexpr inline void difference(const Size &outer, const Size &inner, const pixel &px) {
+        for (fb x = outer.x; x < outer.x + outer.width; x++)
+            for (fb y = outer.y; y < outer.y + outer.height; y++)
+                if (!inner.isBound(x, y))
+                    this->putPixel(x, y, px);
+    }
+
     constexpr inline void fill(const Size &size, const pixel &px) {
         fill(size.x, size.y, size.x + size.width, size.y + size.height, px);
     }

@@ -237,6 +237,14 @@ struct SizeT : public Origin, public Length {
     constexpr inline T getRight() const { return this->x + this->width; }
     constexpr inline T getBottom() const { return this->y + this->height; }
 
+    constexpr inline bool isBound(const T &x, const T &y) const {
+        return x >= this->getLeft() && y >= this->getTop() && x < this->getRight() && y < this->getBottom();
+    }
+
+    constexpr inline bool isBound(const Origin &origin) const {
+        return this->isBound(origin.x, origin.y);
+    }
+
     constexpr inline Origin getMidpoint() const {
         return Origin(
             this->x + (this->width * 0.5),

@@ -101,9 +101,7 @@ struct NodeIteratorT : public NodeMovementT<Node> {
     constexpr inline pointer operator->() const { return ptr; }
 
     constexpr inline Derived begin() const { return Derived(ptr_begin); }
-
     constexpr inline Derived end() const { return Derived(nullptr); }
-
 
     constexpr inline bool operator==(const Derived &other) const { return ptr == other.ptr; }
     constexpr inline bool operator!=(const Derived &other) const { return ptr != other.ptr; }
