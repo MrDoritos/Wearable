@@ -50,7 +50,7 @@ struct DimensionT {
             case PERC:
                 return RType(CALC(major.value) * (CALC(value) * 0.01));
             default:
-                return RType(0);
+                return RType();
         }
     }
 
@@ -102,6 +102,8 @@ struct DimensionT {
     }
 
     friend constexpr inline bool operator>(const T &a, const DimensionT &b) {
+        if (a == 0)
+            return false;
         if (b.unit == NONE)
             return true;
         if (b.unit == PX)
@@ -192,6 +194,17 @@ struct LengthT {
         return a = a + b;
     }
 
+    friend constexpr inline LengthT operator-(const LengthT &a, const LengthT &b) {
+        return LengthT(
+            a.width - b.width,
+            a.height - b.height
+        );
+    }
+
+    friend constexpr inline LengthT &operator-=(LengthT &a, const LengthT &b) {
+        return a = a - b;
+    }
+
     constexpr inline explicit operator OriginT<T>() {
         return OriginT<T>(width, height);
     }
@@ -262,6 +275,9 @@ struct BoxT {
     constexpr BoxT(const T &v):BoxT(v){}
     constexpr BoxT(const Size &s):top(s.y),right(s.x+s.width),bottom(s.y+s.height),left(s.x){}
     
+    constexpr inline T getWidth() const { return right-left; }
+    constexpr inline T getHeight() const { return bottom-top; }
+
     constexpr inline BoxT resolve(const BoxT &major) const {
         const BoxT resolved(
             top.resolve(major.top),

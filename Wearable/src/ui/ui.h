@@ -701,6 +701,7 @@ struct IElement : public Style, public NodeMovementOpsT<IElement> {
         
         Length grow = context;
 
+        /*
         switch (display) {
             case BLOCK:
                 if (position == STATIC) {
@@ -710,6 +711,7 @@ struct IElement : public Style, public NodeMovementOpsT<IElement> {
             default:
                 break;
         }
+        */
 
         /*
         if (grow.width > container.width)
@@ -739,13 +741,18 @@ struct IElement : public Style, public NodeMovementOpsT<IElement> {
             Box child_margin = cur->margin.resolve(container);
             Box child_padding = cur->padding.resolve(container);
             Box child_box = child_margin + child_padding;
-            Length child_use = child_box + cur->container;
 
             switch (cur->display) {
                 case BLOCK:
                     offset.x = original_origin.x;
                     offset.y += inline_size.height;
                     inline_size = 0;
+                    if (cur->position == STATIC) {
+                        if (cur->container.width == NONEDIM) {
+                            cur->container.width = (uu)(container.width - child_box.getWidth());
+                        }
+                    }
+
                     break;
                 case INLINE:
                 case INLINE_BLOCK:
@@ -753,6 +760,8 @@ struct IElement : public Style, public NodeMovementOpsT<IElement> {
                 default:
                     break;
             }
+
+            Length child_use = child_box + cur->container;
 
             Origin child_offset = (Origin)child_margin + offset;
 
@@ -1279,6 +1288,10 @@ struct ElementRootT : public ElementT {
         s_dimminmax(node->width);
         s_s(",hei:");
         s_dimminmax(node->height);
+        s_s("\nrw:");
+        s_dimminmax(node->resolved_width);
+        s_s("rh:");
+        s_dimminmax(node->resolved_height);
 
         this->draw_text(buf, Sprites::minifont, *node, false, true);
     }

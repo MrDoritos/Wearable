@@ -90,9 +90,9 @@ void init() {
     static DElem inlineblock2(display, "sprites");
     static DElem block3(display, "after");
 
-    block << UI::StyleInfo { .height{20} };
-    block2 << UI::StyleInfo { .width{32}, .height{20} };
-    inlineblock << UI::StyleInfo { .display{INLINE}, .width {40}, .height{20} };
+    block << UI::StyleInfo { .height{26} };
+    block2 << UI::StyleInfo { .width{32}, .height{26} };
+    inlineblock << UI::StyleInfo { .display{INLINE}, .width {40}, .height{26} };
     inlineblock2 << UI::StyleInfo { .display{INLINE}, .width {32}, .height{20} };
     block3 << StyleInfo { .width {30}, .height{20} };
 
