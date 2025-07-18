@@ -21,7 +21,7 @@ struct Dpad {
         volatile States state{NONE};
 
         constexpr inline void rising_edge() {
-            if (state & ~States::PRESSED || !state)
+            if (!(state & States::HELD) || !state)
                 state = (States)(state | States::PRESSED);
         }
 

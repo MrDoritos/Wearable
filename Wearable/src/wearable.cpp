@@ -65,6 +65,8 @@ void demo() {
 
         uiroot.dispatch_event(input_event);
     }
+    dpad.print_states();
+    dpad.update();
 
     uiroot.once(uiroot.debug);
     
@@ -82,7 +84,6 @@ void demo() {
         display.clear();
     }
     
-    dpad.update();
     #ifdef __linux__
     delay(100);
     #endif
