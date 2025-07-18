@@ -870,7 +870,7 @@ struct IElement : public Style, public NodeMovementOpsT<IElement> {
             cur = cur->sibling;
         }
 
-        if (child)
+        if (child && (display & ~Display::NONE))
             child->resolve_container_position();
         if (sibling)
             sibling->resolve_container_position();
@@ -1447,6 +1447,15 @@ struct ElementRootT : public ElementT {
             return;
 
         // Screen
+        if (!(event->values & EventValues::RELEASED))
+            return;
+
+        bool left = event->values & EventValues::DPAD_LEFT;
+        bool right = event->values & EventValues::DPAD_RIGHT;
+
+        if (left) {
+            
+        }
     }
 };
 
@@ -1642,6 +1651,46 @@ struct ElementFocusT : public ElementT {
         this->on_draw(event);
     }
 };
+
+template<typename Buffer, typename ElementT = ElementBaseT<Buffer>> 
+struct ScreenBaseT : public ElementT {
+    using ElementT::ElementT;
+    using ElementT::operator<<;
+
+    bool showHeader = false;
+    bool showFooter = false;
+
+    IElement *header = nullptr;
+    IElement *footer = nullptr;
+
+    constexpr inline bool isActive() const {
+        return this->display & ~Display::NONE;
+    }
+
+    void addHeader(IElement *header, const bool &display = true) {
+        this->header = header;
+        this->showHeader = (header && display);
+    }
+    
+    void addFooter(IElement *footer, const bool &display = true) {
+        this->footer = footer;
+        this->showFooter = (footer && display);
+    }
+
+    void on_screen(Event *event) override {
+        if (event->value & (EventValues::NEXT | EventValues::PREVIOUS)) {
+            if (this->isActive()) {
+                for (auto *child : this->depthfirst())
+                    child->display = (Display)(child->display | Display::NONE);
+            } else {
+                for (auto *child : this->depthfirst())
+                    child->display = child->display & ~Display::NONE;
+                event->stopImmediate();
+            }
+        }
+    }
+};
+
 
 }
 }
