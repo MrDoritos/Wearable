@@ -336,6 +336,7 @@ struct Event {
         DISPLAY,
         FOCUS,
         SCREEN,
+        REDRAW,
     };
 
     enum Value : uint8_t {
@@ -357,6 +358,11 @@ struct Event {
         FOCUS_EMIT,
         CHANGE,
         REQUEST,
+        PRESSED,
+        HELD,
+        RELEASED,
+        NEXT,
+        PREVIOUS,
     };
 
     enum Direction : uint8_t {
@@ -1428,6 +1434,13 @@ struct ElementRootT : public ElementT {
     inline void setDebug(const bool &debug_state=true) {
         this->debug = debug_state;
     }
+
+    void on_user_input(Event *event) {
+        if (event->isStopDefault())
+            return;
+
+        // Screen
+    }
 };
 
 template<typename Buffer, typename ElementT = ElementBaseT<Buffer>>
@@ -1586,6 +1599,40 @@ struct ElementDateTimeT : public ElementT {
         sum.width+=1;
         sum.height=12;
         this->content = sum;
+    }
+};
+
+template<typename Buffer, typename ElementT = ElementBaseT<Buffer>>
+struct ElementFocusT : public ElementT {
+    using ElementT::ElementT;
+    using ElementT::operator<<;
+
+    bool focused = false;
+
+    constexpr inline bool isFocused() const {
+        return focused;
+    }
+
+    constexpr inline void setFocused(const bool &focus_state = true) {
+        this->focused = focus_state;
+    }
+
+    void on_focus(Event *event) override {
+        if (isFocused()) {
+            if (event->value & EventValues::FOCUS_NEXT)
+                setFocused(false);
+        } else {
+            if (event->value & EventValues::FOCUS_NEXT) {
+                setFocused(true);
+                event->stopImmediate();
+            }
+        }
+    }
+
+    void on_draw(Event *event) override {
+        if (this->isFocused())
+            this->buffer.border(*this, 1);
+        this->on_draw(event);
     }
 };
 

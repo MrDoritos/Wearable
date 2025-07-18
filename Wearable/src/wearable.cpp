@@ -33,38 +33,40 @@ const Atlas::Sprite sprites[] = {
 const auto I = font.getCharacter('M');
 
 void demo() {
-    /*
-    display.clear();
-    test.draw_multi({0,0}, BATTERY, "50%");
-    spinline.on_draw(nullptr);
-    TEXT.on_draw(nullptr);
-    uiclock.on_draw(nullptr);
-    display.flush();
-    */
     uibattery.set_battery_level((millis()%10000)/100);
     uiroot.reset_log();
-    //display.clear();
-    //uiroot.log_time("BUFCLR");
-    //display.fill(uiroot, 1);
-    //uiroot.log_time("SET1  ");
-    //display.fill(uiroot, 0);
-    //uiroot.log_time("SET0  ");
-    //uiclock.on_draw(nullptr);
-    //uiroot.log_time("CLOCK ");
-    //uibattery.on_draw(nullptr);
-    //uiroot.log_time("BATT  ");
-    //uidatetime.on_draw(nullptr);
-    //uidatetime.on_tick(nullptr);
-    //uiroot.log_time("DATE  ");
-
-    //uiroot.buffer.border(uiroot, 1);
-    ///boxtest.buffer.border(boxtest, 1);
-    //boxtest.clear(1);
-    //boxtest2.clear();
-    //uiroot.flush_log(true,true,{60,80});
-    //display.flush();
     uiroot.setDebug(dpad.right.is_held());
+
+    for (int i = 0; i < dpad.button_count; i++) {
+        const Dpad::Button &button = dpad.buttons[i];
+
+        const UI::EventValues values[] = {
+            UI::EventValues::DPAD_ENTER,
+            UI::EventValues::DPAD_UP,
+            UI::EventValues::DPAD_RIGHT,
+            UI::EventValues::DPAD_DOWN,
+            UI::EventValues::DPAD_LEFT,
+        };
+
+        UI::Event input_event(UI::EventTypes::USER_INPUT);
+
+        if (button.is_pressed())
+            input_event.value = (UI::EventValues)(input_event.value | UI::EventValues::PRESSED);
+        if (button.is_held())
+            input_event.value = (UI::EventValues)(input_event.value | UI::EventValues::HELD);
+        if (button.is_released())
+            input_event.value = (UI::EventValues)(input_event.value | UI::EventValues::RELEASED);
+
+        if (!input_event.value)
+            continue;
+
+        input_event.value = (UI::EventValues)(input_event.value | values[i]);
+
+        uiroot.dispatch_event(input_event);
+    }
+
     uiroot.once(uiroot.debug);
+    
     if (uiroot.debug) {
         uiroot.overlay_tree_positions();
         uiroot.clear();
