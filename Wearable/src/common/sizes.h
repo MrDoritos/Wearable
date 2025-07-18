@@ -208,6 +208,14 @@ struct LengthT {
     constexpr inline explicit operator OriginT<T>() {
         return OriginT<T>(width, height);
     }
+
+    friend constexpr inline bool operator==(const LengthT &a, const LengthT &b) {
+        return a.width == b.width && a.height == b.height;
+    }
+
+    friend constexpr inline bool operator!=(const LengthT &a, const LengthT &b) {
+        return !(a == b);
+    }
 };
 
 struct Length : public LengthT<uu> {

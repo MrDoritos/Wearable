@@ -510,18 +510,7 @@ struct IElement : public Style, public NodeMovementOpsT<IElement> {
     IElement *sibling;
     IElement *child;
 
-    virtual void handle_event(Event *event) {
-        switch (event->type) {
-            case Event::CLEAR:
-                /*
-                if (buffer)
-                    buffer->fill()
-                */
-                break;
-            default:
-                break;
-        }
-    }
+    virtual void handle_event(Event *event) { }
 
     constexpr inline void dispatch_event(Event *event) {
         const bool skipSelf = event->isSkipSelf();
@@ -580,6 +569,10 @@ struct IElement : public Style, public NodeMovementOpsT<IElement> {
 
     constexpr inline void dispatch(const EventTypes &event_type) {
         this->dispatch(event_type, EventValues::VALUE_NONE, EventDirection::BROADCAST|EventDirection::SELF_FIRST|EventDirection::SKIP_SELF);
+    }
+
+    constexpr inline void dispatch_parent(const EventTypes &event_type, const EventValues &event_value = 0) {
+        dispatch(event_type, event_value, EventDirection::PARENT);
     }
 
     constexpr IElement(const char *name, IElement *parent, IElement *sibling, IElement *child):name(name),parent(parent),sibling(sibling),child(child){}
@@ -648,6 +641,9 @@ struct IElement : public Style, public NodeMovementOpsT<IElement> {
 
         if (prev) {
             prev->sibling = element->sibling;
+            assert(prev != element && "Trying to set same");
+        } else {
+            child = element->sibling;
         }
 
         // Remove element from our tree
@@ -1629,10 +1625,10 @@ struct ElementRootT : public ElementT {
         if (!screen)
             return;
 
-        screen->dispatch(EventTypes::SCREEN, EventValues::HIDDEN, EventDirection::RDEPTH);
-
-        if (active_screen)
+        if (active_screen) {
+            active_screen->dispatch(EventTypes::SCREEN, EventValues::HIDDEN, EventDirection::RDEPTH);
             this->remove_child(active_screen);
+        }
 
         this->append_child(screen);
 
@@ -1651,6 +1647,10 @@ struct ElementRootT : public ElementT {
     }
 
     void on_content_size(Event *event) override {
+        if (event->value & EventValues::CHANGE) {
+            this->layout_dirty = true;
+            return;
+        }
         this->layout_dirty = false;
         this->resolve_layout();
     }
@@ -1681,16 +1681,17 @@ struct ElementBatteryT : public ElementT {
         if (last_draw_level == current_level)
             return;
         this->update();
-        this->content = this->getSpritesContentSize(&battery_sprite, 1) + this->getTextContentSize((const char*)buf, Sprites::font);
-        this->content.height = 12;
+        Length size = this->getSpritesContentSize(&battery_sprite, 1) + this->getTextContentSize((const char*)buf, Sprites::font);
+        size.height = 12;
+        if (this->content != size) {
+            this->dispatch_parent(Event::CONTENT_SIZE, Event::CHANGE);
+        }
     }
 
-    void on_clear(Event *event) override {
-
-    }
+    void on_clear(Event *event) override { }
 
     void on_draw(Event *event) override {
-        if (last_draw_level == current_level)
+        if (last_draw_level == current_level && !(event->value & Event::REDRAW))
             return;
         last_draw_level = current_level;
 
@@ -1779,11 +1780,12 @@ struct ElementDateTimeT : public ElementT {
     }
 
     void on_draw(Event *event) override {
-        if (!this->is_stale()) {
+        if (!this->is_stale() && !(event->value & Event::REDRAW)) {
             if (!this->is_interval_tick())
                 return;
         } else {
             last_draw_tm = this->update();
+            this->on_content_size(nullptr);
         }
 
         this->clear();
@@ -1792,12 +1794,6 @@ struct ElementDateTimeT : public ElementT {
     }
 
     void on_content_size(Event *event) override {
-        if (!this->is_stale())
-            return;
-
-        //last_draw_tm =
-         this->update();
-
         const char *texts[] = {
             s_weekday, s_month, s_day, s_hour, s_min
         };
@@ -1811,7 +1807,10 @@ struct ElementDateTimeT : public ElementT {
         sum += this->getSpritesContentSize(&sprites[0], sizeof(sprites)/sizeof(sprites[0]));
         sum.width+=1;
         sum.height=12;
-        this->content = sum;
+        if (this->content != sum) {
+            this->content = sum;
+            this->dispatch_parent(Event::CONTENT_SIZE, Event::CHANGE);
+        }
     }
 };
 

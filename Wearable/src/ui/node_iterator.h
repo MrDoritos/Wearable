@@ -47,7 +47,7 @@ struct NodeMovementT {
         node = node->parent->child;
         while (node->sibling != start && node->sibling)
             node = node->sibling;
-        return node;
+        return node == start ? nullptr : node;
     }
 
     static constexpr inline Node *depth_first_next(Node *node) {

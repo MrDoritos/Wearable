@@ -160,6 +160,7 @@ void init() {
 
     //uiroot << uibattery;
     //uiroot << uidatetime;
+    txt.name = "txt";
     header.name = "header";
     uibattery.name = "battery";
     uidatetime.name = "datetime";
