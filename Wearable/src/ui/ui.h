@@ -804,7 +804,7 @@ struct IElement : public Style, public NodeMovementOpsT<IElement> {
                 element.margin.resolve(parent_container) +
                 element.padding.resolve(parent_container);
 
-            LengthD total = (LengthD)resolved;
+            LengthD total = LengthD(resolved.left+resolved.right,resolved.top+resolved.bottom);
 
             total += element.container;
 
@@ -961,8 +961,12 @@ struct IElement : public Style, public NodeMovementOpsT<IElement> {
                     //child_offset = Origin(remaining_size.getLength()) + remaining_size.getOffset();
                     break;
                 case VCENTER:
+                    //child_offset.x = remaining_size.x;
+                    child_offset.y = remaining_size.getMidpoint().y - (uu)(child_use.height * 0.5);
                     break;
                 case HCENTER:
+                    //child_offset.y = remaining_size.y;
+                    child_offset.x = remaining_size.getMidpoint().x - (uu)(child_use.width * 0.5);
                     break;
                 default:
                     break;

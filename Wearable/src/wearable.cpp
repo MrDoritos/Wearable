@@ -135,7 +135,9 @@ void init() {
     //txt << Size { 32, 64, 64, 64 };
     //txt << UI::StyleInfo { .wrap{UI::WRAP} };
     //uiclock << Size { 16, 16, 97, 97 };
-    uiclock << StyleInfo { .width{96}, .height{96}, .margin{16,4} };
+    //uiclock << StyleInfo { .width{96}, .height{96}, .margin{16,4} };
+    clockscreen << StyleInfo { .width{{100,PERC}}, .height{{100,PERC}} };
+    uiclock << StyleInfo { .align{HCENTER}, .width{{75,PERC}}, .height{{75, PERC}} };
     TEXT << Origin { 12, 16 };
     test.wrap = (UI::WrapStyle)(UI::WrapStyle::WRAP | UI::WrapStyle::TRIM_SPACE);
     test << Size { 32, 30, 64, 64 };
