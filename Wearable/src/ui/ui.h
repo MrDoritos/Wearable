@@ -367,6 +367,7 @@ struct Event {
         NEXT = 4,
         PREVIOUS = 8,
         REDRAW = 1,
+        FORCE = 2,
     };
 
     enum Direction : uint8_t {
@@ -519,7 +520,8 @@ struct IElement : public Style, public NodeMovementOpsT<IElement> {
             event->direction = Event::Direction(event->direction & ~(Event::SKIP_SELF));
 
         //fprintf(stderr, "%s:Event: %i value: %i, direction: %i, state: %i\n", name ? name : "null", event->type, event->value, event->direction, event->state);
-        std::cerr << (name ? name : "null") << ":" << event->to_string() << std::endl;
+        if (event->type != Event::TICK)
+            std::cerr << (name ? name : "null") << ":" << event->to_string() << std::endl;
 
         if (event->isStopping())
             return;
@@ -668,6 +670,13 @@ struct IElement : public Style, public NodeMovementOpsT<IElement> {
 
     constexpr inline IElement &append_child(IElement &element) {
         return *append_child(&element);
+    }
+
+    constexpr inline void set_content_size(const Length &size) {
+        if (this->content != size) {
+            this->content = size;
+            this->dispatch_parent(Event::CONTENT_SIZE, Event::CHANGE);
+        }
     }
 
     /*
@@ -1197,7 +1206,7 @@ struct ElementInlineTextT : public ElementT {
     constexpr ElementInlineTextT(Buffer &buffer, const FontProvider &font):ElementT(buffer, StyleInfo{.wrap{NOWRAP}}),text(""),font(font){}
 
     void on_content_size(Event *event) override {
-        this->content = this->getTextContentSize(text, font);
+        this->set_content_size(this->getTextContentSize(text, font));
     }
 
     void on_draw(Event *event) override {
@@ -1213,9 +1222,7 @@ struct ScreenClockT : public ElementT {
     int64_t prev_draw_time = -1;
     bool use_milliseconds = false;
 
-    void on_clear(Event *event) override {
-
-    }
+    //void on_clear(Event *event) override {}
 
     void on_draw(Event *event) override {
         using calc = float;
@@ -1568,7 +1575,7 @@ struct ElementRootT : public ElementT {
         log_time("CTSZE");
         //this->resolve_layout();
         log_time("LYOUT");
-        this->dispatch(EventTypes::CLEAR);
+        //this->dispatch(EventTypes::CLEAR);
         log_time("CLEAR");
         this->dispatch(EventTypes::DRAW, dirty ? Event::REDRAW : Event::VALUE_NONE, Event::CHILDREN);
         log_time("DRAW.");
@@ -1630,6 +1637,8 @@ struct ElementRootT : public ElementT {
             this->remove_child(active_screen);
         }
 
+        this->clear();
+
         this->append_child(screen);
 
         this->active_screen = screen;
@@ -1683,12 +1692,10 @@ struct ElementBatteryT : public ElementT {
         this->update();
         Length size = this->getSpritesContentSize(&battery_sprite, 1) + this->getTextContentSize((const char*)buf, Sprites::font);
         size.height = 12;
-        if (this->content != size) {
-            this->dispatch_parent(Event::CONTENT_SIZE, Event::CHANGE);
-        }
+        this->set_content_size(size);
     }
 
-    void on_clear(Event *event) override { }
+    //void on_clear(Event *event) override { }
 
     void on_draw(Event *event) override {
         if (last_draw_level == current_level && !(event->value & Event::REDRAW))
@@ -1775,9 +1782,7 @@ struct ElementDateTimeT : public ElementT {
         this->tick %= 10;
     }
 
-    void on_clear(Event *event) override {
-
-    }
+    //void on_clear(Event *event) override {}
 
     void on_draw(Event *event) override {
         if (!this->is_stale() && !(event->value & Event::REDRAW)) {
@@ -1807,10 +1812,7 @@ struct ElementDateTimeT : public ElementT {
         sum += this->getSpritesContentSize(&sprites[0], sizeof(sprites)/sizeof(sprites[0]));
         sum.width+=1;
         sum.height=12;
-        if (this->content != sum) {
-            this->content = sum;
-            this->dispatch_parent(Event::CONTENT_SIZE, Event::CHANGE);
-        }
+        this->set_content_size(sum);
     }
 };
 
