@@ -6,6 +6,8 @@
 #include <stdio.h>
 #include <vector>
 #include <time.h>
+#include <string>
+#include <iostream>
 
 #include "texture.h"
 #include "displaybuffer.h"
@@ -397,6 +399,7 @@ struct Event {
     constexpr Event(const Type &type)
         :Event(type, VALUE_NONE) {}
 
+    #pragma region Event Stuff
     constexpr inline bool isSelfFirst() const {
         return direction & SELF_FIRST;
     }
@@ -436,6 +439,63 @@ struct Event {
     constexpr inline void stopDefault() {
         state = State(state | STOP_DEFAULT);
     }
+
+    std::string to_string() {
+        const char *s_type = nullptr;
+        const char *s_value = nullptr;
+        const char *s_dir = nullptr;
+        const char *s_st = nullptr;
+
+        const char *s_types[] = {
+            "NONE", "BUFFER", "CLEAR", "LOG", "USER_INPUT", "LOAD", "RESET", "VISIBILITY", "LAYOUT", "FONT",
+            "DRAW", "TICK", "CONTENT_SIZE", "FRAME", "DISPLAY", "FOCUS", "SCREEN"
+        };
+
+        const int bufsize = 10;
+        char v_buf[bufsize], d_buf[bufsize];
+
+        s_type = s_types[type];
+
+        switch (value) {
+            case 0: s_value = "NONE"; break;
+            case 1: s_value = "DPAD_LEFT|DISPLAY_ON|VISIBLE|FOCUS_LOST|REDRAW"; break;
+            case 2: s_value = "DPAD_RIGHT|DISPLAY_OFF|HIDDEN|FOCUS_GAIN"; break;
+            case 4: s_value = "DPAD_UP|DISPLAY_LOCKED|FOCUS_NEXT|NEXT"; break;
+            case 8: s_value = "DPAD_DOWN|DISPLAY_UNLOCKED|FOCUS_EMIT|PREVIOUS"; break;
+            case 16: s_value = "DPAD_ENTER|REQUEST"; break;
+            case 32: s_value = "CHANGE|PRESSED"; break;
+            case 64: s_value = "HELD"; break;
+            case 128: s_value = "RELEASED"; break;
+            default: snprintf(v_buf, bufsize, "%i", value); s_value = v_buf; break;
+        }
+
+        switch (direction) {
+            case 0: s_dir = "NONE"; break;
+            case 1: s_dir = "CHILDREN"; break;
+            case 2: s_dir = "PARENT"; break;
+            case 4: s_dir = "BROADCAST"; break;
+            case 8: s_dir = "SELF_FIRST"; break;
+            case 9: s_dir = "RDEPTH"; break;
+            case 16: s_dir = "SKIP_SELF"; break;
+            default: snprintf(d_buf, bufsize, "%i", direction); s_dir = d_buf; break;
+        }
+
+        switch (state) {
+            case 0: s_st = "NORMAL"; break;
+            case 1: s_st = "STOP_PROPAGATION"; break;
+            case 2: s_st = "STOP_IMMEDIATE"; break;
+            case 3: s_st = "STOP_IMMEDIATE|STOP_PROPAGATION"; break;
+            case 4: s_st = "STOP_DEFAULT"; break;
+            case 5: s_st = "STOP_DEFAULT|STOP_PROPAGATION"; break;
+            case 6: s_st = "STOP_DEFAULT|STOP_IMMEDIATE"; break;
+            case 7: s_st = "STOP_ALL"; break;
+            default: s_st = "UNKNOWN"; break;
+        }
+
+        return std::string(s_type) + " " + std::string(s_value) + " " + std::string(s_dir) + " " + std::string(s_st);
+    }
+
+    #pragma endregion
 };
 
 using EventTypes = Event::Type;
@@ -469,7 +529,8 @@ struct IElement : public Style, public NodeMovementOpsT<IElement> {
         if (skipSelf)
             event->direction = Event::Direction(event->direction & ~(Event::SKIP_SELF));
 
-        fprintf(stderr, "%s:Event: %i value: %i, direction: %i, state: %i\n", name ? name : "null", event->type, event->value, event->direction, event->state);
+        //fprintf(stderr, "%s:Event: %i value: %i, direction: %i, state: %i\n", name ? name : "null", event->type, event->value, event->direction, event->state);
+        std::cerr << (name ? name : "null") << ":" << event->to_string() << std::endl;
 
         if (event->isStopping())
             return;
