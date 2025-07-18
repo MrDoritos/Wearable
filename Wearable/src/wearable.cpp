@@ -59,6 +59,7 @@ void demo() {
 
         if (!input_event.value)
             continue;
+        input_event.direction = UI::EventDirection::RDEPTH;
 
         input_event.value = (UI::EventValues)(input_event.value | values[i]);
 

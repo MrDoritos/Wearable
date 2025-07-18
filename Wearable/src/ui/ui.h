@@ -441,59 +441,103 @@ struct Event {
         state = State(state | STOP_DEFAULT);
     }
 
-    std::string to_string() {
-        const char *s_type = nullptr;
-        const char *s_value = nullptr;
-        const char *s_dir = nullptr;
-        const char *s_st = nullptr;
+    std::string get_value_str() {
+        if (!value)
+            return "NONE";
 
+        switch (type) {
+            case USER_INPUT: {
+                std::string ret;
+                switch (value & 31) {
+                    case DPAD_DOWN: ret = "DPAD_DOWN"; break;
+                    case DPAD_ENTER: ret = "DPAD_ENTER"; break;
+                    case DPAD_LEFT: ret = "DPAD_LEFT"; break;
+                    case DPAD_RIGHT: ret = "DPAD_RIGHT"; break;
+                    case DPAD_UP: ret = "DPAD_UP"; break;
+                    default: ret = "UNKOWN"; break;
+                }
+                if (value & PRESSED)
+                    ret += " PRESSED";
+                if (value & RELEASED)
+                    ret += " RELEASED";
+                if (value & HELD)
+                    ret += " HELD";
+                return ret;
+                }
+            case DISPLAY:
+                {
+                    switch (value & 15) {
+                        case DISPLAY_ON: return "ON";
+                        case DISPLAY_LOCKED: return "LOCKED";
+                        case DISPLAY_UNLOCKED: return "UNLOCKED";
+                        case DISPLAY_OFF: return "OFF";
+                        default: break;
+                    }
+                }
+            case SCREEN:
+            case VISIBILITY:
+                {
+                    switch (value & 3) {
+                        case VISIBLE: return "VISIBLE";
+                        case HIDDEN: return "HIDDEN";
+                        default: break;
+                    }
+                }
+            case DRAW: return "REDRAW";
+            case LAYOUT:
+            case CONTENT_SIZE:
+                {
+                    switch (value) {
+                        case REQUEST: return "REQUEST";
+                        case CHANGE: return "CHANGE";
+                        default: break;
+                    }
+                }
+        }
+
+        return std::to_string(value);
+    }
+
+    std::string get_type_str() {
         const char *s_types[] = {
             "NONE", "BUFFER", "CLEAR", "LOG", "USER_INPUT", "LOAD", "RESET", "VISIBILITY", "LAYOUT", "FONT",
             "DRAW", "TICK", "CONTENT_SIZE", "FRAME", "DISPLAY", "FOCUS", "SCREEN"
         };
 
-        const int bufsize = 10;
-        char v_buf[bufsize], d_buf[bufsize];
+        if (type >= (sizeof(s_types)/sizeof(s_types[0])))
+            return "UNKNOWN";
+        return std::string(s_types[type]);
+    }
 
-        s_type = s_types[type];
-
-        switch (value) {
-            case 0: s_value = "NONE"; break;
-            case 1: s_value = "DPAD_LEFT|DISPLAY_ON|VISIBLE|FOCUS_LOST|REDRAW"; break;
-            case 2: s_value = "DPAD_RIGHT|DISPLAY_OFF|HIDDEN|FOCUS_GAIN"; break;
-            case 4: s_value = "DPAD_UP|DISPLAY_LOCKED|FOCUS_NEXT|NEXT"; break;
-            case 8: s_value = "DPAD_DOWN|DISPLAY_UNLOCKED|FOCUS_EMIT|PREVIOUS"; break;
-            case 16: s_value = "DPAD_ENTER|REQUEST"; break;
-            case 32: s_value = "CHANGE|PRESSED"; break;
-            case 64: s_value = "HELD"; break;
-            case 128: s_value = "RELEASED"; break;
-            default: snprintf(v_buf, bufsize, "%i", value); s_value = v_buf; break;
-        }
-
+    std::string get_direction_str() {
         switch (direction) {
-            case 0: s_dir = "NONE"; break;
-            case 1: s_dir = "CHILDREN"; break;
-            case 2: s_dir = "PARENT"; break;
-            case 4: s_dir = "BROADCAST"; break;
-            case 8: s_dir = "SELF_FIRST"; break;
-            case 9: s_dir = "RDEPTH"; break;
-            case 16: s_dir = "SKIP_SELF"; break;
-            default: snprintf(d_buf, bufsize, "%i", direction); s_dir = d_buf; break;
+            case 0: return "NONE";
+            case 1: return "CHILDREN";
+            case 2: return "PARENT";
+            case 4: return "BROADCAST";
+            case 8: return "SELF_FIRST";
+            case 9: return "RDEPTH";
+            case 16: return "SKIP_SELF";
+            default: return std::to_string(direction);
         }
+    }
 
+    std::string get_state_str() {
         switch (state) {
-            case 0: s_st = "NORMAL"; break;
-            case 1: s_st = "STOP_PROPAGATION"; break;
-            case 2: s_st = "STOP_IMMEDIATE"; break;
-            case 3: s_st = "STOP_IMMEDIATE|STOP_PROPAGATION"; break;
-            case 4: s_st = "STOP_DEFAULT"; break;
-            case 5: s_st = "STOP_DEFAULT|STOP_PROPAGATION"; break;
-            case 6: s_st = "STOP_DEFAULT|STOP_IMMEDIATE"; break;
-            case 7: s_st = "STOP_ALL"; break;
-            default: s_st = "UNKNOWN"; break;
+            case 0: return "NORMAL";
+            case 1: return "STOP_PROPAGATION";
+            case 2: return "STOP_IMMEDIATE";
+            case 3: return "STOP_IMMEDIATE|STOP_PROPAGATION";
+            case 4: return "STOP_DEFAULT";
+            case 5: return "STOP_DEFAULT|STOP_PROPAGATION";
+            case 6: return "STOP_DEFAULT|STOP_IMMEDIATE";
+            case 7: return "STOP_ALL";
+            default: return std::to_string(state);
         }
+    }
 
-        return std::string(s_type) + " " + std::string(s_value) + " " + std::string(s_dir) + " " + std::string(s_st);
+    std::string to_string() {
+        return get_type_str() + " " + get_value_str() + " " + get_direction_str() + " " + get_state_str();
     }
 
     #pragma endregion
@@ -513,21 +557,23 @@ struct IElement : public Style, public NodeMovementOpsT<IElement> {
 
     virtual void handle_event(Event *event) { }
 
+    void handle_event_log(Event *event) {
+        if (event->type != Event::TICK)
+            std::cerr << (name ? name : "null") << ":" << event->to_string() << std::endl;
+        this->handle_event(event);
+    }
+
     constexpr inline void dispatch_event(Event *event) {
         const bool skipSelf = event->isSkipSelf();
 
         if (skipSelf)
             event->direction = Event::Direction(event->direction & ~(Event::SKIP_SELF));
 
-        //fprintf(stderr, "%s:Event: %i value: %i, direction: %i, state: %i\n", name ? name : "null", event->type, event->value, event->direction, event->state);
-        if (event->type != Event::TICK)
-            std::cerr << (name ? name : "null") << ":" << event->to_string() << std::endl;
-
         if (event->isStopping())
             return;
 
         if (event->isSelfFirst() && !skipSelf)
-            this->handle_event(event);
+            this->handle_event_log(event);
 
         switch (event->direction & Event::DIRECTION_ONLY) {
             case Event::PARENT:
@@ -557,7 +603,7 @@ struct IElement : public Style, public NodeMovementOpsT<IElement> {
         }
 
         if (!event->isSelfFirst() && !skipSelf)
-            this->handle_event(event);
+            this->handle_event_log(event);
     }
 
     constexpr inline void dispatch_event(Event &event) {
