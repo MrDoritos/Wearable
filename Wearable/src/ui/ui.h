@@ -1686,7 +1686,7 @@ struct ElementRootT : public ElementT {
         redraw_needed = false;
         
         log_time("DRAW.");
-        
+        int64_t log_flush_time = 0;
         if (debug) {
             if (debug_details)
                 this->overlay_tree_positions(debug_details==2, true);
@@ -1697,11 +1697,15 @@ struct ElementRootT : public ElementT {
             ftime = micros();
             log("TOTAL:%5llius\n", frametime);
             log("FPS  : %.1f\n", 1000000.0f/frametime);
-            
-            flush_log(true);
+            log_flush_time = micros();
+            flush_log(false);
+            log_flush_time = micros() - log_flush_time;
         }
 
         reset_log();
+
+        log("LOGFS:%5llius\n", log_flush_time);
+        reset_log_time();
 
         if (!do_not_flush)
             this->buffer.flush();
