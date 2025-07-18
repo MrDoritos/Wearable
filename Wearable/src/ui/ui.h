@@ -17,6 +17,8 @@
 #include "node_iterator.h"
 #include "wbl_func.h"
 
+//#define USE_EVENT_DBG
+
 namespace wbl {
 namespace UI {
 
@@ -441,6 +443,8 @@ struct Event {
         state = State(state | STOP_DEFAULT);
     }
 
+    #ifdef USE_EVENT_DBG
+
     std::string get_value_str() {
         if (!value)
             return "NONE";
@@ -540,6 +544,8 @@ struct Event {
         return get_type_str() + " " + get_value_str() + " " + get_direction_str() + " " + get_state_str();
     }
 
+    #endif
+
     #pragma endregion
 };
 
@@ -557,9 +563,11 @@ struct IElement : public Style, public NodeMovementOpsT<IElement> {
 
     virtual void handle_event(Event *event) { }
 
-    void handle_event_log(Event *event) {
+    constexpr inline void handle_event_log(Event *event) {
+        #ifdef USE_EVENT_DBG
         if (event->type != Event::TICK)
             std::cerr << (name ? name : "null") << ":" << event->to_string() << std::endl;
+        #endif
         this->handle_event(event);
     }
 
@@ -616,10 +624,10 @@ struct IElement : public Style, public NodeMovementOpsT<IElement> {
     }
 
     constexpr inline void dispatch(const EventTypes &event_type) {
-        this->dispatch(event_type, EventValues::VALUE_NONE, EventDirection::BROADCAST|EventDirection::SELF_FIRST|EventDirection::SKIP_SELF);
+        this->dispatch(event_type, EventValues::VALUE_NONE, (EventDirection)(EventDirection::BROADCAST|EventDirection::SELF_FIRST|EventDirection::SKIP_SELF));
     }
 
-    constexpr inline void dispatch_parent(const EventTypes &event_type, const EventValues &event_value = 0) {
+    constexpr inline void dispatch_parent(const EventTypes &event_type, const EventValues &event_value = EventValues::VALUE_NONE) {
         dispatch(event_type, event_value, EventDirection::PARENT);
     }
 
@@ -863,7 +871,7 @@ struct IElement : public Style, public NodeMovementOpsT<IElement> {
         const Size original_size = *this;
         const Origin original_origin = *this;
         Length inline_size;
-        Origin offset = original_origin;
+        //Origin offset = original_origin;
         Size remaining_size = original_size;
 
         /*
@@ -1353,8 +1361,8 @@ struct IScreen : public IElement {
     using IElement::IElement;
     using IElement::operator<<;
 
-    IScreen *up, *right, *down, *left;
     const char* screen_name;
+    IScreen *up, *right, *down, *left;
 
     constexpr IScreen(const char *screen_name, IScreen *up, IScreen *right, IScreen *down, IScreen *left):screen_name(screen_name),up(up),right(right),down(down),left(left){}
     constexpr IScreen(const char *screen_name):IScreen(screen_name, nullptr, nullptr, nullptr, nullptr){}
@@ -1404,7 +1412,8 @@ struct ScreenBaseT : public ScreenT {
             case EventTypes::SCREEN:
                 if (event->value & EventValues::VISIBLE) {
                     this->dispatch(EventTypes::VISIBILITY, EventValues::VISIBLE, EventDirection::CHILDREN);
-                    this->dispatch(EventTypes::LAYOUT, Event::REQUEST, Event::PARENT);
+                    //this->dispatch(EventTypes::LAYOUT, Event::REQUEST, Event::PARENT);
+                    this->dispatch(EventTypes::CONTENT_SIZE);
                 }
                 if (event->value & EventValues::HIDDEN) {
                     this->dispatch(EventTypes::VISIBILITY, EventValues::HIDDEN, EventDirection::CHILDREN);
@@ -1503,18 +1512,18 @@ struct ElementRootT : public ElementT {
     }
 
     inline void overlay_detailed(IElement *node) {
-        const int buflen = 100;
+        const int buflen = 150;
         char buf[buflen];
         int offset=0;
 
         const auto s_dim = [&](const Dimension &v) {
             const char *ex;
             switch (v.unit) {
-                case PERC: ex = "%"; break;
+                case Unit::PERC: ex = "%"; break;
                 default: ex = ""; break;
             }
             switch (v.unit) {
-                case NONE:
+                case Unit::NONE:
                     offset += snprintf(buf+offset, buflen-offset, "N");
                     break;
                 default:
@@ -1623,7 +1632,7 @@ struct ElementRootT : public ElementT {
         log_time("LYOUT");
         //this->dispatch(EventTypes::CLEAR);
         log_time("CLEAR");
-        this->dispatch(EventTypes::DRAW, dirty ? Event::REDRAW : Event::VALUE_NONE, Event::CHILDREN);
+        this->dispatch(EventTypes::DRAW, dirty ? Event::REDRAW : Event::VALUE_NONE, Event::RDEPTH);
         log_time("DRAW.");
         if (!do_not_flush) {
             this->buffer.flush();
@@ -1729,7 +1738,7 @@ struct ElementBatteryT : public ElementT {
     }
 
     inline void update() {
-        int count = snprintf(buf, buflen, "%i%% ", current_level);
+        snprintf(buf, buflen, "%i%% ", current_level);
     }
 
     void on_content_size(Event *event) override {

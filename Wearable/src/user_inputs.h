@@ -22,12 +22,12 @@ struct Dpad {
 
         constexpr inline void rising_edge() {
             if (state & ~States::PRESSED || !state)
-                state |= States::PRESSED;
+                state = (States)(state | States::PRESSED);
         }
 
         constexpr inline void falling_edge() {
             if (state & ~States::RELEASED)
-                state |= States::RELEASED;
+                state = (States)(state | States::RELEASED);
         }
 
         /*
@@ -40,8 +40,8 @@ struct Dpad {
         */
         constexpr inline void update() {
             if (state & States::PRESSED) {
-                state ^= States::PRESSED;
-                state |= States::HELD;
+                state = (States)(state ^ States::PRESSED);
+                state = (States)(state | States::HELD);
             }
             if (state & States::RELEASED)
                 state = States::NONE;

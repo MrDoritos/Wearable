@@ -16,6 +16,7 @@ struct StaticbufferT {
     pixel buffer[SIZE];
 };
 
+template<typename pixelT=pixel>
 struct Memorybuffer {
     const fb WIDTH;
     const fb HEIGHT;
@@ -23,9 +24,9 @@ struct Memorybuffer {
     const fb PXPERBYTE = 8 / BPP;
     const fb SIZE = (WIDTH * HEIGHT) / PXPERBYTE;
 
-    pixel *buffer;
+    pixelT *buffer;
 
-    constexpr Memorybuffer(const fb &width, const fb &height, const fb &bpp, pixel *buffer)
+    constexpr Memorybuffer(const fb &width, const fb &height, const fb &bpp, pixelT *buffer)
         :WIDTH(width),HEIGHT(height),BPP(bpp),buffer(buffer){}
 };
 

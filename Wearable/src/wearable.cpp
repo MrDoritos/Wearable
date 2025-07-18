@@ -26,8 +26,8 @@ UI::ElementDateTimeT<DisplayTexture> uidatetime(display);
 UI::ElementBaseT<DisplayTexture> boxtest(display);
 UI::ElementBaseT<DisplayTexture> boxtest2(display);
 UI::ElementBaseT<DisplayTexture> header(display);
-UI::IScreen mainscreen("Main");
-UI::IScreen clockscreen("Clock");
+UI::ScreenBaseT<> mainscreen("Main");
+UI::ScreenBaseT<> clockscreen("Clock");
 
 static bool tog = false;
 void demo() {
@@ -59,7 +59,7 @@ void demo() {
 
         if (!input_event.value)
             continue;
-        input_event.direction = UI::EventDirection::RDEPTH;
+        input_event.direction = UI::EventDirection::CHILDREN;
 
         input_event.value = (UI::EventValues)(input_event.value | values[i]);
 
@@ -135,7 +135,7 @@ void init() {
     //uiclock << Size { 16, 16, 97, 97 };
     uiclock << StyleInfo { .width{96}, .height{96}, .margin{16,4} };
     TEXT << Origin { 12, 16 };
-    test.wrap = UI::WrapStyle::WRAP | UI::WrapStyle::TRIM_SPACE;
+    test.wrap = (UI::WrapStyle)(UI::WrapStyle::WRAP | UI::WrapStyle::TRIM_SPACE);
     test << Size { 32, 30, 64, 64 };
     spinline << HEART << BATTERY << UI::StyleInfo { .wrap{UI::NOWRAP} };
     //uibattery << Size {0,0,32,16};

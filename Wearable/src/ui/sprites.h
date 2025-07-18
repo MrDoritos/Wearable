@@ -165,7 +165,7 @@ struct MinifontProvider : public GlyphFontProviderT<MinifontProvider, FontProvid
 }
 */
 
-struct MinifontProvider : public TextureT<FramebufferT<Memorybuffer>> {
+struct MinifontProvider : public TextureT<FramebufferT<Memorybuffer<const pixel>>> {
     constexpr MinifontProvider():TextureT(256, 256, 2, &atlas.buffer[0]){}
 
     using Memory = FramebufferT<Memorybuffer>;
@@ -201,7 +201,7 @@ struct MinifontProvider : public TextureT<FramebufferT<Memorybuffer>> {
     }
 };
 
-MinifontProvider minifont;
+const MinifontProvider minifont;
 
 }
 }
