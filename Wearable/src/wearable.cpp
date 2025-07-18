@@ -174,6 +174,8 @@ void init() {
     uiclock.name = "clock";
     uiroot.name = "root";
 
+    clockscreen.show_header = false;
+
     header << uibattery;
     header << uidatetime;
     //uiroot << header;

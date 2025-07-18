@@ -720,6 +720,38 @@ struct IElement : public Style, public NodeMovementOpsT<IElement> {
         return element;
     }
 
+    constexpr inline IElement *insert_before(IElement *to_insert, IElement *before_child) {
+        if (!to_insert) {
+            assert("to_insert is null");
+            return nullptr;
+        }
+
+        if (!before_child)
+            return append_child(to_insert);
+
+        if (!has_child(before_child)) {
+            assert("before is not a child");
+            return nullptr;
+        }
+
+        auto *prev = before_child->previous_sibling();
+
+        if (prev) {
+            prev->sibling = to_insert;
+        } else {
+            child = to_insert;
+        }
+
+        to_insert->sibling = before_child;
+        to_insert->parent = this;
+
+        return to_insert;
+    }
+
+    constexpr inline IElement &insert_before(IElement &to_insert, IElement &before_child) {
+        return *insert_before(&to_insert, &before_child);
+    }
+
     constexpr inline IElement *append_child(IElement *element) {
         assert(element && "Element null");
         
@@ -742,6 +774,13 @@ struct IElement : public Style, public NodeMovementOpsT<IElement> {
             this->content = size;
             this->dispatch_parent(Event::CONTENT_SIZE, Event::CHANGE);
         }
+    }
+
+    /*
+        Does not hide, only propagates the correct event
+    */
+    constexpr inline void set_hidden(const bool &hidden=true) {
+        this->dispatch(EventTypes::VISIBILITY, hidden ? EventValues::HIDDEN : EventValues::VISIBLE, EventDirection::CHILDREN);
     }
 
     /*
@@ -1398,6 +1437,7 @@ struct ScreenBaseT : public ScreenT {
     using ScreenT::operator<<;
 
     bool show_header = true;
+    bool dirty_layout = true;
 
     void handle_event(Event *event) override {
         ScreenT::handle_event(event);
@@ -1407,7 +1447,7 @@ struct ScreenBaseT : public ScreenT {
                 if (event->value & EventValues::VISIBLE) {
                     this->dispatch(EventTypes::VISIBILITY, EventValues::VISIBLE, EventDirection::CHILDREN);
                     //this->dispatch(EventTypes::LAYOUT, Event::REQUEST, Event::PARENT);
-                    this->dispatch(EventTypes::CONTENT_SIZE);
+                    this->dispatch(EventTypes::CONTENT_SIZE, EventValues::VALUE_NONE, EventDirection::RDEPTH);
                 }
                 if (event->value & EventValues::HIDDEN) {
                     this->dispatch(EventTypes::VISIBILITY, EventValues::HIDDEN, EventDirection::CHILDREN);
@@ -1418,6 +1458,14 @@ struct ScreenBaseT : public ScreenT {
             case EventTypes::DRAW:
                 if (!show_header)
                     event->stopDefault();
+                break;
+            case EventTypes::CONTENT_SIZE:
+                if (!show_header) {
+                    *this << Origin { 0, 0 };
+                    //event->stopDefault();
+                    event->value = EventValues::CHANGE;
+                    this->resolve_layout();
+                }
                 break;
             default: break;
         }
@@ -1615,29 +1663,41 @@ struct ElementRootT : public ElementT {
     inline void once(const bool &do_not_flush=false) {
         reset_log(false);
         log_time("ELPSD");
+        
         reset_log_time();
         this->dispatch(Event::TICK);
         log_time("TICK ");
+
         bool dirty = layout_dirty;
         if (dirty)
             this->dispatch(Event::CONTENT_SIZE, Event::REQUEST, Event::CHILDREN);
-        log_time("CTSZE");
-        //this->resolve_layout();
-        log_time("LYOUT");
-        //this->dispatch(EventTypes::CLEAR);
-        log_time("CLEAR");
-        this->dispatch(EventTypes::DRAW, dirty ? Event::REDRAW : Event::VALUE_NONE, Event::RDEPTH);
+
+        this->handle_deferred_event(Event(Event::DRAW, dirty ? Event::REDRAW : Event::VALUE_NONE, Event::RDEPTH, Event::NORMAL));
         layout_dirty = false;
+        
         log_time("DRAW.");
         if (!do_not_flush) {
             this->buffer.flush();
             log_time("FLUSH");
         }
+        
         flush_log(!do_not_flush);
     }
 
     inline void setDebug(const bool &debug_state=true) {
         this->debug = debug_state;
+    }
+
+    void handle_deferred_event(const Event &event) {
+        Event disp = event;
+        if (active_screen)
+            active_screen->dispatch_event(&disp);
+        if (disp.isStopDefault())
+            return;
+        if (header_element)
+            header_element->dispatch_event(&disp);
+            
+        this->handle_event(&event);
     }
 
     void handle_event(Event *event) override {
@@ -1670,8 +1730,19 @@ struct ElementRootT : public ElementT {
     }
 
     void set_header(IElement *header) {
-        this->header_element = header;
-        header->parent = this;
+        if (header_element) {
+            header_element->set_hidden(true);
+            this->remove_child(header_element);
+        }
+
+        if (!header)
+            return;
+
+        this->insert_before(header, active_screen);
+
+        header_element = header;
+
+        header->set_hidden(false);
     }
 
     void set_header(IElement &header) {
@@ -1849,6 +1920,7 @@ struct ElementDateTimeT : public ElementT {
     }
 
     void on_content_size(Event *event) override {
+        this->update();
         const char *texts[] = {
             s_weekday, s_month, s_day, s_hour, s_min
         };
