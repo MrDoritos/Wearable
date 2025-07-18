@@ -32,6 +32,8 @@ enum Display : uint8_t {
     BLOCK=0,
     INLINE=1,
     INLINE_BLOCK=2,
+    NONE=4, // Do not include in layout
+    HIDDEN=8, // Include in layout (use internally)
 };
 
 enum Align : uint8_t {
@@ -758,6 +760,11 @@ struct IElement : public Style, public NodeMovementOpsT<IElement> {
         */
 
         while (cur) {
+            if (cur->display & Display::NONE) {
+                cur = cur->sibling;
+                continue;
+            }
+
             Box child_margin = cur->margin.resolve(container);
             Box child_padding = cur->padding.resolve(container);
             Box child_box = child_margin + child_padding;
