@@ -49,6 +49,15 @@ enum Align : uint8_t {
     BOTTOM=4,
     VCENTER=8,
     HCENTER=16,
+    CENTER=24,
+    BOTTOM_RIGHT=6,
+    BOTTOM_LEFT=5,
+    TOP_RIGHT=3,
+    TOP_LEFT=1,
+    VCENTER_RIGHT=10,
+    VCENTER_LEFT=8,
+    HCENTER_TOP=17,
+    HCENTER_BOTTOM=20,
 };
 
 enum Position : uint8_t {
@@ -926,50 +935,29 @@ struct IElement : public Style, public NodeMovementOpsT<IElement> {
 
             Origin child_offset;
 
-            child_offset = (Origin)child_margin + remaining_size.getOffset();
+            child_offset = (Origin)child_box + remaining_size.getOffset();
 
-            switch (cur->align) {
-                case LEFT: // No change
-                    child_offset.x = remaining_size.x + (uu)child_box.getLeft();
-                    child_offset.y = remaining_size.y + (uu)child_box.getTop();
-                    remaining_size.x += child_use.width;
-                    remaining_size.width -= child_use.width;
-                    break;
-                case TOP: // No change. Based on tree order
-                    //child_offset = (Origin)child_margin + offset;
-                    //child_offset = (Origin)child_margin + (Origin)remaining_size;
-                    //remaining_size.y += child_use.height;
-                    //remaining_size.width -= child_use.width;
-                    //remaining_size.height -= child_use.height;
-                    //remaining_size.y += child_use.height;
-                    //remaining_size.height -= child_use.height;
-                    break;
-                case RIGHT:
-                    remaining_size.width -= child_use.width;
-                    child_offset.x = remaining_size.getRight() + (uu)child_box.getLeft();
-                    //child_offset.y = offset.y;
-                    //child_offset.y = remaining_size.y;
-                    child_offset.y = remaining_size.getTop() + (uu)child_box.getTop();
-                    //child_offset = Origin(remaining_size.getLength()) + remaining_size.getOffset();
-                    //child_offset = (Origin)child_margin + remaining_size.getOffset();
-                    break;
-                case BOTTOM:
-                    remaining_size.height -= child_use.height;
-                    //child_offset.x = offset.x;
-                    child_offset.x = remaining_size.x;
-                    child_offset.y = remaining_size.getBottom() + (uu)child_box.getTop();
-                    //child_offset = Origin(remaining_size.getLength()) + remaining_size.getOffset();
-                    break;
-                case VCENTER:
-                    //child_offset.x = remaining_size.x;
-                    child_offset.y = remaining_size.getMidpoint().y - (uu)(child_use.height * 0.5);
-                    break;
-                case HCENTER:
-                    //child_offset.y = remaining_size.y;
-                    child_offset.x = remaining_size.getMidpoint().x - (uu)(child_use.width * 0.5);
-                    break;
-                default:
-                    break;
+            if (cur->align & LEFT) {
+                remaining_size.x += child_use.width;
+                remaining_size.width -= child_use.width;
+            } else
+            if (cur->align & RIGHT) {
+                remaining_size.width -= child_use.width;
+                child_offset.x = remaining_size.getRight() + (uu)child_box.getLeft();
+            } else
+            if (cur->align & HCENTER) {
+                child_offset.x = remaining_size.getMidpoint().x - (uu)child_use.width * 0.5;
+            }
+
+            if (cur->align & TOP) {
+
+            } else
+            if (cur->align & BOTTOM) {
+                remaining_size.height -= child_use.height;
+                child_offset.y = remaining_size.getBottom() + (uu)child_box.getTop();
+            } else
+            if (cur->align & VCENTER) {
+                child_offset.y = remaining_size.getMidpoint().y - (uu)child_use.height * 0.5;
             }
 
             //Origin child_offset = (Origin)child_margin + offset;
