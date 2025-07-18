@@ -25,6 +25,9 @@ UI::ElementBatteryT<DisplayTexture> uibattery(display);
 UI::ElementDateTimeT<DisplayTexture> uidatetime(display);
 UI::ElementBaseT<DisplayTexture> boxtest(display);
 UI::ElementBaseT<DisplayTexture> boxtest2(display);
+UI::ElementBaseT<DisplayTexture> header(display);
+UI::ScreenBaseT<DisplayTexture> screenclock(display);
+UI::ScreenBaseT<DisplayTexture> screenclocknoheader(display);
 
 const Atlas::Sprite sprites[] = {
     BATTERY,
@@ -132,8 +135,8 @@ void init() {
 
     //uiroot << Size { 0, 0, 128, 128 };
     test << Origin { 4, 30 };
-    txt << Size { 32, 64, 64, 64 };
-    txt << UI::StyleInfo { .wrap{UI::WRAP} };
+    //txt << Size { 32, 64, 64, 64 };
+    //txt << UI::StyleInfo { .wrap{UI::WRAP} };
     //uiclock << Size { 16, 16, 97, 97 };
     uiclock << StyleInfo { .width{96}, .height{96}, .margin{16,4} };
     TEXT << Origin { 12, 16 };
@@ -157,9 +160,19 @@ void init() {
     spinline.resolve_layout();
     TEXT.resolve_layout();
 
-    uiroot << uibattery;
-    uiroot << uidatetime;
-    uiroot << uiclock;
+    screenclock.addHeader(header);
+    screenclock << uiclock;
+    screenclocknoheader << txt;
+
+    //uiroot << uibattery;
+    //uiroot << uidatetime;
+    header.name = "header";
+    header << uibattery;
+    header << uidatetime;
+    //uiroot << header;
+    //uiroot << uiclock;
+    uiroot << screenclock;
+    uiroot << screenclocknoheader;
 
     uiroot.dispatch(EventTypes::CONTENT_SIZE);
     uiroot.resolve_layout();

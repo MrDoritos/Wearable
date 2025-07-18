@@ -710,7 +710,6 @@ struct IElement : public Style, public NodeMovementOpsT<IElement> {
         
         Length grow = context;
 
-        /*
         switch (display) {
             case BLOCK:
                 if (position == STATIC) {
@@ -720,7 +719,6 @@ struct IElement : public Style, public NodeMovementOpsT<IElement> {
             default:
                 break;
         }
-        */
 
         /*
         if (grow.width > container.width)
@@ -1671,20 +1669,28 @@ struct ScreenBaseT : public ElementT {
         this->header = header;
         this->showHeader = (header && display);
     }
+
+    void addHeader(IElement &header, const bool &display = true) {
+        this->addHeader(&header, display);
+    }
     
     void addFooter(IElement *footer, const bool &display = true) {
         this->footer = footer;
         this->showFooter = (footer && display);
     }
 
+    void addFooter(IElement &footer, const bool &display = true) {
+        this->addFooter(&footer, display);
+    }
+
     void on_screen(Event *event) override {
         if (event->value & (EventValues::NEXT | EventValues::PREVIOUS)) {
             if (this->isActive()) {
-                for (auto *child : this->depthfirst())
-                    child->display = (Display)(child->display | Display::NONE);
+                for (auto &child : this->depthfirst())
+                    child.display = (Display)(child.display | Display::NONE);
             } else {
-                for (auto *child : this->depthfirst())
-                    child->display = child->display & ~Display::NONE;
+                for (auto &child : this->depthfirst())
+                    child.display = child.display & ~Display::NONE;
                 event->stopImmediate();
             }
         }
