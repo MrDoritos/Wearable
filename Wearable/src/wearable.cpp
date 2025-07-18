@@ -161,6 +161,13 @@ void init() {
     //uiroot << uibattery;
     //uiroot << uidatetime;
     header.name = "header";
+    uibattery.name = "battery";
+    uidatetime.name = "datetime";
+    clockscreen.name = "clockscreen";
+    mainscreen.name = "mainscreen";
+    uiclock.name = "clock";
+    uiroot.name = "root";
+
     header << uibattery;
     header << uidatetime;
     //uiroot << header;

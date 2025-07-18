@@ -469,6 +469,8 @@ struct IElement : public Style, public NodeMovementOpsT<IElement> {
         if (skipSelf)
             event->direction = Event::Direction(event->direction & ~(Event::SKIP_SELF));
 
+        fprintf(stderr, "%s:Event: %i value: %i, direction: %i, state: %i\n", name ? name : "null", event->type, event->value, event->direction, event->state);
+
         if (event->isStopping())
             return;
 
@@ -1278,6 +1280,37 @@ struct IScreen : public IElement {
     constexpr inline IScreen &set_down(IScreen &screen) { return *set_down(&screen); }
 };
 
+template<typename ScreenT = IScreen>
+struct ScreenBaseT : public ScreenT {
+    using ScreenT::ScreenT;
+    using ScreenT::operator<<;
+
+    bool show_header = true;
+
+    void handle_event(Event *event) override {
+        ScreenT::handle_event(event);
+
+        switch (event->type) {
+            case EventTypes::SCREEN:
+                if (event->value & EventValues::VISIBLE) {
+                    this->dispatch(EventTypes::VISIBILITY, EventValues::VISIBLE, EventDirection::CHILDREN);
+                    this->dispatch(EventTypes::LAYOUT, Event::REQUEST, Event::PARENT);
+                }
+                if (event->value & EventValues::HIDDEN) {
+                    this->dispatch(EventTypes::VISIBILITY, EventValues::HIDDEN, EventDirection::CHILDREN);
+                }
+
+                event->stopImmediate();
+                break;
+            case EventTypes::DRAW:
+                if (!show_header)
+                    event->stopDefault();
+                break;
+            default: break;
+        }
+    }
+};
+
 template<typename Buffer, typename ElementT = ElementBaseT<Buffer>>
 struct ElementRootT : public ElementT {
     using ElementT::ElementT;
@@ -1472,14 +1505,15 @@ struct ElementRootT : public ElementT {
         reset_log_time();
         this->dispatch(Event::TICK);
         log_time("TICK ");
-        if (layout_dirty)
-            this->dispatch(Event::CONTENT_SIZE);
+        bool dirty = layout_dirty;
+        if (dirty)
+            this->dispatch(Event::CONTENT_SIZE, Event::REQUEST, Event::CHILDREN);
         log_time("CTSZE");
         //this->resolve_layout();
         log_time("LYOUT");
         this->dispatch(EventTypes::CLEAR);
         log_time("CLEAR");
-        this->dispatch(EventTypes::DRAW);
+        this->dispatch(EventTypes::DRAW, dirty ? Event::REDRAW : Event::VALUE_NONE, Event::CHILDREN);
         log_time("DRAW.");
         if (!do_not_flush) {
             this->buffer.flush();
