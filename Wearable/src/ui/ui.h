@@ -1479,7 +1479,8 @@ struct ElementRootT : public ElementT {
 
     static constexpr const short debug_log_length = 512;
     bool debug = false;
-    int64_t utime;
+    ub debug_details=0;
+    int64_t utime = 0, ftime = 0;
     short debug_log_offset = 0;
     char debug_log[debug_log_length];
     IScreen *active_screen = nullptr;
@@ -1653,35 +1654,52 @@ struct ElementRootT : public ElementT {
             this->draw_text(buf, Sprites::minifont, child, false, true);
         }
         if (!do_not_flush) {
-            if (debug)
-                this->flush_log();
-            else
+            //if (debug)
+            //    this->flush_log();
+            //else
                 this->buffer.flush();
         }
     }
 
     inline void once(const bool &do_not_flush=false) {
-        reset_log(false);
+        //reset_log(false);
         log_time("ELPSD");
         
-        reset_log_time();
+        //reset_log_time();
         this->dispatch(Event::TICK);
         log_time("TICK ");
 
         bool dirty = layout_dirty;
-        if (dirty)
+        if (dirty) {
             this->dispatch(Event::CONTENT_SIZE, Event::REQUEST, Event::CHILDREN);
+            this->clear();
+        }
+        log_time("CTSIZ");
 
         this->handle_deferred_event(Event(Event::DRAW, dirty ? Event::REDRAW : Event::VALUE_NONE, Event::RDEPTH, Event::NORMAL));
         layout_dirty = false;
         
         log_time("DRAW.");
-        if (!do_not_flush) {
-            this->buffer.flush();
-            log_time("FLUSH");
-        }
         
-        flush_log(!do_not_flush);
+        if (debug) {
+            if (debug_details)
+                this->overlay_tree_positions(debug_details==2, true);
+
+            log_time("OVRLY");
+
+            int64_t frametime = micros() - ftime;
+            ftime = micros();
+            log("TOTAL:%5llius\n", frametime);
+            log("FPS  : %.1f\n", 1000000.0f/frametime);
+            
+            flush_log(true);
+        }
+
+        reset_log();
+
+        if (!do_not_flush)
+            this->buffer.flush();
+        log_time("FLUSH");
     }
 
     inline void setDebug(const bool &debug_state=true) {
@@ -1712,6 +1730,15 @@ struct ElementRootT : public ElementT {
     void on_user_input(Event *event) override {
         if (!active_screen)
             return;
+
+        if (event->value & EventValues::PRESSED) {
+            if (event->value & EventValues::DPAD_UP)
+                debug = !debug;
+            if (event->value & EventValues::DPAD_DOWN)
+                debug_details++;
+            debug_details %= 3;
+            layout_dirty = true;
+        }
 
         if (!(event->value & EventValues::RELEASED))
             return;

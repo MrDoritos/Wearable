@@ -32,10 +32,6 @@ UI::ScreenBaseT<> clockscreen("Clock");
 static bool tog = false;
 void demo() {
     uibattery.set_battery_level((millis()%10000)/100);
-    uiroot.reset_log();
-    if (dpad.up.is_pressed())
-        uiroot.setDebug(!uiroot.debug);
-
 
     for (int i = 0; i < dpad.button_count; i++) {
         const Dpad::Button &button = dpad.buttons[i];
@@ -65,18 +61,7 @@ void demo() {
 
         uiroot.dispatch_event(input_event);
     }
-    dpad.print_states();
-    dpad.update();
-
-    uiroot.once(uiroot.debug);
     
-    if (uiroot.debug) {
-        if (dpad.down.is_pressed())
-            tog = !tog;
-        uiroot.overlay_tree_positions(tog);
-        uiroot.clear();
-    }
-
     if (dpad.enter.is_pressed()) {
         display.putTexture(therock, {0,0,128,128}, {0,0});
         display.flush();
@@ -84,6 +69,11 @@ void demo() {
         display.clear();
     }
     
+    dpad.print_states();
+    dpad.update();
+
+    uiroot.once();
+
     #ifdef __linux__
     delay(100);
     #endif
