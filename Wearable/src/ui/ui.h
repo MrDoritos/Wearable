@@ -1286,6 +1286,7 @@ struct ElementInlineTextT : public ElementT {
 
     const char *text;
     const FontProvider &font;
+    bool text_modified = true;
 
     constexpr ElementInlineTextT(const char *text, const FontProvider &font):text(text),font(font){}
     constexpr ElementInlineTextT(const char *text):ElementInlineTextT(text, Sprites::font){}
@@ -1297,6 +1298,9 @@ struct ElementInlineTextT : public ElementT {
     }
 
     void on_draw(Event *event) override {
+        if (!event->value && !text_modified)
+            return;
+        text_modified = false;
         this->draw_text(text, font);
     }
 };
@@ -1447,7 +1451,7 @@ struct ScreenBaseT : public ScreenT {
                 if (event->value & EventValues::VISIBLE) {
                     this->dispatch(EventTypes::VISIBILITY, EventValues::VISIBLE, EventDirection::CHILDREN);
                     //this->dispatch(EventTypes::LAYOUT, Event::REQUEST, Event::PARENT);
-                    this->dispatch(EventTypes::CONTENT_SIZE, EventValues::VALUE_NONE, EventDirection::RDEPTH);
+                    this->dispatch(EventTypes::CONTENT_SIZE, EventValues::REQUEST, EventDirection::RDEPTH);
                 }
                 if (event->value & EventValues::HIDDEN) {
                     this->dispatch(EventTypes::VISIBILITY, EventValues::HIDDEN, EventDirection::CHILDREN);
@@ -1482,6 +1486,7 @@ struct ElementRootT : public ElementT {
     ub debug_details=0;
     int64_t utime = 0, ftime = 0;
     short debug_log_offset = 0;
+    bool redraw_needed = false;
     char debug_log[debug_log_length];
     IScreen *active_screen = nullptr;
     IElement *header_element = nullptr;
@@ -1676,8 +1681,9 @@ struct ElementRootT : public ElementT {
         }
         log_time("CTSIZ");
 
-        this->handle_deferred_event(Event(Event::DRAW, dirty ? Event::REDRAW : Event::VALUE_NONE, Event::RDEPTH, Event::NORMAL));
+        this->handle_deferred_event(Event(Event::DRAW, dirty || redraw_needed ? Event::REDRAW : Event::VALUE_NONE, Event::RDEPTH, Event::NORMAL));
         layout_dirty = false;
+        redraw_needed = false;
         
         log_time("DRAW.");
         
@@ -1792,6 +1798,8 @@ struct ElementRootT : public ElementT {
         this->active_screen = screen;
 
         this->active_screen->dispatch(EventTypes::SCREEN, EventValues::VISIBLE, EventDirection::RDEPTH);
+
+        redraw_needed = true;
     }
 
     void set_screen(IScreen &screen) {
