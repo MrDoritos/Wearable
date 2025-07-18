@@ -17,7 +17,9 @@
 #include "node_iterator.h"
 #include "wbl_func.h"
 
-//#define USE_EVENT_DBG
+#ifdef __linux__
+#define USE_EVENT_DBG
+#endif
 
 namespace wbl {
 namespace UI {
@@ -1633,6 +1635,7 @@ struct ElementRootT : public ElementT {
         //this->dispatch(EventTypes::CLEAR);
         log_time("CLEAR");
         this->dispatch(EventTypes::DRAW, dirty ? Event::REDRAW : Event::VALUE_NONE, Event::RDEPTH);
+        layout_dirty = false;
         log_time("DRAW.");
         if (!do_not_flush) {
             this->buffer.flush();

@@ -87,7 +87,9 @@ void demo() {
         display.clear();
     }
     dpad.update();
+    #ifdef __linux__
     delay(100);
+    #endif
 }
 
 void init() {
