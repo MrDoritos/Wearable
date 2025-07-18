@@ -31,6 +31,15 @@ struct NodeMovementT {
         return node;
     }
 
+    static constexpr inline bool has_sibling(Node *node, Node *sibling) {
+        while (node->sibling && node->sibling != sibling) node = node->sibling;
+        return node != nullptr;
+    }
+
+    static constexpr inline bool has_child(Node *node, Node *child) {
+        return has_sibling(node->child, child);
+    }
+
     static constexpr inline Node *previous_sibling(Node *node) {
         if (!node->parent || !node->parent->child || node->parent->child == node)
             return nullptr;
@@ -187,15 +196,19 @@ struct NodeMovementOpsT : public NodeMovementT<Derived> {
     public:
     NodeMovementOpsT():super(static_cast<Derived*>(this)){}
 
-    constexpr inline Derived *last_sibling() { return last_sibling(super); }
-    constexpr inline Derived *deepest_child() { return deepest_child(super); }
+    constexpr inline Derived *last_sibling() { return Movement::last_sibling(super); }
+    constexpr inline Derived *deepest_child() { return Movement::deepest_child(super); }
     constexpr inline Derived *last_child() { return Movement::last_child(super); }
-    constexpr inline Derived *root_node() { return root_node(super); }
-    constexpr inline Derived *previous_sibling() { return previous_sibling(super); }
-    constexpr inline Derived *depth_first_next() { return depth_first_next(super); }
-    constexpr inline Derived *depth_first_reverse_next() { return depth_first_reverse_next(super); }
-    constexpr inline Derived *breadth_first_next() { return breadth_first_next(super); }
-    constexpr inline unsigned short node_depth() const { return node_depth(super); }
+    constexpr inline Derived *root_node() { return Movement::root_node(super); }
+    constexpr inline Derived *previous_sibling() { return Movement::previous_sibling(super); }
+    constexpr inline Derived *depth_first_next() { return Movement::depth_first_next(super); }
+    constexpr inline Derived *depth_first_reverse_next() { return Movement::depth_first_reverse_next(super); }
+    constexpr inline Derived *breadth_first_next() { return Movement::breadth_first_next(super); }
+    constexpr inline unsigned short node_depth() const { return Movement::node_depth(super); }
+    constexpr inline bool has_child(Derived *node) { return Movement::has_child(super, node); }
+    constexpr inline bool has_child(Derived &node) { return Movement::has_child(super, &node); }
+    constexpr inline bool has_sibling(Derived *node) { return Movement::has_sibling(super, node); }
+    constexpr inline bool has_sibling(Derived &node) { return Movement::has_sibling(super, &node); }
 
     constexpr inline ChildIterator children() { return ChildIterator::make(super); }
     constexpr inline ReverseChildIterator rchildren() { return ReverseChildIterator::make(super); }

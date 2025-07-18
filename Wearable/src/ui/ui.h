@@ -338,33 +338,33 @@ struct Event {
         DISPLAY,
         FOCUS,
         SCREEN,
-        REDRAW,
     };
 
     enum Value : uint8_t {
-        VALUE_NONE,
-        DPAD_LEFT,
-        DPAD_RIGHT,
-        DPAD_UP,
-        DPAD_DOWN,
-        DPAD_ENTER,
-        DISPLAY_ON,
-        DISPLAY_OFF,
-        DISPLAY_LOCKED,
-        DISPLAY_UNLOCKED,
-        VISIBLE,
-        HIDDEN,
-        FOCUS_LOST,
-        FOCUS_GAIN,
-        FOCUS_NEXT,
-        FOCUS_EMIT,
-        CHANGE,
-        REQUEST,
-        PRESSED,
-        HELD,
-        RELEASED,
-        NEXT,
-        PREVIOUS,
+        VALUE_NONE = 0,
+        DPAD_LEFT = 1,
+        DPAD_RIGHT = 2,
+        DPAD_UP = 4,
+        DPAD_DOWN = 8,
+        DPAD_ENTER = 16,
+        DISPLAY_ON = 1,
+        DISPLAY_OFF = 2,
+        DISPLAY_LOCKED = 4,
+        DISPLAY_UNLOCKED = 8,
+        VISIBLE = 1,
+        HIDDEN = 2,
+        FOCUS_LOST = 1,
+        FOCUS_GAIN = 2,
+        FOCUS_NEXT = 4,
+        FOCUS_EMIT = 8,
+        CHANGE = 32,
+        REQUEST = 16,
+        PRESSED = 32,
+        HELD = 64,
+        RELEASED = 128,
+        NEXT = 4,
+        PREVIOUS = 8,
+        REDRAW = 1,
     };
 
     enum Direction : uint8_t {
@@ -375,6 +375,7 @@ struct Event {
         DIRECTION_ONLY=7,
         SELF_FIRST=8,
         SKIP_SELF=16,
+        RDEPTH=9, // SELF_FIRST | CHILDREN
     };
 
     enum State : uint8_t {
@@ -569,20 +570,26 @@ struct IElement : public Style, public NodeMovementOpsT<IElement> {
     }
 
     constexpr inline IElement *remove_child(IElement *element) {
-        assert(element && "Element null");
+        if (!element) {
+            assert("Element is null");
+            return nullptr;
+        }
 
-        IElement *cur = child;
-        for (; cur != nullptr && cur->sibling != element; cur = cur->sibling);
-        
-        assert(cur && "cur in remove_child is null");
-        
-        if (!element) return element;
+        if (!has_child(element)) {
+            assert("Node does not have child to remove");
+            return nullptr;
+        }
 
+        // Reconnect the sibling chain
+        auto *prev = element->previous_sibling();
+
+        if (prev) {
+            prev->sibling = element->sibling;
+        }
+
+        // Remove element from our tree
         element->parent = nullptr;
-
-        if (!cur) return element;
-
-        cur->sibling = element->sibling;
+        element->sibling = nullptr;
 
         return element;
     }
@@ -1230,6 +1237,47 @@ struct ScreenClockT : public ElementT {
     }
 };
 
+struct IScreen : public IElement {
+    using IElement::IElement;
+    using IElement::operator<<;
+
+    IScreen *up, *right, *down, *left;
+    const char* screen_name;
+
+    constexpr IScreen(const char *screen_name, IScreen *up, IScreen *right, IScreen *down, IScreen *left):screen_name(screen_name),up(up),right(right),down(down),left(left){}
+    constexpr IScreen(const char *screen_name):IScreen(screen_name, nullptr, nullptr, nullptr, nullptr){}
+    constexpr IScreen():IScreen(nullptr){}
+
+    constexpr inline IScreen *set_left(IScreen *screen) {
+        this->left = screen;
+        screen->right = this;
+        return screen;
+    }
+
+    constexpr inline IScreen *set_right(IScreen *screen) {
+        this->right = screen;
+        screen->left = this;
+        return screen;
+    }
+
+    constexpr inline IScreen *set_up(IScreen *screen) {
+        this->up = screen;
+        screen->down = this;
+        return screen;
+    }
+
+    constexpr inline IScreen *set_down(IScreen *screen) {
+        this->down = screen;
+        screen->up = this;
+        return screen;
+    }
+
+    constexpr inline IScreen &set_left(IScreen &screen) { return *set_left(&screen); }
+    constexpr inline IScreen &set_right(IScreen &screen) { return *set_right(&screen); }
+    constexpr inline IScreen &set_up(IScreen &screen) { return *set_up(&screen); }
+    constexpr inline IScreen &set_down(IScreen &screen) { return *set_down(&screen); }
+};
+
 template<typename Buffer, typename ElementT = ElementBaseT<Buffer>>
 struct ElementRootT : public ElementT {
     using ElementT::ElementT;
@@ -1240,6 +1288,9 @@ struct ElementRootT : public ElementT {
     int64_t utime;
     short debug_log_offset = 0;
     char debug_log[debug_log_length];
+    IScreen *active_screen = nullptr;
+    IElement *header_element = nullptr;
+    bool layout_dirty = true;
 
     template<typename FORMAT, typename ...Args>
     inline int log(FORMAT format, const Args&...args) {
@@ -1421,9 +1472,10 @@ struct ElementRootT : public ElementT {
         reset_log_time();
         this->dispatch(Event::TICK);
         log_time("TICK ");
-        this->dispatch(Event::CONTENT_SIZE);
+        if (layout_dirty)
+            this->dispatch(Event::CONTENT_SIZE);
         log_time("CTSZE");
-        this->resolve_layout();
+        //this->resolve_layout();
         log_time("LYOUT");
         this->dispatch(EventTypes::CLEAR);
         log_time("CLEAR");
@@ -1440,20 +1492,72 @@ struct ElementRootT : public ElementT {
         this->debug = debug_state;
     }
 
-    void on_user_input(Event *event) {
+    void handle_event(Event *event) override {
         if (event->isStopDefault())
             return;
 
-        // Screen
+        ElementT::handle_event(event);    
+    }
+
+    void on_clear(Event *event) override {}
+
+    void on_user_input(Event *event) override {
+        if (!active_screen)
+            return;
+
         if (!(event->value & EventValues::RELEASED))
             return;
 
-        bool left = event->value & EventValues::DPAD_LEFT;
-        bool right = event->value & EventValues::DPAD_RIGHT;
+        if (event->value & EventValues::DPAD_UP)
+            this->set_screen(active_screen->up);
 
-        if (left) {
-            
-        }
+        if (event->value & EventValues::DPAD_DOWN)
+            this->set_screen(active_screen->down);
+
+        if (event->value & EventValues::DPAD_LEFT)
+            this->set_screen(active_screen->left);
+
+        if (event->value & EventValues::DPAD_RIGHT)
+            this->set_screen(active_screen->right);
+    }
+
+    void set_header(IElement *header) {
+        this->header_element = header;
+        header->parent = this;
+    }
+
+    void set_header(IElement &header) {
+        this->set_header(&header);
+    }
+
+    void set_screen(IScreen *screen) {
+        if (!screen)
+            return;
+
+        screen->dispatch(EventTypes::SCREEN, EventValues::HIDDEN, EventDirection::RDEPTH);
+
+        if (active_screen)
+            this->remove_child(active_screen);
+
+        this->append_child(screen);
+
+        this->active_screen = screen;
+
+        this->active_screen->dispatch(EventTypes::SCREEN, EventValues::VISIBLE, EventDirection::RDEPTH);
+    }
+
+    void set_screen(IScreen &screen) {
+        this->set_screen(&screen);
+    }
+
+    void on_layout(Event *event) override {
+        if (event->value & EventValues::REQUEST)
+            this->layout_dirty = true;
+    }
+
+    void on_content_size(Event *event) override {
+        this->layout_dirty = false;
+        this->resolve_layout();
     }
 };
 
@@ -1649,54 +1753,6 @@ struct ElementFocusT : public ElementT {
         this->on_draw(event);
     }
 };
-
-template<typename Buffer, typename ElementT = ElementBaseT<Buffer>> 
-struct ScreenBaseT : public ElementT {
-    using ElementT::ElementT;
-    using ElementT::operator<<;
-
-    bool showHeader = false;
-    bool showFooter = false;
-
-    IElement *header = nullptr;
-    IElement *footer = nullptr;
-
-    constexpr inline bool isActive() const {
-        return this->display & ~Display::NONE;
-    }
-
-    void addHeader(IElement *header, const bool &display = true) {
-        this->header = header;
-        this->showHeader = (header && display);
-    }
-
-    void addHeader(IElement &header, const bool &display = true) {
-        this->addHeader(&header, display);
-    }
-    
-    void addFooter(IElement *footer, const bool &display = true) {
-        this->footer = footer;
-        this->showFooter = (footer && display);
-    }
-
-    void addFooter(IElement &footer, const bool &display = true) {
-        this->addFooter(&footer, display);
-    }
-
-    void on_screen(Event *event) override {
-        if (event->value & (EventValues::NEXT | EventValues::PREVIOUS)) {
-            if (this->isActive()) {
-                for (auto &child : this->depthfirst())
-                    child.display = (Display)(child.display | Display::NONE);
-            } else {
-                for (auto &child : this->depthfirst())
-                    child.display = child.display & ~Display::NONE;
-                event->stopImmediate();
-            }
-        }
-    }
-};
-
 
 }
 }

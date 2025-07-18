@@ -26,14 +26,8 @@ UI::ElementDateTimeT<DisplayTexture> uidatetime(display);
 UI::ElementBaseT<DisplayTexture> boxtest(display);
 UI::ElementBaseT<DisplayTexture> boxtest2(display);
 UI::ElementBaseT<DisplayTexture> header(display);
-UI::ScreenBaseT<DisplayTexture> screenclock(display);
-UI::ScreenBaseT<DisplayTexture> screenclocknoheader(display);
-
-const Atlas::Sprite sprites[] = {
-    BATTERY,
-    HEART
-};
-const auto I = font.getCharacter('M');
+UI::IScreen mainscreen("Main");
+UI::IScreen clockscreen("Clock");
 
 static bool tog = false;
 void demo() {
@@ -160,9 +154,9 @@ void init() {
     spinline.resolve_layout();
     TEXT.resolve_layout();
 
-    screenclock.addHeader(header);
-    screenclock << uiclock;
-    screenclocknoheader << txt;
+    //screenclock.addHeader(header);
+    //screenclock << uiclock;
+    //screenclocknoheader << txt;
 
     //uiroot << uibattery;
     //uiroot << uidatetime;
@@ -171,8 +165,14 @@ void init() {
     header << uidatetime;
     //uiroot << header;
     //uiroot << uiclock;
-    uiroot << screenclock;
-    uiroot << screenclocknoheader;
+    //uiroot << screenclock;
+    //uiroot << screenclocknoheader;
+    clockscreen << uiclock;
+    mainscreen << txt;
+    mainscreen.set_left(clockscreen);
+
+    uiroot.set_header(header);
+    uiroot.set_screen(mainscreen);
 
     uiroot.dispatch(EventTypes::CONTENT_SIZE);
     uiroot.resolve_layout();
