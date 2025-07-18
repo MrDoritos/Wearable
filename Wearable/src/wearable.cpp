@@ -33,7 +33,7 @@ static bool tog = false;
 void demo() {
     uibattery.set_battery_level((millis()%10000)/100);
     uiroot.reset_log();
-    if (dpad.right.is_pressed())
+    if (dpad.up.is_pressed())
         uiroot.setDebug(!uiroot.debug);
 
 
@@ -75,17 +75,13 @@ void demo() {
         uiroot.clear();
     }
 
-    if (dpad.enter.is_pressed() || dpad.up.is_pressed()) {
-        puts("Any pressed");
-        display.clear();
-        if (dpad.enter.is_pressed())
-            display.putTexture(therock, {0,0,128,128}, {0,0});
-        if (dpad.up.is_pressed())
-            display.putTexture(atlas, {0,0,128,128}, {0,0});
+    if (dpad.enter.is_pressed()) {
+        display.putTexture(therock, {0,0,128,128}, {0,0});
         display.flush();
         delay(1000);
         display.clear();
     }
+    
     dpad.update();
     #ifdef __linux__
     delay(100);
@@ -137,7 +133,7 @@ void init() {
     //uiclock << Size { 16, 16, 97, 97 };
     //uiclock << StyleInfo { .width{96}, .height{96}, .margin{16,4} };
     clockscreen << StyleInfo { .width{{100,PERC}}, .height{{100,PERC}} };
-    uiclock << StyleInfo { .align{CENTER}, .width{{75,PERC}}, .height{{75, PERC}} };
+    uiclock << StyleInfo { .align{CENTER}, .width{{85,PERC}}, .height{{85, PERC}} };
     TEXT << Origin { 12, 16 };
     test.wrap = (UI::WrapStyle)(UI::WrapStyle::WRAP | UI::WrapStyle::TRIM_SPACE);
     test << Size { 32, 30, 64, 64 };
@@ -148,6 +144,7 @@ void init() {
     uidatetime << UI::StyleInfo { .align{RIGHT}, .wrap{NOWRAP}, .display{INLINE}, .overflow{AUTO} };
     boxtest << Size { 8, 13, 5, 5 };
     boxtest2 << Size { 9, 14, 3, 3 };
+    txt << StyleInfo { .align{CENTER}, .width{{70}}, .margin{4} };
     uiclock.use_milliseconds = true;
 
     TEXT.text = "Hello UI";

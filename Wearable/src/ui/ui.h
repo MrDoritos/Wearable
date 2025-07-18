@@ -985,7 +985,7 @@ struct IElement : public Style, public NodeMovementOpsT<IElement> {
                 child_offset.x = remaining_size.getRight() + (uu)child_box.getLeft();
             } else
             if (cur->align & HCENTER) {
-                child_offset.x = remaining_size.getMidpoint().x - (uu)child_use.width * 0.5;
+                child_offset.x = remaining_size.getMidpoint().x - (((uu)cur->container.width) * 0.5);
             }
 
             if (cur->align & TOP) {
@@ -996,7 +996,7 @@ struct IElement : public Style, public NodeMovementOpsT<IElement> {
                 child_offset.y = remaining_size.getBottom() + (uu)child_box.getTop();
             } else
             if (cur->align & VCENTER) {
-                child_offset.y = remaining_size.getMidpoint().y - (uu)child_use.height * 0.5;
+                child_offset.y = remaining_size.getMidpoint().y - (((uu)cur->container.height) * 0.5);
             }
 
             //Origin child_offset = (Origin)child_margin + offset;
@@ -1537,9 +1537,9 @@ struct ElementRootT : public ElementT {
         Length len = this->getTextContentSize(debug_log, Sprites::minifont);
 
         if (after_last_child) {
-            if (this->child)
-                pos = {0,this->last_child()->getBottom()};
-            if (pos.y + len.height > this->getBottom())
+            if (this->child && this->last_child()->deepest_child())
+                pos = {0,this->last_child()->deepest_child()->getBottom()+2};
+            if (pos.y + len.height + 2 > this->getBottom())
                 pos.y = this->getBottom()-len.height;
         }
 
