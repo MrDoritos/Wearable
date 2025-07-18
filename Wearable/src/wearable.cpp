@@ -32,10 +32,13 @@ const Atlas::Sprite sprites[] = {
 };
 const auto I = font.getCharacter('M');
 
+static bool tog = false;
 void demo() {
     uibattery.set_battery_level((millis()%10000)/100);
     uiroot.reset_log();
-    uiroot.setDebug(dpad.right.is_held());
+    if (dpad.right.is_pressed())
+        uiroot.setDebug(!uiroot.debug);
+
 
     for (int i = 0; i < dpad.button_count; i++) {
         const Dpad::Button &button = dpad.buttons[i];
@@ -68,7 +71,9 @@ void demo() {
     uiroot.once(uiroot.debug);
     
     if (uiroot.debug) {
-        uiroot.overlay_tree_positions();
+        if (dpad.down.is_pressed())
+            tog = !tog;
+        uiroot.overlay_tree_positions(tog);
         uiroot.clear();
     }
 
@@ -84,7 +89,7 @@ void demo() {
         display.clear();
     }
     dpad.update();
-    //delay(100);
+    delay(100);
 }
 
 void init() {

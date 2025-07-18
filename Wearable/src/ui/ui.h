@@ -33,7 +33,7 @@ enum Display : uint8_t {
     INLINE=1,
     INLINE_BLOCK=2,
     NONE=4, // Do not include in layout
-    HIDDEN=8, // Include in layout (use internally)
+    HIDE=8, // Include in layout (use internally)
 };
 
 enum Align : uint8_t {
@@ -870,7 +870,7 @@ struct IElement : public Style, public NodeMovementOpsT<IElement> {
             cur = cur->sibling;
         }
 
-        if (child && (display & ~Display::NONE))
+        if (child && !(display & Display::NONE))
             child->resolve_container_position();
         if (sibling)
             sibling->resolve_container_position();
@@ -1447,11 +1447,11 @@ struct ElementRootT : public ElementT {
             return;
 
         // Screen
-        if (!(event->values & EventValues::RELEASED))
+        if (!(event->value & EventValues::RELEASED))
             return;
 
-        bool left = event->values & EventValues::DPAD_LEFT;
-        bool right = event->values & EventValues::DPAD_RIGHT;
+        bool left = event->value & EventValues::DPAD_LEFT;
+        bool right = event->value & EventValues::DPAD_RIGHT;
 
         if (left) {
             
