@@ -8,6 +8,9 @@
 namespace wbl {
 namespace Sprites {
 
+using DisplayTexture = TextureT<DisplayBuffer>;
+extern DisplayTexture display;
+
 using FontBuffer = FramebufferT<StaticbufferT<256, 256, 2>>;
 using FontTexture = TextureT<FontBuffer>;
 using FontProvider = MonospaceFontProviderT<FontTexture, 6, 12, 0, 0, char, 42, 14>;

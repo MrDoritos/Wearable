@@ -8,4 +8,5 @@
 
 #ifdef __linux__
 #define INPUT_DEBUG
+#define USE_EVENT_DBG
 #endif

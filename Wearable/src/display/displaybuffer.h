@@ -75,6 +75,8 @@ struct DisplayBufferT : public Frame, public Display {
     }
 };
 
-using DisplayBuffer = DisplayBufferT<SH1107::GME128128>;
+using I2C_SH1107 = I2C<I2C_SH1107_ADDR, I2C_DISPLAY_FREQ>;
+using GME128128 = SH1107::Display<128, 128, I2C_SH1107>;
+using DisplayBuffer = DisplayBufferT<GME128128>;
 
 }

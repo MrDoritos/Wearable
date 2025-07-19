@@ -34,18 +34,15 @@ UI::ScreenBaseT<> settingscreen("Settings");
 void demo() {
     uibattery.set_battery_level((millis()%10000)/100);
 
-    dispatch_input_events(uiroot, dpad, false);
-    
     if (dpad.enter.is_pressed()) {
         display.putTexture(therock, {0,0,128,128}, {0,0});
         display.flush();
         delay(1000);
         display.clear();
     }
-    
-    dpad.print_states();
-    dpad.update();
 
+    dispatch_input_events(uiroot, dpad);
+    
     uiroot.once();
 
     #ifdef __linux__

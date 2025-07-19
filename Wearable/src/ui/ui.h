@@ -16,10 +16,7 @@
 #include "sprites.h"
 #include "node_iterator.h"
 #include "wbl_func.h"
-
-#ifdef __linux__
-#define USE_EVENT_DBG
-#endif
+#include "config.h"
 
 namespace wbl {
 namespace UI {
@@ -1730,7 +1727,7 @@ struct ElementRootT : public ElementT {
         if (header_element)
             header_element->dispatch_event(&disp);
             
-        this->handle_event(&event);
+        this->handle_event(&disp);
     }
 
     void handle_event(Event *event) override {

@@ -7,7 +7,7 @@
 namespace wbl {
 namespace UI {
 
-    void dispatch_input_events(IElement &element, Dpad &dpad, const bool &update_dpad = true);
+void dispatch_input_events(IElement &element, Dpad &dpad, const bool &update_dpad = true);
 
 }
 }

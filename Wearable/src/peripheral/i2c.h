@@ -1,8 +1,13 @@
 #pragma once
 
+#include "sdkconfig.h"
 #include "freertos/FreeRTOS.h"
-#include "esp_check.h"
+#include "freertos/task.h"
 #include "driver/i2c_master.h"
+#include "esp_log.h"
+#include "esp_check.h"
+#include "esp_types.h"
+#include "esp_timer.h"
 
 namespace wbl {
 

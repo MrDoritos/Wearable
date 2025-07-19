@@ -4,15 +4,6 @@
 #include "config.h"
 #include "i2c.h"
 
-#include "sdkconfig.h"
-#include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
-#include "driver/i2c_master.h"
-#include "esp_log.h"
-#include "esp_check.h"
-#include "esp_types.h"
-#include "esp_timer.h"
-
 #include <inttypes.h>
 
 namespace wbl {
@@ -107,10 +98,6 @@ struct Display : public I2C_DEVICE {
         return this->reset();
     }
 };
-
-using I2C_SH1107 = I2C<I2C_SH1107_ADDR, I2C_DISPLAY_FREQ>;
-
-using GME128128 = Display<128, 128, I2C_SH1107>;
 
 }
 }
