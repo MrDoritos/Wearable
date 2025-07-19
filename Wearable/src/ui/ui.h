@@ -889,7 +889,6 @@ struct IElement : public Style, public NodeMovementOpsT<IElement> {
         
         Length grow = context;
 
-        /*
         switch (display) {
             case BLOCK:
                 if (position == STATIC) {
@@ -899,7 +898,6 @@ struct IElement : public Style, public NodeMovementOpsT<IElement> {
             default:
                 break;
         }
-        */
 
         /*
         if (grow.width > container.width)

@@ -1,4 +1,5 @@
 #include "sprites.h"
+#include "esp_system.h"
 
 namespace wbl {
 namespace Sprites {

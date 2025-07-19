@@ -27,6 +27,8 @@ endforeach()
 add_library(lib
     ../../console/console.ansi.cpp
     ../wearable.cpp
+    ../ui/sprites.cpp
+    ../ui/ui_func.cpp
     emulator_inputs.cpp
     emu_func.cpp
     ${GENERATED_ASSET_OBJECTS}
