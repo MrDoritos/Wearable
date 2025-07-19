@@ -1804,9 +1804,9 @@ struct ElementRootT : public ElementT {
 
         this->active_screen = screen;
 
-        this->active_screen->dispatch(EventTypes::SCREEN, EventValues::VISIBLE, EventDirection::RDEPTH);
-
         this->resolve_layout();
+
+        this->active_screen->dispatch(EventTypes::SCREEN, EventValues::VISIBLE, EventDirection::RDEPTH);
 
         redraw_needed = true;
     }
