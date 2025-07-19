@@ -56,13 +56,18 @@ struct TextureT : public Buffer {
     }
 
     constexpr inline void fill(const fb &x0, const fb &y0, const fb &x1, const fb &y1, const pixel &px) {
-        for (fb x = x0; x < x1; ++x)
-            for (fb y = y0; y < y1; ++y)
+        const fb xs = x0 >= 0 ? x0 : 0;
+        const fb ys = y0 >= 0 ? y0 : 0;
+        const fb xe = x1 < this->getWidth() ? x1 : this->getWidth();
+        const fb ye = y1 < this->getHeight() ? y1 : this->getHeight();
+        
+        for (fb x = xs; x < xe; ++x)
+            for (fb y = ys; y < ye; ++y)
                 this->putPixel(x, y, px);
     }
 
     constexpr inline void border(const Size &size, const pixel &px) {
-        if (!size.height || !size.width)
+        if (!size.height || !size.width || size.getRight() > this->getWidth() || size.getBottom() > this->getHeight())
             return;
         
         for (fb x = size.x; x < size.x + size.width; x++) {

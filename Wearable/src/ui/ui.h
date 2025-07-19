@@ -636,7 +636,7 @@ struct IElement : public Style, public NodeMovementOpsT<IElement> {
     }
 
     constexpr inline void dispatch_parent(const EventTypes &event_type, const EventValues &event_value = EventValues::VALUE_NONE) {
-        dispatch(event_type, event_value, EventDirection::PARENT);
+        dispatch(event_type, event_value, (EventDirection)(EventDirection::PARENT|EventDirection::SKIP_SELF));
     }
 
     constexpr IElement(const char *name, IElement *parent, IElement *sibling, IElement *child):name(name),parent(parent),sibling(sibling),child(child){}
@@ -1037,6 +1037,9 @@ struct IElement : public Style, public NodeMovementOpsT<IElement> {
     }
 
     constexpr inline void resolve_layout() {
+        #ifdef USE_EVENT_DBG
+        fprintf(stderr, "Run layout on %s\n", name ? name : "null");
+        #endif
         resolve_relative_container_sizes();
         FlowContext root;
         resolve_container_growth(root);
@@ -1451,7 +1454,7 @@ struct ScreenBaseT : public ScreenT {
                 if (event->value & EventValues::VISIBLE) {
                     this->dispatch(EventTypes::VISIBILITY, EventValues::VISIBLE, EventDirection::CHILDREN);
                     //this->dispatch(EventTypes::LAYOUT, Event::REQUEST, Event::PARENT);
-                    this->dispatch(EventTypes::CONTENT_SIZE, EventValues::REQUEST, EventDirection::RDEPTH);
+                    //this->dispatch(EventTypes::CONTENT_SIZE, EventValues::REQUEST, EventDirection::RDEPTH);
                 }
                 if (event->value & EventValues::HIDDEN) {
                     this->dispatch(EventTypes::VISIBILITY, EventValues::HIDDEN, EventDirection::CHILDREN);
@@ -1802,6 +1805,8 @@ struct ElementRootT : public ElementT {
         this->active_screen = screen;
 
         this->active_screen->dispatch(EventTypes::SCREEN, EventValues::VISIBLE, EventDirection::RDEPTH);
+
+        this->resolve_layout();
 
         redraw_needed = true;
     }
