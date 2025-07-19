@@ -7,6 +7,7 @@ namespace SH1107 {
 
 enum : uint8_t {
     SEGREMAP                  = 0xA0,
+    SEGREMAPINV               = 0xA1,
     RESUME                    = 0xA4,
     ALL_ON                    = 0xA5,
     NORMAL                    = 0xA6,

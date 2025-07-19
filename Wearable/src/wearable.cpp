@@ -30,7 +30,6 @@ UI::ScreenBaseT<> mainscreen("Main");
 UI::ScreenBaseT<> clockscreen("Clock");
 UI::ScreenBaseT<> settingscreen("Settings");
 
-static bool tog = false;
 void demo() {
     uibattery.set_battery_level((millis()%10000)/100);
 
