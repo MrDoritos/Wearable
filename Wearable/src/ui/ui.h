@@ -1852,8 +1852,6 @@ struct ElementBatteryT : public ElementT {
     }
 
     void on_content_size(Event *event) override {
-        if (last_draw_level == current_level)
-            return;
         this->update();
         Length size = this->getSpritesContentSize(&battery_sprite, 1) + this->getTextContentSize((const char*)buf, Sprites::font);
         size.height = 12;
