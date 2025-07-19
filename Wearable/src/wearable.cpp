@@ -28,6 +28,7 @@ UI::ElementBaseT<DisplayTexture> boxtest2(display);
 UI::ElementBaseT<DisplayTexture> header(display);
 UI::ScreenBaseT<> mainscreen("Main");
 UI::ScreenBaseT<> clockscreen("Clock");
+UI::ScreenBaseT<> settingscreen("Settings");
 
 static bool tog = false;
 void demo() {
@@ -83,6 +84,7 @@ void init() {
     //uiroot.setDebug(true);
     using namespace UI;
     using DElem = UI::ElementT<DisplayTexture>;
+    using FElem = UI::ElementFocusT<DisplayTexture>;
     static DElem block(display, "block");
     static DElem inner(display, "inner");
     static DElem block2(display, "area");
@@ -91,6 +93,19 @@ void init() {
     static DElem inlineblock3(display, "right");
     static DElem inlineblock4(display, "left");
     static DElem block3(display, "after");
+
+    static FElem focustest(display, "one");
+    static FElem focustest2(display, "two");
+    static FElem focustest3(display, "three");
+
+    static UI::StyleInfo styles { .display{INLINE}, .width{{25,PERC}}, .height{25} };
+
+    focustest << styles;
+    focustest2 << styles;
+    focustest3 << styles;
+    settingscreen << focustest;
+    settingscreen << focustest2;
+    settingscreen << focustest3;
 
     block << UI::StyleInfo { .height{26} };
     inner << StyleInfo {.height {14}};
@@ -173,9 +188,11 @@ void init() {
     clockscreen << uiclock;
     mainscreen << txt;
     mainscreen.set_left(clockscreen);
+    mainscreen.set_right(settingscreen);
 
     uiroot.set_header(header);
-    uiroot.set_screen(mainscreen);
+    //uiroot.set_screen(mainscreen);
+    uiroot.set_screen(settingscreen);
 
     uiroot.dispatch(EventTypes::CONTENT_SIZE);
     uiroot.resolve_layout();

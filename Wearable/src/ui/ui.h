@@ -2005,9 +2005,9 @@ struct ElementFocusT : public ElementT {
     }
 
     void on_draw(Event *event) override {
+        ElementT::on_draw(event);
         if (this->isFocused())
             this->buffer.border(*this, 1);
-        this->on_draw(event);
     }
 };
 
