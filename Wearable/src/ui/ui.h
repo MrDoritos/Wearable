@@ -804,6 +804,9 @@ struct IElement : public Style, public NodeMovementOpsT<IElement> {
             DimensionMinMax rel_w = width.resolve(parent_container.width);
             DimensionMinMax rel_h = height.resolve(parent_container.height);
 
+            //if (display & BLOCK && position & STATIC && parent)
+            //    rel_w = rel_w.resolve(parent->container.width);
+
             computed = {
                 rel_w.value,
                 rel_h.value
@@ -889,6 +892,7 @@ struct IElement : public Style, public NodeMovementOpsT<IElement> {
         
         Length grow = context;
 
+        /*
         switch (display) {
             case BLOCK:
                 if (position == STATIC) {
@@ -898,6 +902,7 @@ struct IElement : public Style, public NodeMovementOpsT<IElement> {
             default:
                 break;
         }
+        */
 
         /*
         if (grow.width > container.width)

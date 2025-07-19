@@ -1,6 +1,7 @@
 #pragma once
 
 #include "sh1107_defs.h"
+#include "config.h"
 
 #include "sdkconfig.h"
 #include "freertos/FreeRTOS.h"
@@ -159,7 +160,7 @@ struct I2C : public BUS {
     }
 };
 
-using I2C_SH1107 = I2C<0x3C, 1000000>;
+using I2C_SH1107 = I2C<I2C_SH1107_ADDR, I2C_DISPLAY_FREQ>;
 
 template<uint8_t _WIDTH, uint8_t _HEIGHT, typename I2C_DEVICE>
 struct Display : public I2C_DEVICE {
