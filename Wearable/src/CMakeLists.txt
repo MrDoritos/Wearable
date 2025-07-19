@@ -1,5 +1,5 @@
 idf_component_register(
-    SRCS "user_inputs.cpp" "wearable.cpp" "./common/wbl_func.cpp"
+    SRCS "user_inputs.cpp" "wearable.cpp" "./common/wbl_func.cpp" "./ui/ui_func.cpp"
     INCLUDE_DIRS "." "./display" "./ui" "./common" "./peripheral"
     PRIV_REQUIRES spi_flash esp_driver_i2c esp_timer esp_driver_gpio
 )

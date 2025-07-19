@@ -11,6 +11,7 @@
 #include "sprites.h"
 #include "user_inputs.h"
 #include "wbl_func.h"
+#include "ui_func.h"
 
 using namespace wbl;
 using namespace Sprites;
@@ -33,34 +34,7 @@ UI::ScreenBaseT<> settingscreen("Settings");
 void demo() {
     uibattery.set_battery_level((millis()%10000)/100);
 
-    for (int i = 0; i < dpad.button_count; i++) {
-        const Dpad::Button &button = dpad.buttons[i];
-
-        const UI::EventValues values[] = {
-            UI::EventValues::DPAD_ENTER,
-            UI::EventValues::DPAD_UP,
-            UI::EventValues::DPAD_RIGHT,
-            UI::EventValues::DPAD_DOWN,
-            UI::EventValues::DPAD_LEFT,
-        };
-
-        UI::Event input_event(UI::EventTypes::USER_INPUT);
-
-        if (button.is_pressed())
-            input_event.value = (UI::EventValues)(input_event.value | UI::EventValues::PRESSED);
-        if (button.is_held())
-            input_event.value = (UI::EventValues)(input_event.value | UI::EventValues::HELD);
-        if (button.is_released())
-            input_event.value = (UI::EventValues)(input_event.value | UI::EventValues::RELEASED);
-
-        if (!input_event.value)
-            continue;
-        input_event.direction = UI::EventDirection::CHILDREN;
-
-        input_event.value = (UI::EventValues)(input_event.value | values[i]);
-
-        uiroot.dispatch_event(input_event);
-    }
+    dispatch_input_events(uiroot, dpad, false);
     
     if (dpad.enter.is_pressed()) {
         display.putTexture(therock, {0,0,128,128}, {0,0});

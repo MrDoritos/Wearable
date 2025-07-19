@@ -1,5 +1,6 @@
 #pragma once
 
+#include "displaybuffer.h"
 #include "framebuffer.h"
 #include "sizes.h"
 #include <math.h>
@@ -390,6 +391,6 @@ struct AtlasT : public Derived {
 
 using DisplayTexture = TextureT<DisplayBuffer>;
 
-DisplayTexture display;
+static DisplayTexture display;
 
 }
