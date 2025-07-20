@@ -126,11 +126,11 @@ struct DataLogT {
         push_back(point_type(time - time_start, value));
     }
 
-    constexpr inline bool has(const int &pos) const { return log.template has(pos); }
+    constexpr inline bool has(const int &pos) const { return log.template has(0-pos); }
 
-    constexpr inline DataPoint &get(const int &pos) { return log.template get(pos); }
+    constexpr inline DataPoint &get(const int &pos) { return log.template get(0-pos); }
 
-    constexpr inline const DataPoint &get(const int &pos) const { return log.template get(pos); }
+    constexpr inline const DataPoint &get(const int &pos) const { return log.template get(0-pos); }
 
     /*
         Returns the previous nearest value or the exact match, never the upper bound

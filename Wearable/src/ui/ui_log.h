@@ -24,7 +24,7 @@ struct ElementLogT : public ElementT, public DataLog {
     constexpr ElementLogT(Buffer &buffer, storage_type &log):ElementT(buffer),DataLog(log){}
 
     inline bool is_stale() const {
-        return last_data_time != this->get_data_end_time();
+        return this->template has(0) && last_data_time != this->template get(0).time;//this->get_data_end_time();
     }
 
     void on_draw(Event *event) override {
@@ -35,7 +35,7 @@ struct ElementLogT : public ElementT, public DataLog {
         if (this->size() < 2)
             return;
 
-        last_data_time = this->get_data_end_time();
+        last_data_time = this->template get(0).time;//this->get_data_end_time();
 
         ElementT::clear();
 
@@ -60,6 +60,7 @@ struct ElementLogT : public ElementT, public DataLog {
         for (uu x = 1; x < this->getWidth(); x++) {
             const time_type t = time_type((float(x) / float(this->getWidth())) * time_range) + time_min;
             //float v = this->template interpolate_value<float>(t+this->time_start);
+            
             float v = this->template get(t).value;
             //if (v == 0)
             //    break;
