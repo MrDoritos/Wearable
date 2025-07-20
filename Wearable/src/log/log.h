@@ -61,16 +61,22 @@ struct LoopBufferT {
         data[index++] = value;
     }
 
-    constexpr inline T &get(int pos) {
+    constexpr inline int to_rel(const int &pos) {
         int i = pos + index;
 
-        if (i < 0)
-            i = count - i;
+        if (i < 0) i = count - i;
 
-        while (i + 1 > count)
-            i -= count;
-        
-        return data[i];
+        while (i + 1 > count) i -= count;
+
+        return i;
+    }
+
+    constexpr inline T &get(const int &pos) {
+        return data[to_rel(pos)];
+    }
+
+    constexpr inline bool has(const int &pos) const {
+        return to_rel(pos) >= 0;
     }
 };
 
@@ -88,6 +94,20 @@ struct DataLogT {
     
     constexpr inline void set_start_time(const int64_t &time) { time_start = time; }
 
+    constexpr inline int64_t get_start_time() const { return time_start; }
+
+    constexpr inline int64_t get_data_time(const time_type &time) const { return time_start + time; }
+
+    constexpr inline int64_t get_data_time(const point_type &point) const { return time_start + point.time; }
+
+    constexpr inline int64_t get_data_index_time(const int &index) const { return get_data_time(has(index) ? get(index).time : 0); }
+
+    constexpr inline int64_t get_data_start_time() const { return get_data_index_time(0); }
+
+    constexpr inline int64_t get_data_end_time() const { return get_data_index_time(-1); }
+
+    constexpr inline time_type get_data_range_time() const { return time_type(get_data_end_time() - get_data_start_time()); }
+
     constexpr inline int size() const { return log.template size(); }
 
     constexpr inline int capacity() const { return log.template capacity(); }
@@ -100,7 +120,11 @@ struct DataLogT {
         push_back(point_type(time - time_start, value));
     }
 
-    constexpr inline DataPoint &get(int pos) { return log.template get(pos); }
+    constexpr inline bool has(const int &pos) const { return log.template has(pos); }
+
+    constexpr inline DataPoint &get(const int &pos) { return log.template get(pos); }
+
+    constexpr inline const DataPoint &get(const int &pos) const { return log.template get(pos); }
 
     /*
         Returns the previous nearest value or the exact match, never the upper bound
