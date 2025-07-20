@@ -5,20 +5,36 @@
 
 namespace wbl {
 
+template<typename IType, typename FType = float, typename RType = IType>
+constexpr inline RType lerp(const IType &v1, const IType &v2, const FType &factor) {
+    return RType(v1) * (FType(1) - factor) + RType(v2) * factor;
+}
+
 template<typename TIME_T, typename POINT_T>
 struct DataPointT {
     using time_type = TIME_T;
     using value_type = POINT_T;
 
     TIME_T time;
-    POINT_T data;
+    POINT_T value;
 
-    constexpr DataPointT(const TIME_T &time, const POINT_T &data):time(time),data(data){}
+    constexpr DataPointT(const TIME_T &time, const POINT_T &value):time(time),value(value){}
     constexpr DataPointT():DataPointT(0,0){}
 
-    constexpr inline TIME_T getTime() const { return time; }
+    constexpr inline TIME_T get_time() const { return time; }
 
-    constexpr inline POINT_T getData() const { return data; }
+    constexpr inline POINT_T get_value() const { return value; }
+
+    constexpr inline DataPointT interpolate(const DataPointT &other, float factor) {
+        return DataPointT(
+            lerp(time, other.time, factor),
+            lerp(value, other.value, factor)
+        );
+    }
+
+    constexpr inline float get_factor(const DataPointT &other, const time_type &time) {
+        return float(time - this->time) / float(other.time - this->time);
+    }
 };
 
 template<typename T, int LOOP_SIZE = 1000>
@@ -89,27 +105,73 @@ struct DataLogT {
     /*
         Returns the previous nearest value or the exact match, never the upper bound
     */
-    constexpr DataPoint &binary_search(const time_type &time, const int &start, const int &end, const int &depth=0) {
+    constexpr int binary_index(const time_type &time, const int &start, const int &end, const int &depth=0) const {
         assert(depth < 32 && "Too much recursion");
 
         const int range = end - start;
 
         if (range < 2)
-            return get(start);
+            return start;
 
         const int mid = start + (range/2);
         const point_type &middle = get(mid);
 
         if (middle.time <= time)
-            return binary_search(time, mid, end, depth+1);
+            return binary_index(time, mid, end, depth+1);
         else
-            return binary_search(time, start, mid, depth+1);
+            return binary_index(time, start, mid, depth+1);
     }
 
-    constexpr inline DataPoint &binary_search(const time_type &time) {
-        return binary_search(time, 0, size());
+    constexpr inline int binary_index(const time_type &time) const {
+        return binary_index(time, 0, size());
     }
 
+    constexpr inline point_type &binary_search(const time_type &time) {
+        return get(binary_index(time));
+    }
+
+    constexpr inline void time_pair(const time_type &time, int &first, int &second) const {
+        int i = binary_index(time);
+
+        if (i < 1) {
+            first = 0; second = 1; return;
+        }
+
+        if (i >= size() - 1) {
+            first = size()-2; second = size()-1; return;
+        }
+
+        first = i;
+        second = i+1;
+    }
+
+    constexpr inline void time_pair(const time_type &time, point_type &first, point_type &second) {
+        int a, b;
+        time_pair(time, a, b);
+        first = get(a);
+        second = get(b);
+    }
+
+    constexpr inline point_type interpolate_point(const time_type &time) {
+        point_type v1, v2;
+
+        time_pair(time, v1, v2);
+
+        float factor = float(time - v1.time) / float(v2.time - v1.time);
+
+        return v1.interpolate(v2, factor);
+    }
+
+    template<typename RType = value_type>
+    constexpr inline RType interpolate_value(const time_type &time) {
+        point_type v1, v2;
+
+        time_pair(time, v1, v2);
+
+        float factor = v1.get_factor(v2, time);
+
+        return lerp<value_type, float, RType>(v1.value, v2.value, factor);
+    }
 };
 
 
