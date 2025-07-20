@@ -89,10 +89,15 @@ struct DataLogT {
     DataStorage &log;
     int64_t time_start;
 
+    constexpr DataLogT(DataLogT &data_log):log(data_log.log),time_start(data_log.time_start){}
     constexpr DataLogT(DataStorage &log):log(log),time_start(0){}
     constexpr DataLogT(DataStorage &log, const int64_t &time_start):log(log),time_start(time_start){}
     
     constexpr inline void set_start_time(const int64_t &time) { time_start = time; }
+
+    constexpr inline void set_log(DataStorage &log) { this->log = log; }
+
+    constexpr inline void set_log(DataStorage *log) { set_log(*log); }
 
     constexpr inline int64_t get_start_time() const { return time_start; }
 
@@ -154,32 +159,49 @@ struct DataLogT {
         return get(binary_index(time));
     }
 
-    constexpr inline void time_pair(const time_type &time, int &first, int &second) const {
+    constexpr inline bool time_pair(const time_type &time, int &first, int &second) const {
         int i = binary_index(time);
 
         if (i < 1) {
-            first = 0; second = 1; return;
+            if (!size())
+                return false;
+            first = 0;
+            second = 1;
+            return true;
         }
 
         if (i >= size() - 1) {
-            first = size()-2; second = size()-1; return;
+            first = size()-2;
+            second = size()-1;
+            return true;
         }
 
         first = i;
         second = i+1;
+        return true;
     }
 
-    constexpr inline void time_pair(const time_type &time, point_type &first, point_type &second) {
+    constexpr inline bool time_pair(const time_type &time, point_type *first, point_type *second) {
         int a, b;
-        time_pair(time, a, b);
-        first = get(a);
-        second = get(b);
+
+        if (!time_pair(time, a, b))
+            return false;
+        
+        first = &get(a);
+        second = &get(b);
+
+        return true;
+    }
+
+    constexpr inline bool time_pair(const time_type &time, point_type &first, point_type &second) {
+        return time_pair(time, &first, &second);
     }
 
     constexpr inline point_type interpolate_point(const time_type &time) {
         point_type v1, v2;
 
-        time_pair(time, v1, v2);
+        if (!time_pair(time, v1, v2))
+            return v1;
 
         float factor = float(time - v1.time) / float(v2.time - v1.time);
 
@@ -190,7 +212,8 @@ struct DataLogT {
     constexpr inline RType interpolate_value(const time_type &time) {
         point_type v1, v2;
 
-        time_pair(time, v1, v2);
+        if (!time_pair(time, v1, v2))
+            return 0;
 
         float factor = v1.get_factor(v2, time);
 
