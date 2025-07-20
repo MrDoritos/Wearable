@@ -10,7 +10,7 @@ constexpr inline RType lerp(const IType &v1, const IType &v2, const FType &facto
     return RType(v1) * (FType(1) - factor) + RType(v2) * factor;
 }
 
-template<typename TIME_T, typename POINT_T>
+template<typename TIME_T = unsigned int, typename POINT_T = unsigned short>
 struct DataPointT {
     using time_type = TIME_T;
     using value_type = POINT_T;
@@ -37,7 +37,7 @@ struct DataPointT {
     }
 };
 
-template<typename T, int LOOP_SIZE = 1000>
+template<typename T, int LOOP_SIZE = 100>
 struct LoopBufferT {
     static constexpr const int _size = LOOP_SIZE;
 
@@ -76,7 +76,7 @@ struct LoopBufferT {
     }
 
     constexpr inline bool has(const int &pos) const {
-        return to_rel(pos) >= 0;
+        return count && to_rel(pos) >= 0;
     }
 };
 
@@ -85,6 +85,7 @@ struct DataLogT {
     using point_type = DataPoint;
     using time_type = typename DataPoint::time_type;
     using value_type = typename DataPoint::value_type;
+    using storage_type = DataStorage;
 
     DataStorage &log;
     int64_t time_start;
@@ -218,6 +219,40 @@ struct DataLogT {
         float factor = v1.get_factor(v2, time);
 
         return lerp<value_type, float, RType>(v1.value, v2.value, factor);
+    }
+
+    constexpr inline value_type min() const {
+        if (!size())
+            return 0;
+
+        value_type v = get(0).value;
+
+        for (int i = 1; i < size(); i++) {
+            const value_type &p = get(i).value;
+            if (p < v)
+                v = p;
+        }
+
+        return v;
+    }
+
+    constexpr inline value_type max() const {
+        if (!size())
+            return 0;
+
+        value_type v = get(0).value;
+
+        for (int i = 1; i < size(); i++) {
+            const value_type &p = get(i).value;
+            if (p > v)
+                v = p;
+        }
+
+        return v;
+    }
+
+    constexpr inline value_type range() const {
+        return max() - min();
     }
 };
 

@@ -51,6 +51,7 @@ target_include_directories(lib PUBLIC
     .
     ../common
     ../
+    ../log
 )
 
 target_link_libraries(Emulator

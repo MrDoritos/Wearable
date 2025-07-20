@@ -12,6 +12,7 @@
 #include "user_inputs.h"
 #include "wbl_func.h"
 #include "ui_func.h"
+#include "ui_log.h"
 
 using namespace wbl;
 using namespace Sprites;
@@ -30,6 +31,8 @@ UI::ElementBaseT<DisplayTexture> header(display);
 UI::ScreenBaseT<> mainscreen("Main");
 UI::ScreenBaseT<> clockscreen("Clock");
 UI::ScreenBaseT<> settingscreen("Settings");
+LoopBufferT<DataPointT<>> datalog;
+UI::ElementLogT<DisplayTexture> elementlog(display, datalog);
 
 void demo() {
     uibattery.set_battery_level((millis()%10000)/100);
@@ -42,8 +45,10 @@ void demo() {
     }
 
     dispatch_input_events(uiroot, dpad);
-    
+
     uiroot.once();
+
+    elementlog.push_back(millis(), sinf(float(millis())*0.03f)*10.0f+30.0f);
 
     #ifdef __linux__
     delay(100);
@@ -76,6 +81,7 @@ void init() {
     settingscreen << focustest;
     settingscreen << focustest2;
     settingscreen << focustest3;
+    settingscreen << elementlog;
 
     block << UI::StyleInfo { .height{26} };
     inner << StyleInfo {.height {14}};
@@ -85,6 +91,8 @@ void init() {
     inlineblock3 << UI::StyleInfo { .align{RIGHT}, .display{INLINE}, .width {20}, .height{10}, .margin{2} };
     inlineblock4 << UI::StyleInfo { .display{INLINE}, .width{20}, .height{30}, .margin{2} };
     block3 << StyleInfo { .width {30}, .height{20} };
+
+    elementlog << StyleInfo { .align{RIGHT}, .width {50}, .height{20} };
 
     uiroot << UI::StyleInfo { .width{128}, .height{128} };
 
@@ -146,6 +154,7 @@ void init() {
     mainscreen.name = "mainscreen";
     uiclock.name = "clock";
     uiroot.name = "root";
+    elementlog.name = "log";
 
     clockscreen.show_header = false;
 
