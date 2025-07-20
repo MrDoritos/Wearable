@@ -31,8 +31,8 @@ UI::ElementBaseT<DisplayTexture> header(display);
 UI::ScreenBaseT<> mainscreen("Main");
 UI::ScreenBaseT<> clockscreen("Clock");
 UI::ScreenBaseT<> settingscreen("Settings");
-LoopBufferT<DataPointT<>> datalog;
-UI::ElementLogT<DisplayTexture> elementlog(display, datalog);
+LoopBufferT<DataPointT<>, 100> datalog;
+UI::ElementLogT<DisplayTexture, DataLogT<DataPointT<>, LoopBufferT<DataPointT<>, 100>>> elementlog(display, datalog);
 
 void demo() {
     uibattery.set_battery_level((millis()%10000)/100);
@@ -48,7 +48,7 @@ void demo() {
 
     uiroot.once();
 
-    elementlog.push_back(millis(), sinf(float(millis())*0.03f)*10.0f+30.0f);
+    elementlog.push_back(millis(), (uu)(sinf(float((millis()%1000)/300.0f))*500.0f+1500.0f));
 
     #ifdef __linux__
     delay(100);

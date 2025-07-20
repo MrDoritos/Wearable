@@ -7,7 +7,7 @@ namespace wbl {
 
 template<typename IType, typename FType = float, typename RType = IType>
 constexpr inline RType lerp(const IType &v1, const IType &v2, const FType &factor) {
-    return RType(v1) * (FType(1) - factor) + RType(v2) * factor;
+    return RType(RType(v1) * (FType(1) - factor) + RType(v2) * factor);
 }
 
 template<typename TIME_T = unsigned int, typename POINT_T = unsigned short>
@@ -61,7 +61,7 @@ struct LoopBufferT {
         data[index++] = value;
     }
 
-    constexpr inline int to_rel(const int &pos) {
+    constexpr inline int to_rel(const int &pos) const {
         int i = pos + index;
 
         if (i < 0) i = count - i;
@@ -214,7 +214,7 @@ struct DataLogT {
         point_type v1, v2;
 
         if (!time_pair(time, v1, v2))
-            return 0;
+            return RType(0);
 
         float factor = v1.get_factor(v2, time);
 

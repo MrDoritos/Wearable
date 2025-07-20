@@ -44,21 +44,23 @@ struct ElementLogT : public ElementT, public DataLog {
         const auto value_range = this->range();
         const auto value_min = this->min();
         //const time_type time_range = (this->get(0).time) - (this->get(-1).time);
-        const time_type time_range = get(0).time - get(-1).time;
-        const time_type time_min = get(-1).time;
+        //const time_type time_range = 10000;//get(0).time - get(-1).time;
+        const time_type time_range = this->get_data_range_time();
+        const time_type time_min = this->template get(-1).time;
 
         if (value_range == 0 || time_range == 0)
             return;
 
         const float value_scale = 1.0 / value_range;
-        const float time_scale = 1.0 / time_range;
+        //const float time_scale = 1.0 / time_range;
         const uu ox = this->getOffsetX(), oy = this->getOffsetY();
 
-        py = ((this->get(0).value - value_min) * value_scale) * (this->getHeight()-1);
+        py = ((this->template get(0).value - value_min) * value_scale) * (this->getHeight()-1);
 
         for (uu x = 1; x < this->getWidth(); x++) {
-            const time_type t = (float(x) / this->getWidth()) * time_range + time_min;
-            float v = this->template interpolate_value<float>(t);
+            const time_type t = time_type((float(x) / float(this->getWidth())) * time_range) + time_min;
+            //float v = this->template interpolate_value<float>(t+this->time_start);
+            float v = this->template get(t).value;
             //if (v == 0)
             //    break;
             
