@@ -1498,8 +1498,23 @@ struct ScreenBaseT : public ScreenT {
             case EventTypes::CONTENT_SIZE:
                 if (!show_header) {
                     *this << Origin { 0, 0 };
+                    //if (this->parent)
+                    //    *this << *((Size*)this->parent);
+                    //*this << Size { 0, 0, 128, 128 };
+                    //this->width.value = {128};
+                    if (this->parent) {
+                        this->width = this->parent->width;
+                        this->height = this->parent->height;
+                    }
+                    //this->height.value = {128};
+                    //if (this->parent)
+                    //    this->content = {
+                    //        (uu)this->parent->width.getExplicitValue(),
+                    //        (uu)this->parent->height.getExplicitValue()
+                    //    };
                     //event->stopDefault();
-                    event->value = EventValues::CHANGE;
+                    if (event->value & EventValues::REQUEST)
+                        event->value = EventValues::CHANGE;
                     this->resolve_layout();
                 }
                 break;
@@ -1837,7 +1852,8 @@ struct ElementRootT : public ElementT {
 
         this->active_screen->dispatch(EventTypes::SCREEN, EventValues::VISIBLE, EventDirection::RDEPTH);
 
-        redraw_needed = true;
+        layout_dirty = true;
+        //redraw_needed = true;
     }
 
     void set_screen(IScreen &screen) {
