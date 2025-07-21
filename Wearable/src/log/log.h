@@ -273,6 +273,35 @@ struct DataLogT {
         return
             this->sum<RType>() / RType(size());
     }
+
+    template<typename RType = int64_t>
+    constexpr inline int64_t sum_range(const int &start_index, const int &end_index) const {
+        RType s = RType(0);
+
+        for (int i = start_index; i < size() && i < end_index; s += get(i).value, i++);
+
+        return s;
+    }
+
+    template<typename RType = int64_t>
+    constexpr inline int64_t sum_range_time(const time_type &start, const time_type &end) const {
+        return sum_range<RType>(binary_index(start), binary_index(end));
+    }
+
+    template<typename RType = value_type>
+    constexpr inline RType avg_range(int start_index, int end_index) const {
+        const int range = end_index - start_index;
+        if (!range || !size())
+            return RType(0);
+
+        return
+            this->sum_range<RType>(start_index, end_index) / RType(range);
+    }
+
+    template<typename RType = value_type>
+    constexpr inline RType avg_range_time(const time_type &start, const time_type &end) const {
+        return avg_range<RType>(binary_index(start), binary_index(end));
+    }
 };
 
 using DataPoint = DataPointT<>;

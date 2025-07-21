@@ -155,7 +155,7 @@ struct ElementLogT : public ElementT, public DataLog {
         if (value_range == 0 || time_range == 0)
             return;
 
-        const float value_scale = 1.0 / value_range;
+        const float value_scale = 1.0f / value_range;
 
         const Size window = *this;
         const uu extra_height = 6;
@@ -170,18 +170,21 @@ struct ElementLogT : public ElementT, public DataLog {
         draw_min_max_reference(plot_size);
 
         py = height - (((this->template get(0).value - value_min) * value_scale) * height);
+        time_type pt = time_min;
 
         for (uu x = 1; x < width; x++) {
             const time_type t = time_type((float(x) / width) * time_range) + time_min;
 
-            const float v = this->template interpolate_value<float>(t);
+            const float v = this->size() < width ? this->template interpolate_value<float>(t) : this->template avg_range_time<float>(pt, t);
             const float vy = (v - value_min) * value_scale;
 
             const int y = height - (vy * height);
+            const uu uy = (y > height) ? height : ((y < 0) ? 0 : y);
 
-            this->buffer.line(x + offsetx, py + offsety, x + offsetx, y + offsety, 1);
+            this->buffer.line(x + offsetx - 1, py + offsety, x + offsetx, uy + offsety, 1);
 
-            py = y;
+            py = uy;
+            pt = t;
         }
 
         Origin text_pos(0, height+1);

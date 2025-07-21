@@ -49,13 +49,15 @@ void demo() {
     uiroot.once();
 
     static int cnt = 0;
+    int64_t t = micros();
     if (cnt++ % 4 == 0) {
-        int64_t t = micros();
         e_sinelog.push_back(t, (uu)(sinf(float((int(t))/(M_PI * 2 * 100000)))*500.0f+1500.0f));
         e_squarelog.push_back(t, (cnt & 64));
         e_sawlog.push_back(t, (uu)(int(t/5000)%1000));
-        e_voltlog.push_back(t, (uu)(4000 + ((((t ^ 0xDEADBEEF) % 0xC0FFEE) | t) & 31)));
     }
+
+    if (cnt % 2 == 0)
+        e_voltlog.push_back(t, (uu)(4000 + ((((t ^ 0xDEADBEEF) % 0xC0FFEE) | t) & 31)));
 
     #ifdef __linux__
     delay(30);
