@@ -24,7 +24,7 @@ struct ElementLogT : public ElementT, public DataLog {
     constexpr ElementLogT(Buffer &buffer, storage_type &log):ElementT(buffer),DataLog(log){}
 
     inline bool is_stale() const {
-        return this->template has(-1) && last_data_time != this->template get(-1).time;//this->get_data_end_time();
+        return this->get_data_end_time();
     }
 
     void on_draw(Event *event) override {
@@ -35,7 +35,7 @@ struct ElementLogT : public ElementT, public DataLog {
         if (this->size() < 2)
             return;
 
-        last_data_time = this->template get(-1).time;//this->get_data_end_time();
+        last_data_time = this->get_data_end_time();
 
         ElementT::clear();
 
@@ -43,29 +43,32 @@ struct ElementLogT : public ElementT, public DataLog {
 
         const auto value_range = this->range();
         const auto value_min = this->min();
-        //const time_type time_range = (this->get(0).time) - (this->get(-1).time);
-        //const time_type time_range = 10000;//get(0).time - get(-1).time;
+
         const time_type time_range = this->get_data_range_time();
-        const time_type time_min = this->template get(0).time;
+        const time_type time_min = this->get_data_start_time();
 
         if (value_range == 0 || time_range == 0)
             return;
 
         const float value_scale = 1.0 / value_range;
-        //const float time_scale = 1.0 / time_range;
-        const uu ox = this->getOffsetX(), oy = this->getOffsetY();
 
-        py = this->getHeight() - 1 - (((this->template get(0).value - value_min) * value_scale) * (this->getHeight()-1));
+        const Size window = *this;
+        const uu height = window.height - 1;
+        const uu width = window.width;
+        const uu offsetx = window.x;
+        const uu offsety = window.y;
 
-        for (uu x = 1; x < this->getWidth(); x++) {
-            const time_type t = time_type((float(x) / float(this->getWidth())) * time_range) + time_min;
-            float v = this->template interpolate_value<float>(t);
-            
+        py = height - (((this->template get(0).value - value_min) * value_scale) * height);
+
+        for (uu x = 1; x < width; x++) {
+            const time_type t = time_type((float(x) / width) * time_range) + time_min;
+
+            const float v = this->template interpolate_value<float>(t);
             const float vy = (v - value_min) * value_scale;
 
-            const int y = this->getHeight() - 1 - (vy * (this->getHeight() - 1));
+            const int y = height - (vy * height);
 
-            this->buffer.line((uu)(x-1)+ox,py+oy,x+ox,y+oy,1);
+            this->buffer.line(x + offsetx, py + offsety, x + offsetx, y + offsety, 1);
 
             py = y;
         }
