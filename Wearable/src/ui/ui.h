@@ -40,38 +40,38 @@ enum Display : uint8_t {
 };
 
 enum Align : uint8_t {
-    LEFT=0,
-    TOP=1,
-    RIGHT=2,
-    BOTTOM=4,
-    VCENTER=8,
-    HCENTER=16,
-    CENTER=24,
-    BOTTOM_RIGHT=6,
-    BOTTOM_LEFT=5,
-    TOP_RIGHT=3,
-    TOP_LEFT=1,
-    VCENTER_RIGHT=10,
-    VCENTER_LEFT=8,
-    HCENTER_TOP=17,
-    HCENTER_BOTTOM=20,
+    LEFT=1,
+    TOP=2,
+    RIGHT=4,
+    BOTTOM=8,
+    VCENTER=16,
+    HCENTER=32,
+    CENTER=48,
+    BOTTOM_RIGHT=12,
+    BOTTOM_LEFT=9,
+    TOP_RIGHT=6,
+    TOP_LEFT=3,
+    VCENTER_RIGHT=20,
+    VCENTER_LEFT=17,
+    HCENTER_TOP=34,
+    HCENTER_BOTTOM=40,
 };
 
 enum Position : uint8_t {
-    STATIC=0,
-    ABSOLUTE=1,
+    STATIC=1,
+    ABSOLUTE=2,
 };
 
 enum Overflow : uint8_t {
-    AUTO=0,
-    HIDDEN=1,
-    SCROLL=2,
+    AUTO=1,
+    HIDDEN=2,
+    SCROLL=4,
 };
 
 enum WrapStyle : uint8_t {
-    NOWRAP = 0,
-    WRAP = 1,
-    TRIM_SPACE = 2,
+    NOWRAP = 1,
+    WRAP = 2,
+    TRIM_SPACE = 4,
 };
 
 template<typename T>
@@ -806,8 +806,8 @@ struct IElement : public Style, public NodeMovementOpsT<IElement> {
             DimensionMinMax rel_w = width.resolve(parent_container.width);
             DimensionMinMax rel_h = height.resolve(parent_container.height);
 
-            //if (display & BLOCK && position & STATIC && parent)
-            //    rel_w = rel_w.resolve(parent->container.width);
+            if ((display & BLOCK) && (position & STATIC) && rel_w.value.value == 0)
+                rel_w.value = parent_container.width;
 
             computed = {
                 rel_w.value,
@@ -848,6 +848,27 @@ struct IElement : public Style, public NodeMovementOpsT<IElement> {
             );
         }
 
+        constexpr void append_break() {
+            block_height += inline_height;
+            inline_height = 0;
+            inline_width = 0;
+        }
+
+        constexpr void append_block(const IElement &element, const Length &real) {
+            append_break();
+            block_height += real.height;
+            if (real.width > block_width)
+                block_width = real.width;
+        }
+
+        constexpr void append_inline(const IElement &element, const Length &real) {
+            if (real.height > inline_height)
+                inline_height = real.height;
+            inline_width += real.width;
+            if (block_width < inline_width)
+                block_width = inline_width;
+        }
+
         constexpr void append(const IElement &element) {
             if (!element.parent)
                 return;
@@ -865,20 +886,13 @@ struct IElement : public Style, public NodeMovementOpsT<IElement> {
 
             switch (element.display) {
                 case BLOCK:
-                    block_height += inline_height;
-                    inline_height = 0;
-                    inline_width = 0;
-                    block_height += real.height;
-                    if (real.width > block_width)
-                        block_width = real.width;
+                    append_block(element, real);
                     break;
                 case INLINE:
                 case INLINE_BLOCK:
-                    if (real.height > inline_height)
-                        inline_height = real.height;
-                    inline_width += real.width;
-                    if (block_width < inline_width)
-                        block_width = inline_width;
+                    if (parent_container.width.resolve(0) && real.width + inline_width > parent_container.width)
+                        append_break();
+                    append_inline(element, real);
                     break;
                 default:
                     break;
