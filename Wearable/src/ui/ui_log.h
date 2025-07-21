@@ -144,7 +144,7 @@ struct ElementLogT : public ElementT, public DataLog {
 
         ElementT::clear();
 
-        uu py;
+        uu py, px=0;
 
         const auto value_range = this->range();
         const auto value_min = this->min();
@@ -172,18 +172,22 @@ struct ElementLogT : public ElementT, public DataLog {
         py = height - (((this->template get(0).value - value_min) * value_scale) * height);
         time_type pt = time_min;
 
+        const time_type inc = time_type((float(1.0) / width) * time_range);
+
         for (uu x = 1; x < width; x++) {
             const time_type t = time_type((float(x) / width) * time_range) + time_min;
 
-            const float v = this->size() < width ? this->template interpolate_value<float>(t) : this->template avg_range_time<float>(pt, t);
+            const float v = this->size() < width ? this->template interpolate_value<float>(t) : this->template avg_range_time<float>(pt-inc, t+inc);
+            //const float v = this->size() < width ? this->binary_search(t).value : this->template avg_range_time<int64_t>(pt-inc, t+inc);
             const float vy = (v - value_min) * value_scale;
 
             const int y = height - (vy * height);
             const uu uy = (y > height) ? height : ((y < 0) ? 0 : y);
 
-            this->buffer.line(x + offsetx - 1, py + offsety, x + offsetx, uy + offsety, 1);
+            this->buffer.line(px + offsetx, py + offsety, x + offsetx, uy + offsety, 1);
 
             py = uy;
+            px = x;
             pt = t;
         }
 
