@@ -10,7 +10,7 @@ constexpr inline RType lerp(const IType &v1, const IType &v2, const FType &facto
     return RType(RType(v1) * (FType(1) - factor) + RType(v2) * factor);
 }
 
-template<typename TIME_T = unsigned int, typename POINT_T = unsigned short>
+template<typename TIME_T = int, typename POINT_T = unsigned short>
 struct DataPointT {
     using time_type = TIME_T;
     using value_type = POINT_T;
@@ -80,7 +80,7 @@ struct LoopBufferT {
     }
 };
 
-template<typename DataPoint = DataPointT<unsigned int, unsigned short>, typename DataStorage = LoopBufferT<DataPoint>>
+template<typename DataPoint = DataPointT<int, unsigned short>, typename DataStorage = LoopBufferT<DataPoint>>
 struct DataLogT {
     using point_type = DataPoint;
     using time_type = typename DataPoint::time_type;
@@ -126,11 +126,11 @@ struct DataLogT {
         push_back(point_type(time - time_start, value));
     }
 
-    constexpr inline bool has(const int &pos) const { return log.template has(0-pos); }
+    constexpr inline bool has(const int &pos) const { return log.template has(pos); }
 
-    constexpr inline DataPoint &get(const int &pos) { return log.template get(0-pos); }
+    constexpr inline DataPoint &get(const int &pos) { return log.template get(pos); }
 
-    constexpr inline const DataPoint &get(const int &pos) const { return log.template get(0-pos); }
+    constexpr inline const DataPoint &get(const int &pos) const { return log.template get(pos); }
 
     /*
         Returns the previous nearest value or the exact match, never the upper bound
@@ -188,8 +188,8 @@ struct DataLogT {
         if (!time_pair(time, a, b))
             return false;
         
-        first = &get(a);
-        second = &get(b);
+        *first = get(a);
+        *second = get(b);
 
         return true;
     }

@@ -49,14 +49,11 @@ void demo() {
     uiroot.once();
 
     static int cnt = 0;
-    display.setContrast((cnt & 255) >> 1);
-    //display.setInverted(true);
-    //display.setState(false);
-    if (cnt++ % 8 == 0)
-        elementlog.push_back(millis(), (uu)(sinf(float((int(millis()))/(M_PI * 2 * 10000)))*500.0f+1500.0f));
+    if (cnt++ % 4 == 0)
+        elementlog.push_back(millis(), (uu)(sinf(float((int(millis()))/(M_PI * 2 * 100)))*500.0f+1500.0f));
 
     #ifdef __linux__
-    delay(100);
+    delay(30);
     #endif
 }
 
