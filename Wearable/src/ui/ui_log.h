@@ -27,6 +27,70 @@ struct ElementLogT : public ElementT, public DataLog {
         return this->get_data_end_time();
     }
 
+    template<typename IType>
+    constexpr inline const char* time_unit(const IType &f_time) const {
+        if (f_time > 1e6) return "s";
+        if (f_time > 1e3) return "ms";
+        return "us";
+    }
+
+    template<typename IType>
+    constexpr inline const char* value_unit(const IType &f_v) const {
+        if (f_v > 1e12) return "T";
+        if (f_v > 1e9) return "G";
+        if (f_v > 1e6) return "M";
+        if (f_v > 1e3) return "k";
+        if (f_v > 0) return "";
+        if (f_v > 1e-3) return "m";
+        if (f_v > 1e-6) return "u";
+        if (f_v > 1e-9) return "n";
+        if (f_v > 1e-12) return "p";
+    }
+
+    template<typename RType = float, typename IType = time_type>
+    constexpr inline RType time_scale(const IType &time) const {
+        if (time > 1e6) return time/RType(1e6f);
+        if (time > 1e3) return time/RType(1e3f);
+        return RType(time);
+    }
+
+    template<typename IType>
+    inline int time_snprintf(char *dest, const int &len, const IType &time) const {
+        const char *unit = time_unit(time);
+        const float ts = time_scale<float>(time);
+        return snprintf(dest, len, "%.f%s", ts, unit);
+    }
+
+    inline int samples_per_time_snprintf(char *dest, const int &len, const time_type &time_range, const int &sample_count) const {
+        const char *time_unit = this->time_unit(time_range);
+        const float ts = time_scale<float>(time_range);
+        const float ratio = sample_count / ts;
+        const char *ratio_unit = value_unit<float>(ratio);
+        return snprintf(dest, len, "%.f%s VALs/%s", ratio, ratio_unit, time_unit);
+    }
+
+    void draw_range_time(const Origin &pos=Origin()) {
+        const time_type time_range = this->get_data_range_time();
+
+        const int bufsize = 10;
+        char buf[bufsize];
+
+        time_snprintf(buf, bufsize, time_range);
+
+        this->draw_text(buf, Sprites::minifont, pos, false, true);
+    }
+
+    void draw_samples_per_second(const Origin &pos=Origin()) {
+        const int bufsize = 20;
+        char buf[bufsize];
+        const int sample_count = this->size();
+        const time_type time_range = this->get_data_range_time();
+
+        samples_per_time_snprintf(buf, bufsize, time_range, sample_count);
+
+        this->draw_text(buf, Sprites::minifont, pos, false, true);
+    }
+
     void on_draw(Event *event) override {
         if (!this->is_stale())
             if (!(event->value & Event::REDRAW))
@@ -53,7 +117,8 @@ struct ElementLogT : public ElementT, public DataLog {
         const float value_scale = 1.0 / value_range;
 
         const Size window = *this;
-        const uu height = window.height - 1;
+        const uu extra_height = 6;
+        const uu height = window.height - 1 - extra_height;
         const uu width = window.width;
         const uu offsetx = window.x;
         const uu offsety = window.y;
@@ -72,6 +137,17 @@ struct ElementLogT : public ElementT, public DataLog {
 
             py = y;
         }
+
+        Origin text_pos(0, height);
+        int bufsize = 30;
+        char buf[bufsize];
+        int offset = time_snprintf(buf, bufsize, time_range);
+        buf[offset++] = '-';
+        offset += samples_per_time_snprintf(buf+offset, bufsize-offset, time_range, this->size());
+        this->draw_text(buf, Sprites::minifont, text_pos, false, true);
+        //this->draw_range_time(text_pos);
+        //text_pos.y += 6;
+        //this->draw_samples_per_second(text_pos);
     }
 };
 

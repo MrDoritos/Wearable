@@ -50,7 +50,7 @@ void demo() {
 
     static int cnt = 0;
     if (cnt++ % 4 == 0)
-        elementlog.push_back(millis(), (uu)(sinf(float((int(millis()))/(M_PI * 2 * 100)))*500.0f+1500.0f));
+        elementlog.push_back(micros(), (uu)(sinf(float((int(micros()))/(M_PI * 2 * 100000)))*500.0f+1500.0f));
 
     #ifdef __linux__
     delay(30);
