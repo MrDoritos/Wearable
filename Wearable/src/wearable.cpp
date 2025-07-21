@@ -52,9 +52,9 @@ void demo() {
     if (cnt++ % 4 == 0) {
         int64_t t = micros();
         e_sinelog.push_back(t, (uu)(sinf(float((int(t))/(M_PI * 2 * 100000)))*500.0f+1500.0f));
-        e_squarelog.push_back(t, (cnt & 16));
-        e_sawlog.push_back(t, (uu)(int(t) % 700));
-        e_voltlog.push_back(t, (uu)(4));
+        e_squarelog.push_back(t, (cnt & 64));
+        e_sawlog.push_back(t, (uu)(int(t/5000)%1000));
+        e_voltlog.push_back(t, (uu)(4000 + ((((t ^ 0xDEADBEEF) % 0xC0FFEE) | t) & 31)));
     }
 
     #ifdef __linux__
@@ -102,7 +102,7 @@ void init() {
     inlineblock4 << UI::StyleInfo { .display{INLINE}, .width{20}, .height{30}, .margin{2} };
     block3 << StyleInfo { .width {30}, .height{20} };
 
-    StyleInfo logstyle = { .display{INLINE}, .width {60}, .height{40} };
+    StyleInfo logstyle = { .display{INLINE}, .width {62}, .height{40}, .margin{1} };
 
     e_sawlog << logstyle << "saw";
     e_voltlog << logstyle << "volts"; 
