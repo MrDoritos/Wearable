@@ -31,8 +31,8 @@ UI::ElementBaseT<DisplayTexture> header(display);
 UI::ScreenBaseT<> mainscreen("Main");
 UI::ScreenBaseT<> clockscreen("Clock");
 UI::ScreenBaseT<> settingscreen("Settings");
-LoopBufferT<DataPointT<>, 100> datalog;
-UI::ElementLogT<DisplayTexture, DataLogT<DataPointT<>, LoopBufferT<DataPointT<>, 100>>> elementlog(display, datalog);
+LoopBuffer sinelog, squarelog, sawlog, voltlog;
+UI::ElementLogT<DisplayTexture, DataLog> e_sinelog(display, sinelog), e_squarelog(display, squarelog), e_sawlog(display, sawlog), e_voltlog(display, voltlog);
 
 void demo() {
     uibattery.set_battery_level((millis()%10000)/100);
@@ -49,8 +49,13 @@ void demo() {
     uiroot.once();
 
     static int cnt = 0;
-    if (cnt++ % 4 == 0)
-        elementlog.push_back(micros(), (uu)(sinf(float((int(micros()))/(M_PI * 2 * 100000)))*500.0f+1500.0f));
+    if (cnt++ % 4 == 0) {
+        int64_t t = micros();
+        e_sinelog.push_back(t, (uu)(sinf(float((int(t))/(M_PI * 2 * 100000)))*500.0f+1500.0f));
+        e_squarelog.push_back(t, (cnt & 16));
+        e_sawlog.push_back(t, (uu)(int(t) % 700));
+        e_voltlog.push_back(t, (uu)(4));
+    }
 
     #ifdef __linux__
     delay(30);
@@ -80,10 +85,13 @@ void init() {
     focustest << styles;
     focustest2 << styles;
     focustest3 << styles;
-    settingscreen << focustest;
-    settingscreen << focustest2;
-    settingscreen << focustest3;
-    settingscreen << elementlog;
+    //settingscreen << focustest;
+    //settingscreen << focustest2;
+    //settingscreen << focustest3;
+    settingscreen << e_sinelog;
+    settingscreen << e_squarelog;
+    settingscreen << e_sawlog;
+    settingscreen << e_voltlog;
 
     block << UI::StyleInfo { .height{26} };
     inner << StyleInfo {.height {14}};
@@ -94,7 +102,12 @@ void init() {
     inlineblock4 << UI::StyleInfo { .display{INLINE}, .width{20}, .height{30}, .margin{2} };
     block3 << StyleInfo { .width {30}, .height{20} };
 
-    elementlog << StyleInfo { .align{RIGHT}, .width {60}, .height{40} };
+    StyleInfo logstyle = { .display{INLINE}, .width {60}, .height{40} };
+
+    e_sawlog << logstyle << "saw";
+    e_voltlog << logstyle << "volts"; 
+    e_sinelog << logstyle << "sine";
+    e_squarelog << logstyle << "square";
 
     uiroot << UI::StyleInfo { .width{128}, .height{128} };
 
@@ -156,7 +169,6 @@ void init() {
     mainscreen.name = "mainscreen";
     uiclock.name = "clock";
     uiroot.name = "root";
-    elementlog.name = "log";
 
     clockscreen.show_header = false;
 

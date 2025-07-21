@@ -644,6 +644,11 @@ struct IElement : public Style, public NodeMovementOpsT<IElement> {
     constexpr IElement():IElement(""){}
     constexpr IElement(const StyleInfo &styleInfo):Style(styleInfo),name(""),parent(nullptr),sibling(nullptr),child(nullptr){}
 
+    constexpr inline IElement &operator<<(const char *str) {
+        name = str ? str : "";
+        return *this;
+    }
+
     constexpr inline IElement &operator<<(const Origin &origin) {
         *((Origin*)this) = origin;
         return *this;

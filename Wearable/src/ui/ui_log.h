@@ -7,7 +7,7 @@
 namespace wbl {
 namespace UI {
 
-template<typename Buffer, typename DataLog = DataLogT<>, typename ElementT = ElementBaseT<Buffer>>
+template<typename Buffer, typename DataLog = wbl::DataLog, typename ElementT = ElementBaseT<Buffer>>
 struct ElementLogT : public ElementT, public DataLog {
     using ElementT::ElementT;
     using ElementT::operator<<;
