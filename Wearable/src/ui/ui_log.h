@@ -45,6 +45,7 @@ struct ElementLogT : public ElementT, public DataLog {
         if (f_v > 1e-6) return "u";
         if (f_v > 1e-9) return "n";
         if (f_v > 1e-12) return "p";
+        return "";
     }
 
     template<typename RType = float, typename IType = time_type>
@@ -91,6 +92,12 @@ struct ElementLogT : public ElementT, public DataLog {
         this->draw_text(buf, Sprites::minifont, pos, false, true);
     }
 
+    void draw_reference(const Origin &pos=Origin()) {
+        for (int x = 0; x < this->getWidth(); x+=2) {
+            this->buffer.putPixel(x+pos.x+this->getOffsetX(), pos.y+this->getOffsetY(), 1);
+        }
+    }
+
     void on_draw(Event *event) override {
         if (!this->is_stale())
             if (!(event->value & Event::REDRAW))
@@ -122,6 +129,9 @@ struct ElementLogT : public ElementT, public DataLog {
         const uu width = window.width;
         const uu offsetx = window.x;
         const uu offsety = window.y;
+        const uu refy = height / 2;//((this->template avg<float>() - value_min) * value_scale) * height;
+
+        draw_reference({0, refy});
 
         py = height - (((this->template get(0).value - value_min) * value_scale) * height);
 
@@ -138,13 +148,13 @@ struct ElementLogT : public ElementT, public DataLog {
             py = y;
         }
 
-        Origin text_pos(0, height);
+        Origin text_pos(0, height+1);
         int bufsize = 30;
         char buf[bufsize];
         int offset = time_snprintf(buf, bufsize, time_range);
         buf[offset++] = '-';
         offset += samples_per_time_snprintf(buf+offset, bufsize-offset, time_range, this->size());
-        this->draw_text(buf, Sprites::minifont, text_pos, false, true);
+        this->draw_text(buf, Sprites::minifont, text_pos);
         //this->draw_range_time(text_pos);
         //text_pos.y += 6;
         //this->draw_samples_per_second(text_pos);

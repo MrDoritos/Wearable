@@ -254,6 +254,24 @@ struct DataLogT {
     constexpr inline value_type range() const {
         return max() - min();
     }
+
+    template<typename RType = int64_t>
+    constexpr inline int64_t sum() const {
+        RType s = RType(0);
+
+        for (int i = 0; i < size(); s += get(i).value, i++);
+        
+        return s;
+    }
+
+    template<typename RType = value_type>
+    constexpr inline RType avg() const {
+        if (!size())
+            return RType(0);
+
+        return
+            this->sum<RType>() / RType(size());
+    }
 };
 
 

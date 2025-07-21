@@ -94,7 +94,7 @@ void init() {
     inlineblock4 << UI::StyleInfo { .display{INLINE}, .width{20}, .height{30}, .margin{2} };
     block3 << StyleInfo { .width {30}, .height{20} };
 
-    elementlog << StyleInfo { .align{RIGHT}, .width {50}, .height{20} };
+    elementlog << StyleInfo { .align{RIGHT}, .width {60}, .height{40} };
 
     uiroot << UI::StyleInfo { .width{128}, .height{128} };
 
