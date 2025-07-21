@@ -92,10 +92,44 @@ struct ElementLogT : public ElementT, public DataLog {
         this->draw_text(buf, Sprites::minifont, pos, false, true);
     }
 
-    void draw_reference(const Origin &pos=Origin()) {
-        for (int x = 0; x < this->getWidth(); x+=2) {
-            this->buffer.putPixel(x+pos.x+this->getOffsetX(), pos.y+this->getOffsetY(), 1);
+    constexpr inline Origin get_point_position(const point_type &point, const Size &plot_size, const float &time_range_inv, const time_type &time_min, const float &value_range_inv, const value_type &value_min) {
+        return Origin(
+           ((point.time - time_min) * time_range_inv * plot_size.width) + plot_size.x,
+           plot_size.height - ((point.value - value_min) * value_range_inv * plot_size.height) + plot_size.y
+        );
+    }
+
+    constexpr inline Origin get_point_position(const point_type &point, const Size &plot_size) const {
+        return get_point_position(point, plot_size, 1.0f / this->get_data_range_time(), this->get_data_start_time(), 1.0f / this->range(), this->min());
+    }
+
+    void draw_reference(const Size &plot_size) {
+        const auto median = this->range()/2+this->min();
+        const Origin pos = {0, plot_size.height/2};
+
+        for (int x = 0; x < plot_size.width; x+=2) {
+            this->buffer.putPixel(x + plot_size.x, pos.y + plot_size.y, 1);
         }
+
+        const int bufsize = 10;
+        char buf[bufsize];
+
+        snprintf(buf, bufsize, "%i", median);
+
+        this->draw_text(buf, Sprites::minifont, {0,pos.y});
+    }
+
+    void draw_min_max_reference(const Size &plot_size) {
+        const auto min = this->min(), max = this->max();
+
+        const int bufsize_min = 10, bufsize_max = 10;
+        char buf_min[bufsize_min], buf_max[bufsize_max];
+
+        snprintf(buf_min, bufsize_min, "%i", min);
+        snprintf(buf_max, bufsize_max, "%i", max);
+
+        this->draw_text(buf_max, Sprites::minifont);
+        this->draw_text(buf_min, Sprites::minifont, {0, plot_size.height-5});
     }
 
     void on_draw(Event *event) override {
@@ -129,9 +163,11 @@ struct ElementLogT : public ElementT, public DataLog {
         const uu width = window.width;
         const uu offsetx = window.x;
         const uu offsety = window.y;
-        const uu refy = height / 2;//((this->template avg<float>() - value_min) * value_scale) * height;
+        //const uu refy = height / 2;//((this->template avg<float>() - value_min) * value_scale) * height;
 
-        draw_reference({0, refy});
+        const Size plot_size = {offsetx, offsety, width, height};
+        draw_reference(plot_size);
+        draw_min_max_reference(plot_size);
 
         py = height - (((this->template get(0).value - value_min) * value_scale) * height);
 
@@ -152,7 +188,7 @@ struct ElementLogT : public ElementT, public DataLog {
         int bufsize = 30;
         char buf[bufsize];
         int offset = time_snprintf(buf, bufsize, time_range);
-        buf[offset++] = '-';
+        buf[offset++] = ' ';
         offset += samples_per_time_snprintf(buf+offset, bufsize-offset, time_range, this->size());
         this->draw_text(buf, Sprites::minifont, text_pos);
         //this->draw_range_time(text_pos);

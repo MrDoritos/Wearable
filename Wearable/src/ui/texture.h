@@ -394,4 +394,70 @@ struct AtlasT : public Derived {
     }
 };
 
+template<typename Buffer>
+struct BufferRefT {
+    Buffer &buffer;
+
+    constexpr BufferRefT(Buffer &buffer):buffer(buffer) { }
+
+    inline constexpr Length getLength() const { return buffer.getLength(); }
+
+    inline constexpr Size getFrameSize() const { return buffer.getFrameSize(); }
+
+    inline constexpr fb getWidth() const { return buffer.getWidth(); }
+
+    inline constexpr fb getHeight() const { return buffer.getHeight(); }
+
+    inline constexpr fb getSize() const { return buffer.getSize(); }
+
+    inline constexpr bool isBound(const fb &x, const fb &y) const { return buffer.isBound(x, y); }
+
+    inline constexpr bool isBound(const Origin &pos) const { return isBound(pos.x, pos.y); }
+
+    inline constexpr fb getOffset(const fb &x, const fb &y) const { return buffer.getOffset(x, y); }
+
+    inline constexpr fb getOffset(const Origin &pos) const { return getOffset(pos.x, pos.y); }
+
+    inline constexpr pixel getBitOffset(const fb &x, const fb &y) const { return buffer.getBitOffset(x, y); }
+
+    inline constexpr pixel getBitOffset(const Origin &pos) const { return getBitOffset(pos.x, pos.y); }
+
+    inline constexpr pixel getByteMask(const fb &x, const fb &y) const { return buffer.getByteMask(x, y); }
+
+    inline constexpr pixel getByteMask(const Origin &pos) const { return getByteMask(pos.x, pos.y); }
+
+    inline constexpr pixel getBitMask() const { return buffer.getBitMask(); }
+
+    inline constexpr void putPixel(const fb &x, const fb &y, const pixel &px) { buffer.putPixel(x, y, px); }
+
+    inline constexpr void putPixel(const Origin &pos, const pixel &px) { putPixel(pos.x, pos.y, px); }
+
+    inline constexpr pixel getPixel(const fb &x, const fb &y) const { return buffer.getPixel(x, y); }
+
+    inline constexpr pixel getPixel(const Origin &pos) const { return getPixel(pos.x, pos.y); }
+};
+
+template<typename Buffer>
+struct RotateBufferT : public BufferRefT<Buffer> {    
+    enum Rotation {
+        NORMAL = 0,
+        ROT_90 = 1,
+        ROT_180 = 2,
+        ROT_270 = 3,
+    };
+
+    using Base = BufferRefT<Buffer>;
+    Rotation rotation;
+
+    constexpr RotateBufferT(Buffer &buffer, const Rotation &rotation)
+        :Base(buffer),rotation(rotation) { }
+
+    inline constexpr void putPixel(const fb &x, const fb &y, const pixel &px) {
+    }
+
+    inline constexpr pixel getPixel(const fb &x, const fb &y) const {
+        return 0;
+    }
+};
+
 }
