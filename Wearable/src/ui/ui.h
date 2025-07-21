@@ -32,11 +32,11 @@ struct AxisT;
 using OverflowT = AxisT<Overflow>;
 
 enum Display : uint8_t {
-    BLOCK=0,
-    INLINE=1,
-    INLINE_BLOCK=2,
-    NONE=4, // Do not include in layout
-    HIDE=8, // Include in layout (use internally)
+    BLOCK=1,
+    INLINE=2,
+    INLINE_BLOCK=4,
+    NONE=8, // Do not include in layout
+    HIDE=16, // Include in layout (use internally)
 };
 
 enum Align : uint8_t {
@@ -992,6 +992,16 @@ struct IElement : public Style, public NodeMovementOpsT<IElement> {
             Length child_use = (LengthT<uu>)child_boxuse + (LengthT<uu>)cur->container;
 
             Origin child_offset;
+
+            if (child_use.width > remaining_size.width) {
+                if (inline_size.height > remaining_size.height) 
+                    break;
+                remaining_size.y += inline_size.height;
+                remaining_size.height -= inline_size.height;
+                remaining_size.x = original_origin.x;
+                remaining_size.width = original_size.width;
+                inline_size = 0;
+            }
 
             child_offset = (Origin)child_box + remaining_size.getOffset();
 
