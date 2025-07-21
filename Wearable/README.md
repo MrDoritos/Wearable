@@ -1,5 +1,102 @@
+# Source for ESP32 controller for Wearable
+
 `g++ imgconv.cpp -o imgconv.o && ./imgconv.o 1 1 ../fonts/fixedsys-excelsior-301.ttf_16x16.png`
 
 `objcopy -I binary -O elf64-x86-64 --rename-section .data=.rodata,alloc,load,readonly,contents fixedsys.bin binary.o`
 
 `g++ binary.o emulator.cpp -o emulator.o console/console.ansi.cpp -g -z noexecstack`
+
+## To-Do
+
+- [ ] UI library
+    - [ ] Layout
+    - [ ] Auto sizing
+    - [ ] Display timeout
+    - [ ] Overlays
+    - [ ] Popovers
+    - [ ] Footer
+    - [ ] Focus
+- [ ] ESP32
+    - [ ] Basic functions
+        - [ ] Display
+        - [ ] Buttons
+        - [ ] 3.7v \- 4.2v input
+        - [ ] Battery sense
+    - [ ] Display interface
+        - [ ] Async buffer flush
+        - [ ] Rotation
+    - [ ] Vibration
+        - 3.3V, starting voltage 2.3V
+        - less than 75mA, starting current 120mA
+    - [ ] Buzzer
+    - [ ] LED status
+- [ ] Logging
+    - [ ] SD Card
+        - [ ] Remaining / total size
+        - 3.3v
+        - CS pullup to 3.3v permanently, if display remains I2C
+    - [ ] Sync GPS time to exported log
+- [ ] Sensors
+    - [ ] GPS IMU
+        - [ ] Accelerometer
+        - [ ] Magnetometer
+        - [ ] Gyroscope
+        - [ ] GPS CAM-M8
+            - 3.3V
+        - [ ] GPS time sync
+    - [ ] LTR-390 UV
+        - [ ] UV Wavelength
+        - [ ] UV daily exposure alert
+        - [ ] Ambient light for auto brightness
+        - 400 kHz I2C
+        - 3.3V input voltage
+        - 100 uA max duty cycle
+        - 1 uA standby
+        - 5-10ms standby to active
+        - [ ] UVS/ALS
+            - 13 - 20 bits resolution
+            - 1:18,000,000 dynamic range
+        - UV spectral response 300-350 nm
+    - [ ] BME688
+        - [ ] CO2eq ppm
+        - [ ] IAQ (0 - 500)
+        - [ ] bVOC ppm
+            - Breath VOCs
+        - [ ] Gas scan results (%)
+            - Hydrogen sulfide (H2S)
+            - Ethanol (EtOH)
+            - Carbon monoxide (CO)
+            - 10 to 30 seconds
+        - [ ] Humidity (0-100%)
+            - accuracy 3%
+        - [ ] Temperature
+            - 0.01 C output resolution (0.5C accuracy 0-65C)
+        - [ ] Pressure (0 - 200000 Pa)
+            - 0.18 Pa output resolution (1.2cm)
+        - 3.9 mA gas scan
+        - 90 uA P/T/H
+    - [ ] MICS-6814
+        - [ ] Gases
+            - [ ] Carbon monoxide (CO) (1-1000 ppm)
+            - [ ] Nitrogen dioxide (NO2) (0.05 - 10 ppm)
+            - [ ] Ethanol (C2H5OH) (10-500 ppm)
+            - [ ] Hydrogen (H2) (1-1000 ppm)
+            - [ ] Ammonia (NH3) (1-500 ppm)
+            - [ ] Methane (CH4) >1000ppm
+            - [ ] Propane (C3H8) >1000ppm
+            - [ ] Iso-butane (C4H10) >1000ppm
+        - [ ] Reality
+            - [ ] CO (RED reducing gases)
+            - [ ] NO2 (OX oxidizing gases)
+            - [ ] NH3
+            - Only relative readings. Typical resulting voltages are CO=2.4V NO2=1.7V NH3=2.2V. May work on 3.3v with resistor swapping
+            - Heating current is 30mA.. 88mW (5V)
+            - Must be read with analog
+    - [ ] MAX30102
+        - Onboard 3.3V regulator
+        - 600 uA
+        - 0.7 standby
+        - HbO2 oxygenated hemoglobin absorbs infrared
+        - Internal temperature sensor
+            - 1 C accuracy (-40 - 85C)
+        - 400kHz I2C
