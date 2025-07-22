@@ -3,7 +3,9 @@
 namespace wbl {
 namespace UI {
 
-void dispatch_input_events(IElement &element, Dpad &dpad, const bool &update_dpad) {
+int dispatch_input_events(IElement &element, Dpad &dpad, const bool &update_dpad) {
+    int num_events = 0;
+
     for (int i = 0; i < dpad.button_count; i++) {
         const Dpad::Button &button = dpad.buttons[i];
 
@@ -26,11 +28,14 @@ void dispatch_input_events(IElement &element, Dpad &dpad, const bool &update_dpa
 
         if (!input_event.value)
             continue;
+
         input_event.direction = UI::EventDirection::CHILDREN;
 
         input_event.value = (UI::EventValues)(input_event.value | values[i]);
 
         element.dispatch_event(input_event);
+
+        num_events++;
     }
 
     #ifdef INPUT_DEBUG
@@ -39,6 +44,8 @@ void dispatch_input_events(IElement &element, Dpad &dpad, const bool &update_dpa
 
     if (update_dpad)
         dpad.update();
+
+    return num_events;
 }
 
 }

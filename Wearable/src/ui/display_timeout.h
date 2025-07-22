@@ -22,6 +22,9 @@ struct DisplayTimeout {
     bool lock_key_state(bool is_held);
     bool any_user_input();
     int64_t time_since_last_input();
+    void update(bool any_input);
 };
+
+extern DisplayTimeout displayTimeout;
     
 }

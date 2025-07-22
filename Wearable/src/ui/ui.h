@@ -17,6 +17,7 @@
 #include "node_iterator.h"
 #include "wbl_func.h"
 #include "config.h"
+#include "display_timeout.h"
 
 namespace wbl {
 namespace UI {
@@ -1714,6 +1715,9 @@ struct ElementRootT : public ElementT {
     }
 
     inline void once(const bool &do_not_flush=false) {
+        if (displayTimeout.is_display_off())
+            return;
+
         //reset_log(false);
         log_time("ELPSD");
         

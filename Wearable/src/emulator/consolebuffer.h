@@ -4,6 +4,7 @@
 #include "console.h"
 
 #include <string.h>
+#include <inttypes.h>
 
 namespace wbl {
 
@@ -41,6 +42,16 @@ struct ConsoleBuffer : public FramebufferT<StaticbufferT<128,128,1>>, public Dis
         this->clear();
         return this->flush();
     }
+
+    inline int setDisplay(const uint8_t &flags = 0) { return 0; }
+
+    inline int setOrientation(const uint8_t &flags = 0) { return 0; }
+
+    inline int setContrast(const uint8_t &flags = 0) { return 0; }
+
+    inline int setState(const bool &on = true) { return 0; }
+
+    inline int setInverted(const bool &invert = false) { return 0; }
 };
 
 template<typename BLOCKSRC>

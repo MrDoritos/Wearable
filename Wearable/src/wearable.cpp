@@ -13,6 +13,7 @@
 #include "wbl_func.h"
 #include "ui_func.h"
 #include "ui_log.h"
+#include "display_timeout.h"
 
 using namespace wbl;
 using namespace Sprites;
@@ -44,7 +45,17 @@ void demo() {
         display.clear();
     }
 
-    dispatch_input_events(uiroot, dpad);
+    if (dpad.enter.is_held())
+        displayTimeout.lock_key_state(true);
+
+    displayTimeout.update(dispatch_input_events(uiroot, dpad));
+
+    static bool isDisplayOff = false;
+
+    if (displayTimeout.is_display_off() != isDisplayOff) {
+        isDisplayOff = displayTimeout.is_display_off();
+        display.setState(!isDisplayOff);
+    }
 
     uiroot.once();
 
