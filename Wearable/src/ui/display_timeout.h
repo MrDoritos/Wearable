@@ -5,14 +5,10 @@
 namespace wbl {
 
 struct DisplayTimeout {
-    enum State {
+    enum State : uint8_t {
         ACTIVE=1,
         ACCEPTING_INPUT=2,
-        ACTIVE_ACCEPTING_INPUT=3,
-        OFFLINE=4,
-        OFFLINE_ACCEPTING_INPUT=6,
-        REJECTING_INPUT=8,
-        ACTIVE_REJECTING_INPUT=9
+        ACTIVE_ACCEPTING_INPUT=3
     };
 
     State state{ACTIVE_ACCEPTING_INPUT};
@@ -23,7 +19,9 @@ struct DisplayTimeout {
     bool is_display_locked();
     bool is_rejecting_input();
     bool is_timeout_exceeded();
-    void user_sent_input(uint8_t dpad_event);
+    bool lock_key_state(bool is_held);
+    bool any_user_input();
+    int64_t time_since_last_input();
 };
     
 }
