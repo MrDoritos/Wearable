@@ -38,17 +38,21 @@ UI::ElementLogT<DisplayTexture, DataLog> e_sinelog(display, sinelog), e_squarelo
 void demo() {
     uibattery.set_battery_level((millis()%10000)/100);
 
+    /*
     if (dpad.enter.is_pressed()) {
         display.putTexture(therock, {0,0,128,128}, {0,0});
         display.flush();
         delay(1000);
         display.clear();
     }
+    */
 
-    if (dpad.enter.is_held())
-        displayTimeout.lock_key_state(true);
-
-    displayTimeout.update(dispatch_input_events(uiroot, dpad));
+    if (!displayTimeout.lock_key_state(dpad.enter.is_held()))
+        displayTimeout.update(dispatch_input_events(uiroot, dpad));
+    else
+        dpad.update();
+        
+    printf("%lli %lli %i\n", displayTimeout.last_input, displayTimeout.held_time, displayTimeout.state);
 
     static bool isDisplayOff = false;
 

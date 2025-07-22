@@ -33,6 +33,8 @@ bool DisplayTimeout::lock_key_state(bool is_held) {
         return is_display_locked();
     }
 
+    held_time += time_since_last_input();
+
     any_user_input();
 
     if (held_time > HOLD_TIME_TO_LOCK) {
