@@ -52,6 +52,8 @@ TX(VERT_BAR_NONE, 27, 23, 2, 11)
 TX(SLASH, 31, 23, 4, 11)
 TX(DUMMY, 0, 0, 0, 0)
 
+TX(LOCK_ICON, 29, 37, 8, 11)
+
 static constexpr const AtlasFontSprite GLYPHS_NUM_3x5[] = {
     FT35(0,0),
     FT35(3,0),

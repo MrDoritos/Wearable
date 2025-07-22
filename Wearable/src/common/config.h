@@ -14,4 +14,3 @@
 #endif
 
 #define USE_LAYOUT_DBG
-#define INPUT_DEBUG

@@ -2065,5 +2065,40 @@ struct ElementFocusT : public ElementT {
     }
 };
 
+template<typename Buffer, typename ElementT = ElementBaseT<Buffer>>
+struct ElementLockIconT : public ElementT {
+    using ElementT::ElementT;
+    using ElementT::operator<<;
+
+    bool prev_state = false;
+
+    bool is_displaying() {
+        return displayTimeout.is_display_locked();
+    }
+
+    void on_content_size(Event *event) override {
+        Length size/*;
+        if (is_displaying())
+            size*/ = this->getSpritesContentSize(&Sprites::LOCK_ICON, 1);
+        this->set_content_size(size);
+    }
+
+    void on_draw(Event *event) override {
+        if (prev_state == is_displaying() && !(event->value & Event::REDRAW))
+            return;
+
+        if (prev_state != is_displaying())
+            this->on_content_size(nullptr);
+
+        prev_state = is_displaying();
+
+        if (!is_displaying())
+            return;
+
+        this->clear();
+        this->draw_sprites(&Sprites::LOCK_ICON, 1);
+    }
+};
+
 }
 }

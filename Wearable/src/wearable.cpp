@@ -34,6 +34,7 @@ UI::ScreenBaseT<> clockscreen("Clock");
 UI::ScreenBaseT<> settingscreen("Settings");
 LoopBuffer sinelog, squarelog, sawlog, voltlog;
 UI::ElementLogT<DisplayTexture, DataLog> e_sinelog(display, sinelog), e_squarelog(display, squarelog), e_sawlog(display, sawlog), e_voltlog(display, voltlog);
+UI::ElementLockIconT<DisplayTexture> e_lockicon(display);
 
 void demo() {
     uibattery.set_battery_level((millis()%10000)/100);
@@ -47,13 +48,14 @@ void demo() {
     }
     */
 
+    bool has_input = false;
     if (!displayTimeout.lock_key_state(dpad.enter.is_held()))
-        displayTimeout.update(dispatch_input_events(uiroot, dpad));
+        has_input = dispatch_input_events(uiroot, dpad);
     else
         dpad.update();
-        
-    printf("%lli %lli %i\n", displayTimeout.last_input, displayTimeout.held_time, displayTimeout.state);
 
+    displayTimeout.update(has_input);
+    
     static bool isDisplayOff = false;
 
     if (displayTimeout.is_display_off() != isDisplayOff) {
@@ -118,6 +120,7 @@ void init() {
     inlineblock3 << UI::StyleInfo { .align{RIGHT}, .display{INLINE}, .width {20}, .height{10}, .margin{2} };
     inlineblock4 << UI::StyleInfo { .display{INLINE}, .width{20}, .height{30}, .margin{2} };
     block3 << StyleInfo { .width {30}, .height{20} };
+    e_lockicon << StyleInfo{.display{INLINE}, .overflow{AUTO,AUTO}} << "lock";
 
     StyleInfo logstyle = { .display{INLINE}, .width {62}, .height{40}, .margin{1} };
 
@@ -190,6 +193,7 @@ void init() {
     clockscreen.show_header = false;
 
     header << uibattery;
+    header << e_lockicon;
     header << uidatetime;
     //uiroot << header;
     //uiroot << uiclock;
