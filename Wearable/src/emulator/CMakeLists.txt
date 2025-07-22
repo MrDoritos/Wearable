@@ -29,6 +29,7 @@ add_library(lib
     ../wearable.cpp
     ../ui/sprites.cpp
     ../ui/ui_func.cpp
+    ../ui/display_timeout.cpp
     emulator_inputs.cpp
     emu_func.cpp
     ${GENERATED_ASSET_OBJECTS}

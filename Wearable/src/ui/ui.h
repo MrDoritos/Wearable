@@ -1788,6 +1788,7 @@ struct ElementRootT : public ElementT {
         if (!active_screen)
             return;
 
+        #ifdef USE_LAYOUT_DBG
         if (event->value & EventValues::PRESSED) {
             if (event->value & EventValues::DPAD_UP)
                 debug = !debug;
@@ -1796,6 +1797,7 @@ struct ElementRootT : public ElementT {
             debug_details %= 3;
             layout_dirty = true;
         }
+        #endif
 
         if (!(event->value & EventValues::RELEASED))
             return;
