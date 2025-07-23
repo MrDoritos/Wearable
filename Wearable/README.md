@@ -38,16 +38,21 @@
     - [ ] Sync GPS time to exported log
 - [ ] Sensors
     - [ ] GPS IMU
-        - [ ] Accelerometer
-            - 0x6A
         - [ ] Magnetometer
             - 0x1C
-        - [ ] Gyroscope
+            - LIS3MDL
+        - [ ] Gyroscope and Accelerometer
             - 0x6A
-        - [ ] GPS CAM-M8
+            - LSM6DSL
+        - [ ] Barometer
+            - 0x77
+            - BME388
+        - [ ] GPS
             - 3.3V
             - 0x42
+            - CAM-M8
         - [ ] GPS time sync
+        - 0.040A @ 5v -> 0.2W
     - [ ] LTR-390 UV
         - [ ] UV Wavelength
         - [ ] UV daily exposure alert
