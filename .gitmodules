@@ -4,3 +4,6 @@
 [submodule "Wearable/esp-idf"]
 	path = Wearable/esp-idf
 	url = https://github.com/espressif/esp-idf
+[submodule "Wearable/third_party/u-blox-m8"]
+	path = Wearable/third_party/u-blox-m8
+	url = https://github.com/RocketManRC/u-blox-m8
