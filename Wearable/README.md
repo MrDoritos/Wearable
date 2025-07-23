@@ -39,10 +39,14 @@
 - [ ] Sensors
     - [ ] GPS IMU
         - [ ] Accelerometer
+            - 0x6A
         - [ ] Magnetometer
+            - 0x1C
         - [ ] Gyroscope
+            - 0x6A
         - [ ] GPS CAM-M8
             - 3.3V
+            - 0x42
         - [ ] GPS time sync
     - [ ] LTR-390 UV
         - [ ] UV Wavelength
