@@ -14,6 +14,7 @@
 #include "ui_func.h"
 #include "ui_log.h"
 #include "display_timeout.h"
+#include "gps.h"
 
 using namespace wbl;
 using namespace Sprites;
@@ -75,6 +76,14 @@ void demo() {
 
     if (cnt % 2 == 0)
         e_voltlog.push_back(t, (uu)(4000 + ((((t ^ 0xDEADBEEF) % 0xC0FFEE) | t) & 31)));
+
+    int64_t time = getGPSTime();
+    printf("time: %lli\n", getGPSTime());
+    timeval tv;
+    tv.tv_sec = time / 1000000;
+    tv.tv_usec = time % 1000000;
+    settimeofday(&tv, nullptr);
+
 
     #ifdef __linux__
     delay(30);
@@ -215,9 +224,14 @@ void init() {
 extern "C" {
 void app_main() {
     dpad.init();
-    init();
+    ::init();
+    if (wbl::init() != ESP_OK) {
+        printf("Failed to initialize gps\n");
+        goto end;
+    }
     if (display.init() != ESP_OK) {
         printf("Failed to initialize display\n");
+        goto end;
     } else {
         printf("Display initialized\n");
         display.clear(0);
@@ -227,6 +241,8 @@ void app_main() {
             vPortYield();
         }
     }
+
+    end:;
 
     fflush(stdout);
     
