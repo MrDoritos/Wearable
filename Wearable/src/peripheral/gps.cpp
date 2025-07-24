@@ -3,6 +3,7 @@ typedef uint8_t byte;
 #include "u-blox-m8.h"
 #include "i2c.h"
 #include "config.h"
+#include "wbl_func.h"
 #include "driver/i2c_master.h"
 
 namespace wbl {
@@ -19,8 +20,11 @@ cfggnss gc(gps);
 
 esp_err_t init() {
     ESP_RETURN_ON_ERROR(cam.init(), TAG, "gps i2c failed to init");
+    delay(100);
     disableNmea();
+    delay(100);
     enableNavPvt();
+    delay(100);
     return ESP_OK;
 }
 
@@ -30,7 +34,7 @@ int64_t getGPSTime() {
     uint8_t buffer[buflen];
 
     while (true) {
-        i2c_master_receive(cam.dev, buffer, buflen, 1000 / portTICK_PERIOD_MS);
+        i2c_master_receive(cam.dev, buffer, buflen, 1 / portTICK_PERIOD_MS);
         char *r = (char*)gps.parse(buffer[0]);
 
         if (strlen(r) > 0) {
