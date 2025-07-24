@@ -78,11 +78,13 @@ void demo() {
         e_voltlog.push_back(t, (uu)(4000 + ((((t ^ 0xDEADBEEF) % 0xC0FFEE) | t) & 31)));
 
     int64_t time = getGPSTime();
-    printf("time: %lli\n", getGPSTime());
-    timeval tv;
-    tv.tv_sec = time / 1000000;
-    tv.tv_usec = time % 1000000;
-    settimeofday(&tv, nullptr);
+    if (time > 0) {
+        printf("time: %lli\n", getGPSTime());
+        timeval tv;
+        tv.tv_sec = time / 1000000;
+        tv.tv_usec = time % 1000000;
+        settimeofday(&tv, nullptr);
+    }
 
 
     #ifdef __linux__
