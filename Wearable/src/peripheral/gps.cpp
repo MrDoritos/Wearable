@@ -35,16 +35,16 @@ esp_err_t GPS::init() {
 }
 
 esp_err_t GPS::update() {
-    const int buflen = 32;
+    const int buflen = 1;
     uint8_t buffer[buflen];
 
     esp_err_t ret;
 
     while (true) {
-        ret = i2c_master_receive(cam.dev, buffer, buflen, 10 / portTICK_PERIOD_MS);
+        ret = i2c_master_receive(cam.dev, buffer, buflen, 100);
 
         if (ret != ESP_OK)
-            return !ESP_OK;
+            return ret;
 
         for (int i = 0; i < buflen; i++) {
             char *r = (char*)_gps.parse(buffer[i]);

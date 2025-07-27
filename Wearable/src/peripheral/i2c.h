@@ -11,12 +11,13 @@
 
 namespace wbl {
 
-template<uint8_t _PORT, gpio_num_t _SDA, gpio_num_t _SCL, i2c_clock_source_t _CLK>
+template<uint8_t _PORT, gpio_num_t _SDA, gpio_num_t _SCL, i2c_clock_source_t _CLK, bool internal_pullup = true>
 struct I2C_BUS {
     static constexpr const char *TAG = "wbl::SH1107::I2C_BUS";
     static constexpr uint8_t PORT = _PORT;
     static constexpr gpio_num_t SDA = _SDA;
     static constexpr gpio_num_t SCL = _SCL;
+    static constexpr bool INTERNAL_PULLUP = internal_pullup;
 
     i2c_master_bus_handle_t bus = 0;
 
@@ -37,7 +38,7 @@ struct I2C_BUS {
             .clk_source = _CLK,
             .glitch_ignore_cnt = 7,
             .flags = {
-                .enable_internal_pullup = true
+                .enable_internal_pullup = INTERNAL_PULLUP
             },
         };
 
@@ -51,7 +52,7 @@ struct I2C_BUS {
 };
 
 using I2C_BUS_0 = I2C_BUS<I2C_NUM_0, GPIO_NUM_6, GPIO_NUM_5, I2C_CLK_SRC_DEFAULT>;
-using I2C_BUS_1 = I2C_BUS<I2C_NUM_1, GPIO_NUM_36, GPIO_NUM_35, I2C_CLK_SRC_DEFAULT>;
+using I2C_BUS_1 = I2C_BUS<I2C_NUM_1, GPIO_NUM_36, GPIO_NUM_35, I2C_CLK_SRC_DEFAULT, false>;
 
 template<uint16_t _I2C_ADDRESS, uint32_t _I2C_CLOCK, uint16_t _I2C_TIMEOUT=1000, typename BUS=I2C_BUS_0, uint16_t _SCL_WAIT=0>
 struct I2C : public BUS {

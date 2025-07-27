@@ -87,9 +87,12 @@ void demo() {
         settimeofday(&tv, nullptr);
     }
     */
-    if (!gps.update()) {
+    esp_err_t ret = gps.update();
+    if (!ret) {
         GPSPoint point = gps.getFix();
         printf("time %lli\n", point.time);
+    } else {
+        printf("update failed: %i\n", ret);
     }
 
 
