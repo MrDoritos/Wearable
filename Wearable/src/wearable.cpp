@@ -77,6 +77,7 @@ void demo() {
     if (cnt % 2 == 0)
         e_voltlog.push_back(t, (uu)(4000 + ((((t ^ 0xDEADBEEF) % 0xC0FFEE) | t) & 31)));
 
+    /*
     int64_t time = getGPSTime();
     if (time > 0) {
         printf("time: %lli\n", getGPSTime());
@@ -84,6 +85,12 @@ void demo() {
         tv.tv_sec = time / 1000000;
         tv.tv_usec = time % 1000000;
         settimeofday(&tv, nullptr);
+    }
+    */
+    if (!gps.update()) {
+        GPSPoint point;
+        gps.getFix(point);
+        printf("time %lli\n", point.time);
     }
 
 
@@ -226,8 +233,8 @@ void init() {
 extern "C" {
 void app_main() {
     dpad.init();
-    ::init();
-    if (wbl::init() != ESP_OK) {
+    init();
+    if (gps.init() != ESP_OK) {
         printf("Failed to initialize gps\n");
         goto end;
     }

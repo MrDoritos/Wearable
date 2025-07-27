@@ -5,6 +5,7 @@ typedef uint8_t byte;
 #include "config.h"
 #include "wbl_func.h"
 #include "driver/i2c_master.h"
+#include "time.h"
 
 namespace wbl {
 
@@ -18,7 +19,7 @@ navpvt8 nav(gps);
 cfggnss gc(gps);
 
 
-esp_err_t init() {
+esp_err_t GPS::init() {
     ESP_RETURN_ON_ERROR(cam.init(), TAG, "gps i2c failed to init");
     delay(100);
     restoreDefaults();
@@ -32,8 +33,44 @@ esp_err_t init() {
     return ESP_OK;
 }
 
+esp_err_t GPS::update() {
+    const int buflen = 256;
+    uint8_t buffer[buflen];
 
-int64_t getGPSTime() {
+    esp_err_t ret;
+
+    while (true) {
+        ret = i2c_master_receive(cam.dev, buffer, buflen, 2 / portTICK_PERIOD_MS);
+
+        if (ret != ESP_OK)
+            return !ESP_OK;
+
+        char *r = (char*)gps.parse(buffer[0]);
+
+        if (strlen(r) > 0 && strcmp(r, "navpvt8") == 0)
+            return ESP_OK;
+    }
+}
+
+GPSPoint GPS::getFix() {
+    ret.longitude = nav.getlon();
+    ret.latitude = nav.getlat();
+    ret.altitude = nav.getheight();
+    
+    timeval tv;
+    tm t;
+    
+    double sec = 3600.0 * nav.gethour() + 60.0 * nav.getminute() + 1.0 * nav.getsecond() + nav.getnano() * 1e-9;
+
+    t.tm_year = nav.getyear();
+    t.tm_mday = nav.getday();
+    t.tm_hour = nav.gethour();
+    t.tm_sec = nav.getsecond();
+
+    ret.time = mktime(&t) * 1000000 + (int64_t(nav.getnano() * 1e-3));
+}
+
+int64_t GPS::getGPSTime() {
     const int buflen = 1;
     uint8_t buffer[buflen];
     memset(buffer, 0, buflen);
@@ -41,7 +78,7 @@ int64_t getGPSTime() {
     double sec;
     esp_err_t err;
     while (true) {
-        err = i2c_master_receive(cam.dev, buffer, buflen, 1000 / portTICK_PERIOD_MS);
+        err = i2c_master_receive(cam.dev, buffer, buflen, 2 / portTICK_PERIOD_MS);
         if (err == ESP_ERR_INVALID_ARG || err == ESP_ERR_TIMEOUT || err == ESP_ERR_INVALID_STATE)
             goto error;
         //printf("Receive: %i\n", err);
