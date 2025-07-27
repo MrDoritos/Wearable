@@ -13,16 +13,17 @@ static constexpr const char *TAG = "wbl::gps.cpp";
 
 using I2C_CAMM8 = I2C<I2C_CAMM8_ADDR, I2C_CAMM8_FREQ, 1000, I2C_BUS_1, 40000>;
 
+GPS gps;
 I2C_CAMM8 cam;
-ublox gps;
-navpvt8 nav(gps);
-cfggnss gc(gps);
+ublox _gps;
+navpvt8 nav(_gps);
+cfggnss gc(_gps);
 
 
 esp_err_t GPS::init() {
     ESP_RETURN_ON_ERROR(cam.init(), TAG, "gps i2c failed to init");
-    delay(100);
-    restoreDefaults();
+    //delay(100);
+    //restoreDefaults();
     delay(100);
     disableNmea();
     delay(100);
@@ -34,25 +35,29 @@ esp_err_t GPS::init() {
 }
 
 esp_err_t GPS::update() {
-    const int buflen = 256;
+    const int buflen = 32;
     uint8_t buffer[buflen];
 
     esp_err_t ret;
 
     while (true) {
-        ret = i2c_master_receive(cam.dev, buffer, buflen, 2 / portTICK_PERIOD_MS);
+        ret = i2c_master_receive(cam.dev, buffer, buflen, 10 / portTICK_PERIOD_MS);
 
         if (ret != ESP_OK)
             return !ESP_OK;
 
-        char *r = (char*)gps.parse(buffer[0]);
+        for (int i = 0; i < buflen; i++) {
+            char *r = (char*)_gps.parse(buffer[i]);
 
-        if (strlen(r) > 0 && strcmp(r, "navpvt8") == 0)
-            return ESP_OK;
+            if (strlen(r) > 0 && strcmp(r, "navpvt8") == 0)
+                return ESP_OK;
+        }
     }
 }
 
 GPSPoint GPS::getFix() {
+    GPSPoint ret;
+
     ret.longitude = nav.getlon();
     ret.latitude = nav.getlat();
     ret.altitude = nav.getheight();
@@ -68,6 +73,8 @@ GPSPoint GPS::getFix() {
     t.tm_sec = nav.getsecond();
 
     ret.time = mktime(&t) * 1000000 + (int64_t(nav.getnano() * 1e-3));
+
+    return ret;
 }
 
 int64_t GPS::getGPSTime() {
@@ -85,7 +92,7 @@ int64_t GPS::getGPSTime() {
         //if (err < 1)
         //    break;
             
-        char *r = (char*)gps.parse(buffer[0]);
+        char *r = (char*)_gps.parse(buffer[0]);
 
         if (strlen(r) > 0) {
             if (strcmp(r, "navpvt8")==0) {

@@ -16,7 +16,7 @@ namespace wbl {
         esp_err_t init();
         int64_t getGPSTime();
         esp_err_t update();
-        bool getFix(GPSPoint &ret);
+        GPSPoint getFix();
     };
 
     extern GPS gps;

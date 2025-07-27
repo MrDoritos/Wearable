@@ -88,8 +88,7 @@ void demo() {
     }
     */
     if (!gps.update()) {
-        GPSPoint point;
-        gps.getFix(point);
+        GPSPoint point = gps.getFix();
         printf("time %lli\n", point.time);
     }
 
