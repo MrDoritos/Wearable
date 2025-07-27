@@ -96,7 +96,7 @@ void demo() {
         tv.tv_usec = point.time % 1000000;
         timezone tz;
         tz.tz_dsttime = DST_USA;
-        tz.tz_minuteswest = -7 * 60;
+        tz.tz_minuteswest = 7 * 60;
         settimeofday(&tv,&tz);
     } else {
         printf("update failed: %i\n", ret);
