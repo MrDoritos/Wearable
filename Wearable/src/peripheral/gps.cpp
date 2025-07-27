@@ -67,10 +67,14 @@ GPSPoint GPS::getFix() {
     
     double sec = 3600.0 * nav.gethour() + 60.0 * nav.getminute() + 1.0 * nav.getsecond() + nav.getnano() * 1e-9;
 
-    t.tm_year = nav.getyear();
+    t.tm_year = nav.getyear() - 1900;
     t.tm_mday = nav.getday();
     t.tm_hour = nav.gethour();
+    t.tm_min = nav.getminute();
     t.tm_sec = nav.getsecond();
+    t.tm_mon = nav.getmonth() - 1;
+
+    //printf("%i %i %i %i %i\n", t.tm_year, t.tm_mon, t.tm_mday, t.tm_hour, t.tm_sec);
 
     ret.time = mktime(&t) * 1000000 + (int64_t(nav.getnano() * 1e-3));
 

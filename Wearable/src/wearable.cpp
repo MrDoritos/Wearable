@@ -91,6 +91,13 @@ void demo() {
     if (!ret) {
         GPSPoint point = gps.getFix();
         printf("time %lli\n", point.time);
+        timeval tv;
+        tv.tv_sec = point.time / 1000000;
+        tv.tv_usec = point.time % 1000000;
+        timezone tz;
+        tz.tz_dsttime = DST_USA;
+        tz.tz_minuteswest = -7 * 60;
+        settimeofday(&tv,&tz);
     } else {
         printf("update failed: %i\n", ret);
     }
