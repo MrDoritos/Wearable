@@ -110,3 +110,29 @@
         - Internal temperature sensor
             - 1 C accuracy (-40 - 85C)
         - 400kHz I2C
+- Power by module
+    - ESP32
+        - 40 mA
+        - 3.3V reg
+    - GPS
+        - 40 mA
+        - VBAT possible
+    - MAX30102
+        - 1 mA
+        - 3.3V reg
+    - GME128128
+        - 60 mA
+        - VBAT ok
+    - BME688
+        - 4 mA
+        - VBAT possible
+    - MiCS-6814
+        - 30 mA
+        - VBAT possible
+    - LTR390-UV
+        - 1 mA
+        - VBAT possible, may require 3.3v?
+    - SD Card
+        - 100 mA default mode, verify!
+    - Haptics
+        - 60 mA.. use VBAT if possible
