@@ -5,7 +5,10 @@ typedef uint8_t byte;
 #include "config.h"
 #include "wbl_func.h"
 #include "driver/i2c_master.h"
-#include "time.h"
+
+#include <time.h>
+#include <stdio.h>
+#include <sys/time.h>
 
 namespace wbl {
 
@@ -35,6 +38,11 @@ esp_err_t GPS::init() {
 }
 
 esp_err_t GPS::update() {
+    if (last_update + GPS_UPDATE_INTERVAL < millis())
+        return ESP_OK;
+
+    last_update = millis();
+
     const int buflen = 1;
     uint8_t buffer[buflen];
 
@@ -74,43 +82,89 @@ GPSPoint GPS::getFix() {
     t.tm_sec = nav.getsecond();
     t.tm_mon = nav.getmonth() - 1;
 
-    //printf("%i %i %i %i %i\n", t.tm_year, t.tm_mon, t.tm_mday, t.tm_hour, t.tm_sec);
-
     ret.time = mktime(&t) * 1000000 + (int64_t(nav.getnano() * 1e-3));
 
     return ret;
 }
 
 int64_t GPS::getGPSTime() {
-    const int buflen = 1;
-    uint8_t buffer[buflen];
-    memset(buffer, 0, buflen);
+    return getFix().time;
+}
 
-    double sec;
-    esp_err_t err;
-    while (true) {
-        err = i2c_master_receive(cam.dev, buffer, buflen, 2 / portTICK_PERIOD_MS);
-        if (err == ESP_ERR_INVALID_ARG || err == ESP_ERR_TIMEOUT || err == ESP_ERR_INVALID_STATE)
-            goto error;
-        //printf("Receive: %i\n", err);
-        //if (err < 1)
-        //    break;
-            
-        char *r = (char*)_gps.parse(buffer[0]);
+void GPS::setSystemTime() {
+    GPSPoint point = getFix();
+    timeval tv;
+    tv.tv_sec = point.time / 1000000;
+    tv.tv_usec = point.time % 1000000;
 
-        if (strlen(r) > 0) {
-            if (strcmp(r, "navpvt8")==0) {
-                break;
-            }
-        }
+    if (tv.tv_sec < seconds()) {
+        printf("No GPS time yet %lli < %lli\n", tv.tv_sec, seconds());
+        return;
     }
 
-    sec = 3600.0 * nav.gethour() + 60.0 * nav.getminute() + 1.0 * nav.getsecond() + nav.getnano() * 1e-9;
-    return int64_t(sec*1000*1000);
+    printf("Set time %lli -> %lli\n", seconds(), tv.tv_sec);
 
-    error:;
-    //printf("Error %i\n", err);
-    return 0;
+    settimeofday(&tv,nullptr);
+}
+
+double GPS::getGroundSpeed() {
+    return nav.getgSpeed();
+}
+
+double GPS::getGroundSpeedAccuracy() {
+    return nav.gethAcc();
+}
+
+double GPS::getHeadingMotion() {
+    return nav.getheadMot();
+}
+
+double GPS::getHeadingVehicle() {
+    return ((_navpvt8*)_gps.getbuffer())->headVeh * en5;
+}
+
+double GPS::getHeadingAccuracy() {
+    return ((_navpvt8*)_gps.getbuffer())->headAcc * en5;
+}
+
+int32_t GPS::getElevationAccuracy() {
+    return nav.getvAcc();
+}
+
+double GPS::getElevationAboveSeaLevel() {
+    return ((_navpvt8*)_gps.getbuffer())->hMSL * mm2m;
+}
+
+double GPS::getElevationAboveEllipsoid() {
+    return nav.getheight();
+}
+
+double GPS::getVelocityNorth() {
+    return ((_navpvt8*)_gps.getbuffer())->velN;
+}
+
+double GPS::getVelocityEast() {
+    return ((_navpvt8*)_gps.getbuffer())->velE;
+}
+
+double GPS::getVelocityVertical() {
+    return ((_navpvt8*)_gps.getbuffer())->velD;
+}
+
+int GPS::getSatelliteCount() {
+    return nav.getnumSV();
+}
+
+double GPS::getLongitude() {
+    return nav.getlon();
+}
+
+double GPS::getLatitude() {
+    return nav.getlat();
+}
+
+double GPS::getAltitude() {
+    return getElevationAboveSeaLevel();
 }
 
 }

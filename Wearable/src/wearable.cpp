@@ -77,31 +77,9 @@ void demo() {
     if (cnt % 2 == 0)
         e_voltlog.push_back(t, (uu)(4000 + ((((t ^ 0xDEADBEEF) % 0xC0FFEE) | t) & 31)));
 
-    /*
-    int64_t time = getGPSTime();
-    if (time > 0) {
-        printf("time: %lli\n", getGPSTime());
-        timeval tv;
-        tv.tv_sec = time / 1000000;
-        tv.tv_usec = time % 1000000;
-        settimeofday(&tv, nullptr);
-    }
-    */
     esp_err_t ret = gps.update();
-    if (!ret) {
-        GPSPoint point = gps.getFix();
-        printf("time %lli\n", point.time);
-        timeval tv;
-        tv.tv_sec = point.time / 1000000;
-        tv.tv_usec = point.time % 1000000;
-        timezone tz;
-        tz.tz_dsttime = DST_USA;
-        tz.tz_minuteswest = 7 * 60;
-        settimeofday(&tv,&tz);
-    } else {
-        printf("update failed: %i\n", ret);
-    }
-
+    if (millis() % 10000 < 100)
+        gps.setSystemTime();
 
     #ifdef __linux__
     delay(30);

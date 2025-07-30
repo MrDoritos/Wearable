@@ -15,10 +15,27 @@ namespace wbl {
     struct GPS {
         esp_err_t init();
         int64_t getGPSTime();
+        void setSystemTime();
         esp_err_t update();
         GPSPoint getFix();
+        double getGroundSpeed();
+        double getGroundSpeedAccuracy();
+        double getHeadingMotion();
+        double getHeadingVehicle();
+        double getHeadingAccuracy();
+        int32_t getElevationAccuracy();
+        double getElevationAboveSeaLevel();
+        double getElevationAboveEllipsoid();
+        double getVelocityNorth();
+        double getVelocityEast();
+        double getVelocityVertical();
+        int getSatelliteCount();
+        double getLongitude();
+        double getLatitude();
+        double getAltitude();
+
+        int64_t last_update = 0;
     };
 
     extern GPS gps;
-    int64_t last_update = 0;
 }
