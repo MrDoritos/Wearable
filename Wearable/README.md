@@ -66,6 +66,7 @@
             - 13 - 20 bits resolution
             - 1:18,000,000 dynamic range
         - UV spectral response 300-350 nm
+        - 1 field at a time, mode switch required
     - [ ] BME688
         - [ ] CO2eq ppm
         - [ ] IAQ (0 - 500)
