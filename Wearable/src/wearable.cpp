@@ -15,6 +15,7 @@
 #include "ui_log.h"
 #include "display_timeout.h"
 #include "gps.h"
+#include "ui_gps.h"
 
 using namespace wbl;
 using namespace Sprites;
@@ -36,6 +37,8 @@ UI::ScreenBaseT<> settingscreen("Settings");
 LoopBuffer sinelog, squarelog, sawlog, voltlog;
 UI::ElementLogT<DisplayTexture, DataLog> e_sinelog(display, sinelog), e_squarelog(display, squarelog), e_sawlog(display, sawlog), e_voltlog(display, voltlog);
 UI::ElementLockIconT<DisplayTexture> e_lockicon(display);
+UI::ScreenBaseT<> gpsscreen("GPSInfo");
+UI::ElementGPST<DisplayTexture> uigps(display);
 
 void demo() {
     uibattery.set_battery_level((millis()%10000)/100);
@@ -116,6 +119,7 @@ void init() {
     settingscreen << e_squarelog;
     settingscreen << e_sawlog;
     settingscreen << e_voltlog;
+    gpsscreen << uigps;
 
     block << UI::StyleInfo { .height{26} };
     inner << StyleInfo {.height {14}};
@@ -126,7 +130,7 @@ void init() {
     inlineblock4 << UI::StyleInfo { .display{INLINE}, .width{20}, .height{30}, .margin{2} };
     block3 << StyleInfo { .width {30}, .height{20} };
     e_lockicon << StyleInfo{.display{INLINE}, .overflow{AUTO,AUTO}} << "lock";
-
+    uigps << StyleInfo { .height{92}, .overflow{AUTO,AUTO} } << "GPS";
     StyleInfo logstyle = { .display{INLINE}, .width {62}, .height{40}, .margin{1} };
 
     e_sawlog << logstyle << "saw";
@@ -208,10 +212,12 @@ void init() {
     mainscreen << txt;
     mainscreen.set_left(clockscreen);
     mainscreen.set_right(settingscreen);
+    settingscreen.set_right(gpsscreen);
 
     uiroot.set_header(header);
     //uiroot.set_screen(mainscreen);
-    uiroot.set_screen(settingscreen);
+    //uiroot.set_screen(settingscreen);
+    uiroot.set_screen(gpsscreen);
 
     uiroot.dispatch(EventTypes::CONTENT_SIZE);
     uiroot.resolve_layout();
