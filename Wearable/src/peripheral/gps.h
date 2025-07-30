@@ -20,4 +20,5 @@ namespace wbl {
     };
 
     extern GPS gps;
+    int64_t last_update = 0;
 }

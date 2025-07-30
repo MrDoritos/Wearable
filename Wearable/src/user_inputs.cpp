@@ -17,10 +17,14 @@ static const char *TAG = "USER_INPUTS";
 
 static constexpr gpio_num_t pins[] = {
     GPIO_NUM_7,
+    GPIO_NUM_17, //Rotate for prototyping mode
+    GPIO_NUM_18,
     GPIO_NUM_15,
     GPIO_NUM_16,
-    GPIO_NUM_17,
-    GPIO_NUM_18
+    //GPIO_NUM_15,
+    //GPIO_NUM_16,
+    //GPIO_NUM_17,
+    //GPIO_NUM_18
 };
 
 static constexpr int pin_count = sizeof(pins)/sizeof(pins[0]);

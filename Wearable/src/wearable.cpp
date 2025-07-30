@@ -254,6 +254,7 @@ void app_main() {
         printf("Display initialized\n");
         display.clear(0);
         display.flush();
+        display.setOrientation(3);
         while (1) {
             demo();
             vPortYield();

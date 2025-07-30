@@ -13,7 +13,7 @@ namespace wbl {
 
 template<uint8_t _PORT, gpio_num_t _SDA, gpio_num_t _SCL, i2c_clock_source_t _CLK, bool internal_pullup = true>
 struct I2C_BUS {
-    static constexpr const char *TAG = "wbl::SH1107::I2C_BUS";
+    static constexpr const char *TAG = "wbl::I2C_BUS";
     static constexpr uint8_t PORT = _PORT;
     static constexpr gpio_num_t SDA = _SDA;
     static constexpr gpio_num_t SCL = _SCL;
@@ -56,7 +56,7 @@ using I2C_BUS_1 = I2C_BUS<I2C_NUM_1, GPIO_NUM_36, GPIO_NUM_35, I2C_CLK_SRC_DEFAU
 
 template<uint16_t _I2C_ADDRESS, uint32_t _I2C_CLOCK, uint16_t _I2C_TIMEOUT=1000, typename BUS=I2C_BUS_0, uint16_t _SCL_WAIT=0>
 struct I2C : public BUS {
-    static constexpr const char *TAG = "wbl::SH1107::I2C";
+    static constexpr const char *TAG = "wbl::I2C";
     static constexpr uint16_t I2C_ADDRESS = _I2C_ADDRESS;
 
     uint16_t I2C_TIMEOUT = _I2C_TIMEOUT;
