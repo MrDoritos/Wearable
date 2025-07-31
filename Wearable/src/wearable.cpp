@@ -83,8 +83,9 @@ void demo() {
         e_sawlog.push_back(t, (uu)(int(t/5000)%1000));
     }
 
-    if (cnt % 2 == 0)
-        e_voltlog.push_back(t, (uu)(4000 + ((((t ^ 0xDEADBEEF) % 0xC0FFEE) | t) & 31)));
+    if (cnt % 32 == 0)
+        //e_voltlog.push_back(t, (uu)(4000 + ((((t ^ 0xDEADBEEF) % 0xC0FFEE) | t) & 31)));
+        e_voltlog.push_back(t, wbl_system.getBatteryVoltage() * 1000);
 
     esp_err_t ret = gps.update();
     gps.setSystemTime();

@@ -10,7 +10,7 @@ namespace wbl {
 
 static constexpr const char *TAG = "wbl::wbl_system.cpp";
 
-#define VBAT_ATTEN ADC_ATTEN_DB_12
+#define VBAT_ATTEN ADC_ATTEN_DB_6
 #define VBAT_CHANNEL ADC_CHANNEL_3
 #define VBAT_UNIT ADC_UNIT_2
 #define VBAT_GPIO GPIO_NUM_14
@@ -81,20 +81,26 @@ void wbl_System::beginAudibleFeedback(const uint8_t &level, const int32_t &durat
 float wbl_System::getBatteryVoltage() {
     int raw = 0;
     adc_oneshot_read(adc_handle, VBAT_CHANNEL, &raw);
+    const float vscale = 2.619789893;//(4.23/1.3);
+    const float voff = 0.83;
 
     if (adc_calib) {
         int v = 0;
         adc_cali_raw_to_voltage(adc_chars, raw, &v);
-        return v * 0.001;
+        return v * 0.001 * vscale + voff;
     }
 
-    return raw * (3100.0/4095.0) * 0.001;
+    return raw * (1600.0/3333.0) * 0.001 * vscale + voff;
+    return 0;
 }
 
 float wbl_System::getBatteryLevel() {
     float v = getBatteryVoltage();
 
-    float p = ((v * 2) - 3.6) * (1/0.03) * 5;
+    const float pscale = 1.0/0.005;
+    const float poff = 3.7;
+
+    float p = (v - poff) * pscale;
     if (p > 100)
         return 100;
     if (p < 0)
