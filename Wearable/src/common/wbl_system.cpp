@@ -8,6 +8,8 @@
 #include "driver/ledc.h"
 #include "esp_timer.h"
 
+#include <stdio.h>
+
 namespace wbl {
 
 static constexpr const char *TAG = "wbl::wbl_system.cpp";
@@ -17,14 +19,16 @@ static constexpr const char *TAG = "wbl::wbl_system.cpp";
 #define VBAT_UNIT ADC_UNIT_2
 #define VBAT_GPIO GPIO_NUM_14
 
-#define HAPTIC_GPIO GPIO_NUM_37
+#define HAPTIC_GPIO GPIO_NUM_38
 #define HAPTIC_CHANNEL LEDC_CHANNEL_1
 #define HAPTIC_TIMER LEDC_TIMER_1
 #define HAPTIC_MODE LEDC_LOW_SPEED_MODE
+#define HAPTIC_BITS LEDC_TIMER_13_BIT
 #define PIEZO_GPIO GPIO_NUM_38
 #define PIEZO_CHANNEL LEDC_CHANNEL_2
 #define PIEZO_TIMER LEDC_TIMER_1
 #define PIEZO_MODE LEDC_LOW_SPEED_MODE
+#define PIEZO_BITS LEDC_TIMER_13_BIT
 #define TIMER_DURATION 10
 
 wbl_System wbl_system;
@@ -35,7 +39,7 @@ esp_timer_handle_t timer_handle;
 
 static void pwm_timer_callback(void *arg) {
     int32_t &dur = wbl_system.haptic_feedback_end;
-    uint8_t &level = wbl_system.haptic_feedback_level;
+    uint16_t &level = wbl_system.haptic_feedback_level;
     bool &tstate = wbl_system.haptic_timer_state;
 
     dur -= TIMER_DURATION;
@@ -50,22 +54,25 @@ static void pwm_timer_callback(void *arg) {
         esp_timer_stop(timer_handle);
     }
 
-    ledc_set_duty_and_update(HAPTIC_MODE, HAPTIC_CHANNEL, state * level, 0);
+    ledc_set_duty(HAPTIC_MODE, HAPTIC_CHANNEL, state ? level : 0);
+    ledc_update_duty(HAPTIC_MODE, HAPTIC_CHANNEL);
 }
 
 esp_err_t init_pwm() {
     ledc_timer_config_t haptic_cfg = {
         .speed_mode = HAPTIC_MODE,
-        .duty_resolution = LEDC_TIMER_13_BIT,
+        .duty_resolution = HAPTIC_BITS,
         .timer_num = HAPTIC_TIMER,
         .freq_hz = 4000,
+        .clk_cfg = LEDC_AUTO_CLK,
     };
 
     ledc_timer_config_t piezo_cfg = {
         .speed_mode = PIEZO_MODE,
-        .duty_resolution = LEDC_TIMER_13_BIT,
+        .duty_resolution = PIEZO_BITS,
         .timer_num = PIEZO_TIMER,
         .freq_hz = 4000,
+        .clk_cfg = LEDC_AUTO_CLK,
     };
 
     ESP_RETURN_ON_ERROR(ledc_timer_config(&haptic_cfg), TAG, "Failed to init haptic");
@@ -121,6 +128,8 @@ esp_err_t wbl_System::init() {
 
     ESP_RETURN_ON_ERROR(gpio_set_pull_mode(VBAT_GPIO, GPIO_PULLDOWN_ONLY), TAG, "Failed to set VBAT pulldown");
 
+    ESP_RETURN_ON_ERROR(init_pwm(), TAG, "Failed to init pwm");
+
     return ESP_OK;
 }
 
@@ -136,25 +145,26 @@ void wbl_System::setAudibleFeedback(const bool &state) {
     use_audible_feedback = state;
 }
 
-void wbl_System::setHapticFeedbackLevel(const uint8_t &level) {
-    haptic_feedback_level = level;
+void wbl_System::setHapticFeedbackLevel(const float &level) {
+    haptic_feedback_level = level * ((1 << HAPTIC_BITS)-1);
 }
 
-void wbl_System::setAudibleFeedbackLevel(const uint8_t &level) {
-    audible_feedback_level = level;
+void wbl_System::setAudibleFeedbackLevel(const float &level) {
+    audible_feedback_level = level * ((1 << PIEZO_BITS)-1);
 }
 
-void wbl_System::beginHapticFeedback(const uint8_t &level, const int32_t &duration) {
+void wbl_System::beginHapticFeedback(const float &level, const int32_t &duration) {
     setHapticFeedbackLevel(level);
     haptic_feedback_end = duration;
+    printf("Level: %u Duration %li\n", haptic_feedback_level, haptic_feedback_end);
 
-    if (!haptic_timer_state)
+    if (!haptic_timer_state) {
+        haptic_timer_state = true;
         ESP_ERROR_CHECK(esp_timer_start_periodic(timer_handle, TIMER_DURATION));
-
-    haptic_timer_state = true;
+    }
 }
 
-void wbl_System::beginAudibleFeedback(const uint8_t &level, const int32_t &duration) {
+void wbl_System::beginAudibleFeedback(const float &level, const int32_t &duration) {
     setAudibleFeedbackLevel(level);
 }
 

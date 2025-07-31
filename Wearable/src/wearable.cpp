@@ -243,7 +243,7 @@ void app_main() {
         printf("Failed to initialize system\n");
         goto end;
     }
-    wbl_system.beginHapticFeedback(50, 500);
+    wbl_system.beginHapticFeedback(0.5, 500);
     dpad.init();
     init();
     if (gps.init() != ESP_OK) {
