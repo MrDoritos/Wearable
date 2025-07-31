@@ -10,6 +10,7 @@ idf_component_register(
     "../third_party/LSM6DSL/LSM6DSLSensor.cpp"
     "../third_party/LSM6DSL/LSM6DSL_ACC_GYRO_Driver.c"
     "./peripheral/gps_imu.cpp"
+    "./peripheral/i2c.cpp"
     INCLUDE_DIRS
     "."
     "./display"

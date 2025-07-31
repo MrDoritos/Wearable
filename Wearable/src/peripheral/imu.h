@@ -6,12 +6,8 @@
 
 namespace wbl {
 
-using I2C_LSM6DSL = I2C<I2C_LSM6DSL_ADDR, I2C_LSM6DSL_FREQ, 1000, I2C_BUS_1, 40000>;
-using I2C_LIS3MDL = I2C<I2C_LIS3MDL_ADDR, I2C_LIS3MDL_FREQ, 1000, I2C_BUS_1, 40000>;
-using I2C_BME388 = I2C<I2C_BME388_ADDR, I2C_BME388_FREQ, 1000, I2C_BUS_1, 40000>;
-
-extern I2C_LSM6DSL lsm6dsl;
-extern I2C_LIS3MDL lis3mdl;
-extern I2C_BME388 bme388;
+extern I2C lsm6dsl;
+extern I2C lis3mdl;
+extern I2C bme388;
 
 }

@@ -14,10 +14,10 @@ namespace wbl {
 
 static constexpr const char *TAG = "wbl::gps.cpp";
 
-using I2C_CAMM8 = I2C<I2C_CAMM8_ADDR, I2C_CAMM8_FREQ, 1000, I2C_BUS_1, 40000>;
+//using I2C_CAMM8 = I2C<I2C_CAMM8_ADDR, I2C_CAMM8_FREQ, 1000, I2C_BUS_1, 40000>;
 
 GPS gps;
-I2C_CAMM8 cam;
+I2C cam(I2C_BUS_1, I2C_CAMM8_ADDR, 1000, I2C_CAMM8_FREQ, 40000);
 ublox _gps;
 navpvt8 nav(_gps);
 cfggnss gc(_gps);

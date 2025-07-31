@@ -9,8 +9,10 @@
 namespace wbl {
 namespace SH1107 {
 
-template<uint8_t _WIDTH, uint8_t _HEIGHT, typename I2C_DEVICE>
-struct Display : public I2C_DEVICE {
+template<uint8_t _WIDTH, uint8_t _HEIGHT, uint16_t _i2c_addr, uint32_t _i2c_freq>
+struct Display : public I2C {
+    constexpr Display():I2C(I2C_BUS_0, _i2c_addr, 1000, _i2c_freq, 0){}
+
     static constexpr const char *TAG = "wbl::SH1107::Display";
     static constexpr uint8_t WIDTH = _WIDTH;
     static constexpr uint8_t HEIGHT = _HEIGHT;
@@ -93,7 +95,7 @@ struct Display : public I2C_DEVICE {
     }
 
     inline esp_err_t init() {
-        ESP_RETURN_ON_ERROR(I2C_DEVICE::init(), TAG, "i2c_device init failed");
+        ESP_RETURN_ON_ERROR(I2C::init(), TAG, "i2c_device init failed");
 
         return this->reset();
     }

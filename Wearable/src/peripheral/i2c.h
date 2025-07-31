@@ -11,15 +11,18 @@
 
 namespace wbl {
 
-template<uint8_t _PORT, gpio_num_t _SDA, gpio_num_t _SCL, i2c_clock_source_t _CLK, bool internal_pullup = true>
 struct I2C_BUS {
     static constexpr const char *TAG = "wbl::I2C_BUS";
-    static constexpr uint8_t PORT = _PORT;
-    static constexpr gpio_num_t SDA = _SDA;
-    static constexpr gpio_num_t SCL = _SCL;
-    static constexpr bool INTERNAL_PULLUP = internal_pullup;
+    uint8_t PORT;
+    gpio_num_t SDA;
+    gpio_num_t SCL;
+    i2c_clock_source_t CLK;
+    bool INTERNAL_PULLUP;
 
-    static i2c_master_bus_handle_t bus;
+    i2c_master_bus_handle_t bus;
+
+    constexpr I2C_BUS(const uint8_t &port, const gpio_num_t &sda, const gpio_num_t &scl, const i2c_clock_source_t &clk, const bool &internal_pullup=true)
+    :PORT(port),SDA(sda),SCL(scl),CLK(clk),INTERNAL_PULLUP(internal_pullup){}
 
     inline esp_err_t probe(uint16_t device_id) {
         ESP_RETURN_ON_ERROR(i2c_master_probe(bus, device_id, 1000 / portTICK_PERIOD_MS), TAG, "failed to probe device %i", device_id);
@@ -35,7 +38,7 @@ struct I2C_BUS {
             .i2c_port = PORT,
             .sda_io_num = SDA,
             .scl_io_num = SCL,
-            .clk_source = _CLK,
+            .clk_source = CLK,
             .glitch_ignore_cnt = 7,
             .flags = {
                 .enable_internal_pullup = INTERNAL_PULLUP
@@ -51,25 +54,22 @@ struct I2C_BUS {
     }
 };
 
-using I2C_BUS_0 = I2C_BUS<I2C_NUM_0, GPIO_NUM_6, GPIO_NUM_5, I2C_CLK_SRC_DEFAULT>;
-using I2C_BUS_1 = I2C_BUS<I2C_NUM_1, GPIO_NUM_36, GPIO_NUM_35, I2C_CLK_SRC_DEFAULT, false>;
+extern I2C_BUS I2C_BUS_0, I2C_BUS_1;
 
-#ifndef WBL_I2C_BUS_IMPL
-#define WBL_I2C_BUS_IMPL
-template<> i2c_master_bus_handle_t I2C_BUS_0::bus = 0;
-template<> i2c_master_bus_handle_t I2C_BUS_1::bus = 0;
-#endif
-
-template<uint16_t _I2C_ADDRESS, uint32_t _I2C_CLOCK, uint16_t _I2C_TIMEOUT=1000, typename BUS=I2C_BUS_0, uint16_t _SCL_WAIT=0>
-struct I2C : public BUS {
+struct I2C {
     static constexpr const char *TAG = "wbl::I2C";
-    static constexpr uint16_t I2C_ADDRESS = _I2C_ADDRESS;
 
-    uint16_t I2C_TIMEOUT = _I2C_TIMEOUT;
-    uint32_t I2C_CLOCK = _I2C_CLOCK;
-    uint16_t SCL_WAIT = _SCL_WAIT;
+    I2C_BUS& bus;
+
+    uint16_t I2C_ADDRESS;
+    uint16_t I2C_TIMEOUT;
+    uint32_t I2C_CLOCK;
+    uint16_t SCL_WAIT;
 
     i2c_master_dev_handle_t dev = 0;
+
+    constexpr I2C(I2C_BUS &bus, const uint16_t &address, const uint16_t &timeout, const uint32_t &clock, const uint16_t &stretch)
+    :bus(bus),I2C_ADDRESS(address),I2C_TIMEOUT(timeout),I2C_CLOCK(clock),SCL_WAIT(stretch){}
 
     inline esp_err_t write(const uint8_t *c, const uint8_t n) {
         ESP_RETURN_ON_ERROR(i2c_master_transmit(dev, c, n, I2C_TIMEOUT / portTICK_PERIOD_MS), TAG, "i2c_master_transmit failed");
@@ -126,18 +126,18 @@ struct I2C : public BUS {
     }
 
     inline esp_err_t probe() {
-        ESP_RETURN_ON_ERROR(BUS::probe(I2C_ADDRESS), TAG, "failed to probe device");
+        ESP_RETURN_ON_ERROR(bus.probe(I2C_ADDRESS), TAG, "failed to probe device");
 
         return ESP_OK;
     }
 
     inline esp_err_t init() {
-        ESP_RETURN_ON_ERROR(BUS::init(), TAG, "i2c_bus init failed");
+        ESP_RETURN_ON_ERROR(bus.init(), TAG, "i2c_bus init failed");
 
         if (dev != nullptr)
             return ESP_OK;
 
-        ESP_RETURN_ON_ERROR(!this->bus, TAG, "bus invalid");
+        ESP_RETURN_ON_ERROR(!bus.bus, TAG, "bus invalid");
 
         i2c_device_config_t dev_config = {
             .dev_addr_length = I2C_ADDR_BIT_LEN_7,
@@ -148,7 +148,7 @@ struct I2C : public BUS {
 
         ESP_RETURN_ON_ERROR(probe(), TAG, "failed to check device during init");
 
-        ESP_RETURN_ON_ERROR(i2c_master_bus_add_device(this->bus, &dev_config, &dev), TAG, "i2c_master_bus_add_device failed");
+        ESP_RETURN_ON_ERROR(i2c_master_bus_add_device(bus.bus, &dev_config, &dev), TAG, "i2c_master_bus_add_device failed");
 
         if (dev != nullptr)
             return ESP_OK;
