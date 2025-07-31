@@ -32,11 +32,11 @@ struct ElementGPST : public ElementT {
     };
 
     void on_draw(Event *event) override {
-        if (!this->is_stale())
-            if (!(event->value & Event::REDRAW))
-                return;
+        //if (!this->is_stale())
+        //    if (!(event->value & Event::REDRAW))
+        //        return;
         
-        last_update = gps.last_update;
+        //last_update = gps.last_update;
 
         ElementT::clear();
 
@@ -45,7 +45,12 @@ struct ElementGPST : public ElementT {
         buffer.print("Lon %lf\n", gps.getLongitude());
         buffer.print("Lat %lf\n", gps.getLatitude());
         buffer.print("Alt %lf\n", gps.getAltitude());
-        buffer.print("\nSatellites: %i", gps.getSatelliteCount());
+        time_t now = time(nullptr);
+        tm t = *gmtime(&now);
+        buffer.print("UTC %02i:%02i:%02i:%03i\n", t.tm_hour, t.tm_min, t.tm_sec, int(millis() % 1000));
+        buffer.print("Satellites: %i\n", gps.getSatelliteCount());
+        buffer.print("HAcc %.2lfmm\n", gps.getHorizontalAccuracy());
+        buffer.print("VAcc %.2lfmm\n", gps.getVerticalAccuracy());
 
         this->draw_text(buffer.buffer, Sprites::font);
     }

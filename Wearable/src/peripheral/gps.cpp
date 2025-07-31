@@ -38,10 +38,11 @@ esp_err_t GPS::init() {
 }
 
 esp_err_t GPS::update() {
-    if (last_update + GPS_UPDATE_INTERVAL < millis())
+    if (micros() - GPS_UPDATE_INTERVAL * 1000 < last_update)
         return ESP_OK;
 
-    last_update = millis();
+    //printf("Updating GPS data %lli -> %lli\n", last_update, micros());
+    last_update = micros();
 
     const int buflen = 1;
     uint8_t buffer[buflen];
@@ -73,8 +74,6 @@ GPSPoint GPS::getFix() {
     timeval tv;
     tm t;
     
-    double sec = 3600.0 * nav.gethour() + 60.0 * nav.getminute() + 1.0 * nav.getsecond() + nav.getnano() * 1e-9;
-
     t.tm_year = nav.getyear() - 1900;
     t.tm_mday = nav.getday();
     t.tm_hour = nav.gethour();
@@ -92,19 +91,29 @@ int64_t GPS::getGPSTime() {
 }
 
 void GPS::setSystemTime() {
+    if (getSatelliteCount() < 1)
+        return;
+
     GPSPoint point = getFix();
+
+    if (point.time == last_time_update)
+        return;
+
     timeval tv;
     tv.tv_sec = point.time / 1000000;
     tv.tv_usec = point.time % 1000000;
 
     if (tv.tv_sec < seconds()) {
-        printf("No GPS time yet %lli < %lli\n", tv.tv_sec, seconds());
+        //printf("No GPS time yet %lli < %lli\n", tv.tv_sec, seconds());
         return;
     }
 
-    printf("Set time %lli -> %lli\n", seconds(), tv.tv_sec);
+
+    //printf("Set time %lli -> %lli\n", seconds(), tv.tv_sec);
 
     settimeofday(&tv,nullptr);
+
+    last_time_update = point.time;
 }
 
 double GPS::getGroundSpeed() {
@@ -113,6 +122,14 @@ double GPS::getGroundSpeed() {
 
 double GPS::getGroundSpeedAccuracy() {
     return nav.gethAcc();
+}
+
+double GPS::getHorizontalAccuracy() {
+    return nav.gethAcc();
+}
+
+double GPS::getVerticalAccuracy() {
+    return nav.getvAcc() * mm2m;
 }
 
 double GPS::getHeadingMotion() {

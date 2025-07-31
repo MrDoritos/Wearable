@@ -81,8 +81,7 @@ void demo() {
         e_voltlog.push_back(t, (uu)(4000 + ((((t ^ 0xDEADBEEF) % 0xC0FFEE) | t) & 31)));
 
     esp_err_t ret = gps.update();
-    if (millis() % 10000 < 100)
-        gps.setSystemTime();
+    gps.setSystemTime();
 
     #ifdef __linux__
     delay(30);

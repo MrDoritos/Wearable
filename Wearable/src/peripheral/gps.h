@@ -33,8 +33,11 @@ namespace wbl {
         double getLongitude();
         double getLatitude();
         double getAltitude();
+        double getVerticalAccuracy();
+        double getHorizontalAccuracy();
 
         int64_t last_update = 0;
+        int64_t last_time_update = 0;
     };
 
     extern GPS gps;
