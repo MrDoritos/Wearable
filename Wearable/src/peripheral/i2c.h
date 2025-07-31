@@ -19,7 +19,7 @@ struct I2C_BUS {
     static constexpr gpio_num_t SCL = _SCL;
     static constexpr bool INTERNAL_PULLUP = internal_pullup;
 
-    static i2c_master_bus_handle_t bus = 0;
+    static i2c_master_bus_handle_t bus;
 
     inline esp_err_t probe(uint16_t device_id) {
         ESP_RETURN_ON_ERROR(i2c_master_probe(bus, device_id, 1000 / portTICK_PERIOD_MS), TAG, "failed to probe device %i", device_id);
@@ -53,6 +53,12 @@ struct I2C_BUS {
 
 using I2C_BUS_0 = I2C_BUS<I2C_NUM_0, GPIO_NUM_6, GPIO_NUM_5, I2C_CLK_SRC_DEFAULT>;
 using I2C_BUS_1 = I2C_BUS<I2C_NUM_1, GPIO_NUM_36, GPIO_NUM_35, I2C_CLK_SRC_DEFAULT, false>;
+
+#ifndef WBL_I2C_BUS_IMPL
+#define WBL_I2C_BUS_IMPL
+template<> i2c_master_bus_handle_t I2C_BUS_0::bus = 0;
+template<> i2c_master_bus_handle_t I2C_BUS_1::bus = 0;
+#endif
 
 template<uint16_t _I2C_ADDRESS, uint32_t _I2C_CLOCK, uint16_t _I2C_TIMEOUT=1000, typename BUS=I2C_BUS_0, uint16_t _SCL_WAIT=0>
 struct I2C : public BUS {
