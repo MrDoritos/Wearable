@@ -16,6 +16,7 @@
 #include "display_timeout.h"
 #include "gps.h"
 #include "ui_gps.h"
+#include "gps_imu.h"
 
 using namespace wbl;
 using namespace Sprites;
@@ -228,6 +229,10 @@ void app_main() {
     init();
     if (gps.init() != ESP_OK) {
         printf("Failed to initialize gps\n");
+        goto end;
+    }
+    if (gpsimu.init() != ESP_OK) {
+        printf("Failed to initialize imu\n");
         goto end;
     }
     if (display.init() != ESP_OK) {

@@ -1,6 +1,23 @@
 idf_component_register(
-    SRCS "user_inputs.cpp" "wearable.cpp" "./common/wbl_func.cpp" "./ui/ui_func.cpp" "./ui/sprites.cpp" "./ui/display_timeout.cpp" "./peripheral/gps.cpp"
-    INCLUDE_DIRS "." "./display" "./ui" "./common" "./peripheral" "./log" "../third_party/u-blox-m8/src"
+    SRCS 
+    "user_inputs.cpp"
+    "wearable.cpp"
+    "./common/wbl_func.cpp"
+    "./ui/ui_func.cpp"
+    "./ui/sprites.cpp"
+    "./ui/display_timeout.cpp"
+    "./peripheral/gps.cpp"
+    "../third_party/LSM6DSL/LSM6DSLSensor.cpp"
+    "../third_party/LSM6DSL/LSM6DSL_ACC_GYRO_Driver.c"
+    INCLUDE_DIRS
+    "."
+    "./display"
+    "./ui"
+    "./common"
+    "./peripheral"
+    "./log"
+    "../third_party/u-blox-m8/src"
+    "../third_party/LSM6DSL"
     PRIV_REQUIRES spi_flash esp_driver_i2c esp_timer esp_driver_gpio
 )
 

@@ -39,8 +39,8 @@
 
 /* Includes ------------------------------------------------------------------*/
 
-#include "Arduino.h"
-#include "Wire.h"
+//#include "Arduino.h"
+//#include "Wire.h"
 #include "LSM6DSLSensor.h"
 
 
@@ -78,8 +78,8 @@ LSM6DSLStatusTypeDef LSM6DSLSensor::begin()
   if(dev_spi)
   {
     // Configure CS pin
-    pinMode(cs_pin, OUTPUT);
-    digitalWrite(cs_pin, HIGH); 
+    //pinMode(cs_pin, OUTPUT);
+    //digitalWrite(cs_pin, HIGH); 
   }
 
   /* Enable register address automatically incremented during a multiple byte
@@ -157,7 +157,7 @@ LSM6DSLStatusTypeDef LSM6DSLSensor::end()
   if(dev_spi)
   {
     // Configure CS pin
-    pinMode(cs_pin, INPUT); 
+    //pinMode(cs_pin, INPUT); 
   }
 
   return LSM6DSL_STATUS_OK;

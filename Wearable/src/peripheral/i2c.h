@@ -19,7 +19,7 @@ struct I2C_BUS {
     static constexpr gpio_num_t SCL = _SCL;
     static constexpr bool INTERNAL_PULLUP = internal_pullup;
 
-    i2c_master_bus_handle_t bus = 0;
+    static i2c_master_bus_handle_t bus = 0;
 
     inline esp_err_t probe(uint16_t device_id) {
         ESP_RETURN_ON_ERROR(i2c_master_probe(bus, device_id, 1000 / portTICK_PERIOD_MS), TAG, "failed to probe device %i", device_id);
@@ -103,6 +103,18 @@ struct I2C : public BUS {
         uint8_t inmem[n+1] = {prefix};
         memcpy(inmem+1, c, n);
         ESP_RETURN_ON_ERROR(write(inmem, n+1), TAG, "write_commands failed");
+
+        return ESP_OK;
+    }
+
+    inline esp_err_t read(uint8_t *buffer, const uint16_t &bytes) {
+        ESP_RETURN_ON_ERROR(i2c_master_receive(dev, buffer, bytes, I2C_TIMEOUT / portTICK_PERIOD_MS), TAG, "read failed");
+
+        return ESP_OK;
+    }
+
+    inline esp_err_t write_read(const uint8_t *c, const uint8_t &n, uint8_t *recv, const uint16_t &recv_len) {
+        ESP_RETURN_ON_ERROR(i2c_master_transmit_receive(dev, c, n, recv, recv_len, I2C_TIMEOUT / portTICK_PERIOD_MS), TAG, "write_read failed");
 
         return ESP_OK;
     }
