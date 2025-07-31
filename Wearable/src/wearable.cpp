@@ -18,6 +18,7 @@
 #include "ui_gps.h"
 #include "gps_imu.h"
 #include "ui_imu.h"
+#include "wbl_system.h"
 
 using namespace wbl;
 using namespace Sprites;
@@ -45,7 +46,8 @@ UI::ScreenBaseT<> imuscreen("IMUInfo");
 UI::ElementIMUT<DisplayTexture> uiimu(display);
 
 void demo() {
-    uibattery.set_battery_level((millis()%10000)/100);
+    //uibattery.set_battery_level((millis()%10000)/100);
+    uibattery.set_battery_level((uint8_t)wbl_system.getBatteryLevel());
 
     /*
     if (dpad.enter.is_pressed()) {
@@ -232,6 +234,10 @@ void init() {
 
 extern "C" {
 void app_main() {
+    if (wbl_system.init() != ESP_OK) {
+        printf("Failed to initialize system\n");
+        goto end;
+    }
     dpad.init();
     init();
     if (gps.init() != ESP_OK) {

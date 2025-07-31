@@ -11,6 +11,7 @@ idf_component_register(
     "../third_party/LSM6DSL/LSM6DSL_ACC_GYRO_Driver.c"
     "./peripheral/gps_imu.cpp"
     "./peripheral/i2c.cpp"
+    "./common/wbl_system.cpp"
     INCLUDE_DIRS
     "."
     "./display"
@@ -20,7 +21,7 @@ idf_component_register(
     "./log"
     "../third_party/u-blox-m8/src"
     "../third_party/LSM6DSL"
-    PRIV_REQUIRES spi_flash esp_driver_i2c esp_timer esp_driver_gpio
+    PRIV_REQUIRES spi_flash esp_driver_i2c esp_timer esp_driver_gpio esp_adc
 )
 
 target_compile_options(${COMPONENT_LIB} PRIVATE

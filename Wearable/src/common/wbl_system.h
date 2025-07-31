@@ -14,6 +14,8 @@ struct wbl_System {
     void setAudibleFeedback(const bool &state);
     void setAudibleFeedbackLevel(const uint8_t &level);
     void beginAudibleFeedback(const uint8_t &level, const int32_t &duration);
+    float getBatteryVoltage();
+    float getBatteryLevel();
 
     bool use_audible_feedback = true;
     bool use_haptic_feedback = true;
