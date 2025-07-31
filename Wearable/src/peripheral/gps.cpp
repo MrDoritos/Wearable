@@ -71,7 +71,6 @@ GPSPoint GPS::getFix() {
     ret.latitude = nav.getlat();
     ret.altitude = nav.getheight();
     
-    timeval tv;
     tm t;
     
     t.tm_year = nav.getyear() - 1900;
@@ -118,6 +117,14 @@ void GPS::setSystemTime() {
 
 double GPS::getGroundSpeed() {
     return nav.getgSpeed();
+}
+
+uint32_t GPS::getTimeAccuracy() {
+    return nav.gettacc();
+}
+
+double GPS::getPDOP() {
+    return nav.getpDOP();
 }
 
 double GPS::getGroundSpeedAccuracy() {

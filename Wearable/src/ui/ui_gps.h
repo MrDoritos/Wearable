@@ -12,13 +12,7 @@ struct ElementGPST : public ElementT {
     using ElementT::ElementT;
     using ElementT::operator<<;
 
-    int64_t last_update = 0;
-
     constexpr ElementGPST(Buffer &buffer):ElementT(buffer){}
-
-    inline bool is_stale() const {
-        return last_update != gps.last_update;
-    }
 
     template<int buflen>
     struct TextBuffer {
@@ -29,30 +23,40 @@ struct ElementGPST : public ElementT {
         void print(FORMAT format, const Args&...args) {
             offset += snprintf(buffer + offset, buflen - offset, format, args...);
         }
+
+        void clear() {
+            offset = 0;
+            buffer[0] = 0;
+        }
     };
 
     void on_draw(Event *event) override {
-        //if (!this->is_stale())
-        //    if (!(event->value & Event::REDRAW))
-        //        return;
-        
-        //last_update = gps.last_update;
-
-        ElementT::clear();
+        this->clear();
 
         TextBuffer<500> buffer;
 
         buffer.print("Lon %lf\n", gps.getLongitude());
         buffer.print("Lat %lf\n", gps.getLatitude());
         buffer.print("Alt %lf\n", gps.getAltitude());
+        buffer.print("Speed %.2lfm/s\n", gps.getGroundSpeed()*0.001);
+        buffer.print("Bearing %.2lf\n", gps.getHeadingVehicle());
+
         time_t now = time(nullptr);
         tm t = *gmtime(&now);
         buffer.print("UTC %02i:%02i:%02i:%03i\n", t.tm_hour, t.tm_min, t.tm_sec, int(millis() % 1000));
-        buffer.print("Satellites: %i\n", gps.getSatelliteCount());
-        buffer.print("HAcc %.2lfmm\n", gps.getHorizontalAccuracy());
-        buffer.print("VAcc %.2lfmm\n", gps.getVerticalAccuracy());
+        
+        Length offset = this->draw_text(buffer.buffer, Sprites::font);
 
-        this->draw_text(buffer.buffer, Sprites::font);
+
+        buffer.clear();
+
+        buffer.print("Satellites: %i ", gps.getSatelliteCount());
+        buffer.print("PDOP %.2lf\n", gps.getPDOP());
+        buffer.print("HAcc %.2lfmm ", gps.getHorizontalAccuracy());
+        buffer.print("VAcc %.2lfmm\n", gps.getVerticalAccuracy());
+        buffer.print("TAcc %uns\n", gps.getTimeAccuracy());
+        
+        this->draw_text(buffer.buffer, Sprites::minifont, {0, offset.height});
     }
 
 };

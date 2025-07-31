@@ -35,6 +35,8 @@ namespace wbl {
         double getAltitude();
         double getVerticalAccuracy();
         double getHorizontalAccuracy();
+        uint32_t getTimeAccuracy();
+        double getPDOP();
 
         int64_t last_update = 0;
         int64_t last_time_update = 0;
