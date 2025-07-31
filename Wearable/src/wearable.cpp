@@ -46,9 +46,6 @@ UI::ScreenBaseT<> imuscreen("IMUInfo");
 UI::ElementIMUT<DisplayTexture> uiimu(display);
 
 void demo() {
-    //uibattery.set_battery_level((millis()%10000)/100);
-    uibattery.set_battery_level((uint8_t)wbl_system.getBatteryLevel());
-
     /*
     if (dpad.enter.is_pressed()) {
         display.putTexture(therock, {0,0,128,128}, {0,0});
@@ -86,6 +83,9 @@ void demo() {
     if (cnt % 32 == 0)
         //e_voltlog.push_back(t, (uu)(4000 + ((((t ^ 0xDEADBEEF) % 0xC0FFEE) | t) & 31)));
         e_voltlog.push_back(t, wbl_system.getBatteryVoltage() * 1000);
+
+    if (cnt % 200 == 0)
+        uibattery.set_battery_level((uint8_t)wbl_system.getBatteryLevel());
 
     esp_err_t ret = gps.update();
     gps.setSystemTime();
@@ -231,6 +231,10 @@ void init() {
 
     uiroot.dispatch(EventTypes::CONTENT_SIZE);
     uiroot.resolve_layout();
+
+    for (int i = 0; i < 3; i++)
+        wbl_system.getBatteryVoltageMean();
+    uibattery.set_battery_level(wbl_system.getBatteryLevel());
 }
 
 extern "C" {

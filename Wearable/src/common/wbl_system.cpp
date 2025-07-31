@@ -94,8 +94,24 @@ float wbl_System::getBatteryVoltage() {
     return 0;
 }
 
+static constexpr const int voltage_count = 3;
+float vbats[voltage_count];
+int voltage_offset = 0;
+
+float wbl_System::getBatteryVoltageMean() {
+    vbats[voltage_offset] = getBatteryVoltage();
+
+    if (++voltage_offset >= voltage_count) voltage_offset = 0;
+
+    float sum = 0;
+    for (int i = 0; i < voltage_count; i++)
+        sum += vbats[i];
+
+    return sum / voltage_count;
+}
+
 float wbl_System::getBatteryLevel() {
-    float v = getBatteryVoltage();
+    float v = getBatteryVoltageMean();
 
     const float pscale = 1.0/0.005;
     const float poff = 3.7;
