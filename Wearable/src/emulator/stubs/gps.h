@@ -41,6 +41,10 @@ int GPS::getSatelliteCount() { return 18; }
 double GPS::getLongitude() { return 19; }
 double GPS::getLatitude() { return 20; }
 double GPS::getAltitude() { return 21; }
+double GPS::getVerticalAccuracy() { return 22; }
+double GPS::getHorizontalAccuracy() { return 23; }
+uint32_t GPS::getTimeAccuracy() { return 24; }
+double GPS::getPDOP() { return 25; }
 
 }
 

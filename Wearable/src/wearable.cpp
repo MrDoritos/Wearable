@@ -238,6 +238,9 @@ void app_main() {
         display.clear(0);
         display.flush();
         display.setOrientation(3);
+        gps.update();
+        gps.setSystemTime();
+        displayTimeout.update(true);
         while (1) {
             demo();
             vPortYield();

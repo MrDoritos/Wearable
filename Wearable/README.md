@@ -47,11 +47,11 @@
         - [ ] Barometer
             - 0x77
             - BME388
-        - [ ] GPS
+        - [x] GPS
             - 3.3V
             - 0x42
             - CAM-M8
-        - [ ] GPS time sync
+        - [x] GPS time sync
         - 0.040A @ 5v -> 0.2W
     - [ ] LTR-390 UV
         - [ ] UV Wavelength
