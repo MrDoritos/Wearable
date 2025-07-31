@@ -21,7 +21,13 @@ idf_component_register(
     "./log"
     "../third_party/u-blox-m8/src"
     "../third_party/LSM6DSL"
-    PRIV_REQUIRES spi_flash esp_driver_i2c esp_timer esp_driver_gpio esp_adc
+    PRIV_REQUIRES
+    spi_flash
+    esp_driver_i2c
+    esp_timer
+    esp_driver_gpio
+    esp_adc
+    esp_driver_ledc
 )
 
 target_compile_options(${COMPONENT_LIB} PRIVATE

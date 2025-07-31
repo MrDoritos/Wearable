@@ -24,6 +24,8 @@ struct wbl_System {
     int32_t audible_feedback_end = 0;
     uint8_t haptic_feedback_level = 255;
     uint8_t audible_feedback_level = 255;
+    bool haptic_timer_state = false;
+    bool audible_timer_state = false;
 };
 
 extern wbl_System wbl_system;

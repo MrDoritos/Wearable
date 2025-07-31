@@ -6,6 +6,7 @@
 #include "esp_adc/adc_cali.h"
 #include "esp_adc/adc_cali_scheme.h"
 #include "driver/ledc.h"
+#include "esp_timer.h"
 
 namespace wbl {
 
@@ -24,11 +25,33 @@ static constexpr const char *TAG = "wbl::wbl_system.cpp";
 #define PIEZO_CHANNEL LEDC_CHANNEL_2
 #define PIEZO_TIMER LEDC_TIMER_1
 #define PIEZO_MODE LEDC_LOW_SPEED_MODE
+#define TIMER_DURATION 10
 
 wbl_System wbl_system;
 adc_oneshot_unit_handle_t adc_handle;
 adc_cali_handle_t adc_chars;
 bool adc_calib = false;
+esp_timer_handle_t timer_handle;
+
+static void pwm_timer_callback(void *arg) {
+    int32_t &dur = wbl_system.haptic_feedback_end;
+    uint8_t &level = wbl_system.haptic_feedback_level;
+    bool &tstate = wbl_system.haptic_timer_state;
+
+    dur -= TIMER_DURATION;
+    const bool state = dur > 0;
+
+    if (!state) {
+        dur = 0;
+        tstate = false;
+    }
+
+    if (!tstate) {
+        esp_timer_stop(timer_handle);
+    }
+
+    ledc_set_duty_and_update(HAPTIC_MODE, HAPTIC_CHANNEL, state * level, 0);
+}
 
 esp_err_t init_pwm() {
     ledc_timer_config_t haptic_cfg = {
@@ -59,6 +82,16 @@ esp_err_t init_pwm() {
     };
 
     ESP_RETURN_ON_ERROR(ledc_channel_config(&channel_cfg), TAG, "Failed to init channel");
+
+    esp_timer_create_args_t timer_cfg = {
+        .callback = &pwm_timer_callback,
+        .arg = (void*)timer_handle,
+        .name = "pwm_timer",
+    };
+
+    ESP_RETURN_ON_ERROR(esp_timer_create(&timer_cfg, &timer_handle), TAG, "Failed to init pwm timer");
+
+    return ESP_OK;
 }
 
 esp_err_t wbl_System::init() {
@@ -113,6 +146,12 @@ void wbl_System::setAudibleFeedbackLevel(const uint8_t &level) {
 
 void wbl_System::beginHapticFeedback(const uint8_t &level, const int32_t &duration) {
     setHapticFeedbackLevel(level);
+    haptic_feedback_end = duration;
+
+    if (!haptic_timer_state)
+        ESP_ERROR_CHECK(esp_timer_start_periodic(timer_handle, TIMER_DURATION));
+
+    haptic_timer_state = true;
 }
 
 void wbl_System::beginAudibleFeedback(const uint8_t &level, const int32_t &duration) {
