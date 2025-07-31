@@ -17,6 +17,7 @@
 #include "gps.h"
 #include "ui_gps.h"
 #include "gps_imu.h"
+#include "ui_imu.h"
 
 using namespace wbl;
 using namespace Sprites;
@@ -40,6 +41,8 @@ UI::ElementLogT<DisplayTexture, DataLog> e_sinelog(display, sinelog), e_squarelo
 UI::ElementLockIconT<DisplayTexture> e_lockicon(display);
 UI::ScreenBaseT<> gpsscreen("GPSInfo");
 UI::ElementGPST<DisplayTexture> uigps(display);
+UI::ScreenBaseT<> imuscreen("IMUInfo");
+UI::ElementIMUT<DisplayTexture> uiimu(display);
 
 void demo() {
     uibattery.set_battery_level((millis()%10000)/100);
@@ -120,6 +123,7 @@ void init() {
     settingscreen << e_sawlog;
     settingscreen << e_voltlog;
     gpsscreen << uigps;
+    imuscreen << uiimu;
 
     block << UI::StyleInfo { .height{26} };
     inner << StyleInfo {.height {14}};
@@ -131,6 +135,7 @@ void init() {
     block3 << StyleInfo { .width {30}, .height{20} };
     e_lockicon << StyleInfo{.display{INLINE}, .overflow{AUTO,AUTO}} << "lock";
     uigps << StyleInfo { .height{92}, .overflow{AUTO,AUTO} } << "GPS";
+    uiimu << StyleInfo { .height{92} } << "IMU";
     StyleInfo logstyle = { .display{INLINE}, .width {62}, .height{40}, .margin{1} };
 
     e_sawlog << logstyle << "saw";
@@ -213,11 +218,13 @@ void init() {
     mainscreen.set_left(clockscreen);
     mainscreen.set_right(settingscreen);
     settingscreen.set_right(gpsscreen);
+    gpsscreen.set_right(imuscreen);
 
     uiroot.set_header(header);
     //uiroot.set_screen(mainscreen);
     //uiroot.set_screen(settingscreen);
-    uiroot.set_screen(gpsscreen);
+    //uiroot.set_screen(gpsscreen);
+    uiroot.set_screen(imuscreen);
 
     uiroot.dispatch(EventTypes::CONTENT_SIZE);
     uiroot.resolve_layout();

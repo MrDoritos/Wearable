@@ -170,7 +170,7 @@ struct StyleInfo {
     Position position{STATIC};
     DimensionMinMax width, height;
     Box margin, padding;
-    OverflowT overflow;
+    OverflowT overflow{AUTO};
 
     Length content, used;
     LengthD computed, container;

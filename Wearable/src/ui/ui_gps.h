@@ -3,6 +3,7 @@
 #include "config.h"
 #include "ui.h"
 #include "gps.h"
+#include "ui_textbuffer.h"
 
 namespace wbl {
 namespace UI {
@@ -13,22 +14,6 @@ struct ElementGPST : public ElementT {
     using ElementT::operator<<;
 
     constexpr ElementGPST(Buffer &buffer):ElementT(buffer){}
-
-    template<int buflen>
-    struct TextBuffer {
-        char buffer[buflen];
-        int offset = 0;
-
-        template<typename FORMAT, typename ...Args>
-        void print(FORMAT format, const Args&...args) {
-            offset += snprintf(buffer + offset, buflen - offset, format, args...);
-        }
-
-        void clear() {
-            offset = 0;
-            buffer[0] = 0;
-        }
-    };
 
     void on_draw(Event *event) override {
         this->clear();
@@ -55,7 +40,7 @@ struct ElementGPST : public ElementT {
         buffer.print("HAcc %.2lfmm ", gps.getHorizontalAccuracy());
         buffer.print("VAcc %.2lfmm\n", gps.getVerticalAccuracy());
         buffer.print("TAcc %uns\n", gps.getTimeAccuracy());
-        
+
         this->draw_text(buffer.buffer, Sprites::minifont, {0, offset.height});
     }
 

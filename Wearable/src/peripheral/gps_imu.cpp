@@ -22,7 +22,22 @@ esp_err_t GPSIMU::init() {
         return 1;
     }
 
+    if (s_lsm6dsl.Enable_X()) return 1;
+    if (s_lsm6dsl.Enable_G()) return 1;
+
     return ESP_OK;
+}
+
+AxisData GPSIMU::getGyroscope() {
+    int32_t axis[3];
+    s_lsm6dsl.Get_G_Axes(axis);
+    return AxisData(axis[0], axis[1], axis[2]);
+}
+
+AxisData GPSIMU::getAccelerometer() {
+    int32_t axis[3];
+    s_lsm6dsl.Get_X_Axes(axis);
+    return AxisData(axis[0], axis[1], axis[2]);
 }
 
 }
