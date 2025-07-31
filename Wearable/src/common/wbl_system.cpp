@@ -5,6 +5,7 @@
 #include "esp_adc/adc_oneshot.h"
 #include "esp_adc/adc_cali.h"
 #include "esp_adc/adc_cali_scheme.h"
+#include "driver/ledc.h"
 
 namespace wbl {
 
@@ -15,10 +16,50 @@ static constexpr const char *TAG = "wbl::wbl_system.cpp";
 #define VBAT_UNIT ADC_UNIT_2
 #define VBAT_GPIO GPIO_NUM_14
 
+#define HAPTIC_GPIO GPIO_NUM_37
+#define HAPTIC_CHANNEL LEDC_CHANNEL_1
+#define HAPTIC_TIMER LEDC_TIMER_1
+#define HAPTIC_MODE LEDC_LOW_SPEED_MODE
+#define PIEZO_GPIO GPIO_NUM_38
+#define PIEZO_CHANNEL LEDC_CHANNEL_2
+#define PIEZO_TIMER LEDC_TIMER_1
+#define PIEZO_MODE LEDC_LOW_SPEED_MODE
+
 wbl_System wbl_system;
 adc_oneshot_unit_handle_t adc_handle;
 adc_cali_handle_t adc_chars;
 bool adc_calib = false;
+
+esp_err_t init_pwm() {
+    ledc_timer_config_t haptic_cfg = {
+        .speed_mode = HAPTIC_MODE,
+        .duty_resolution = LEDC_TIMER_13_BIT,
+        .timer_num = HAPTIC_TIMER,
+        .freq_hz = 4000,
+    };
+
+    ledc_timer_config_t piezo_cfg = {
+        .speed_mode = PIEZO_MODE,
+        .duty_resolution = LEDC_TIMER_13_BIT,
+        .timer_num = PIEZO_TIMER,
+        .freq_hz = 4000,
+    };
+
+    ESP_RETURN_ON_ERROR(ledc_timer_config(&haptic_cfg), TAG, "Failed to init haptic");
+    ESP_RETURN_ON_ERROR(ledc_timer_config(&piezo_cfg), TAG, "Failed to init piezo");
+
+    ledc_channel_config_t channel_cfg = {
+        .gpio_num = PIEZO_GPIO,
+        .speed_mode = PIEZO_MODE,
+        .channel = PIEZO_CHANNEL,
+        .intr_type = LEDC_INTR_DISABLE,
+        .timer_sel = PIEZO_TIMER,
+        .duty = 0,
+        .hpoint = 0,
+    };
+
+    ESP_RETURN_ON_ERROR(ledc_channel_config(&channel_cfg), TAG, "Failed to init channel");
+}
 
 esp_err_t wbl_System::init() {
     adc_oneshot_unit_init_cfg_t adc_conf = {
