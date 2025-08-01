@@ -27,6 +27,8 @@ esp_err_t LTR390::init() {
     printf("gain: %i, mode: %i, resolution: %i, active: %i\n", s_ltr390.getGain(), s_ltr390.getMode(), s_ltr390.getResolution(), s_ltr390.enabled());
     printf("status: %i\n", i2c_ltr390.read_register(LTR390_MAIN_STATUS));
     printf("ctrl: %i\n", i2c_ltr390.read_register(LTR390_MAIN_CTRL));
+    printf("als_uvs_meas_rate: %i\n", i2c_ltr390.read_register(LTR390_MEAS_RATE));
+    printf("als_uvs_gain: %i\n", i2c_ltr390.read_register(LTR390_GAIN));
     
     return ESP_OK;
 }
@@ -47,14 +49,16 @@ uint32_t LTR390::getUVS() {
     return s_ltr390.readUVS();
 }
 
-float LTR390::getLux() {
-    uint32_t als = getALS();
-
+float LTR390::getLux(const uint32_t &als) {
     float lux;
 
     lux = (als * 0.523636f) + 7.9449;
 
     return lux;
+}
+
+float LTR390::getLux() {
+    return getLux(getALS());
 }
 
 void LTR390::setState(const bool &state) {

@@ -118,6 +118,7 @@ uint32_t Adafruit_LTR390::readALS(void) {
     uint32_t v;
     uint8_t b[4];
   };
+  v = 0;
   uint8_t r = LTR390_ALSDATA;
   
   wbl::i2c_ltr390.write_read(&r, 1, b, 3);
@@ -139,6 +140,7 @@ uint32_t Adafruit_LTR390::readUVS(void) {
     uint32_t v;
     uint8_t b[4];
   };
+  v = 0;
 
   uint8_t r = LTR390_UVSDATA;
   wbl::i2c_ltr390.write_read(&r, 1, b, 3);

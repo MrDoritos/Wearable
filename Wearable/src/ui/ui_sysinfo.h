@@ -18,16 +18,12 @@ struct ElementSysInfoT : public ElementT {
     void on_draw(Event *event) override {
         this->clear();
 
-        //TextBuffer<500> buffer;
-
-        //buffer.print("BAT %.03lfV %.01lf%%\n", wbl_system.getBatteryVoltage(), wbl_system.getBatteryLevel());
-        //buffer.print("UVS %li ALS %li\n", ltr390.getUVS(), ltr390.getALS());
-
-        //this->draw_text(buffer.buffer, Sprites::font);
-
         TextureWriterT<ElementSysInfoT> writer(this);
-        writer.printf(Sprites::font, "BAT %.03lfV %.01lf%%\n", wbl_system.getBatteryVoltage(), wbl_system.getBatteryLevel());
-        writer.printf(Sprites::font, "UVS %li ALS %li\n", ltr390.getUVS(), ltr390.getALS());
+        
+        writer.printf(Sprites::font, "BAT %.03fV %.01f%%\n", wbl_system.getBatteryVoltage(), wbl_system.getBatteryLevel());
+        writer.printf(Sprites::font, "UVS %li\n", /*ltr390.getUVS()*/0);
+        uint32_t als = ltr390.getALS();
+        writer.printf(Sprites::font, "ALS %li %.01flx\n", als, ltr390.getLux(als));
     }
 };
 
