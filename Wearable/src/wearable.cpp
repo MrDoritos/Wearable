@@ -20,6 +20,7 @@
 #include "ui_imu.h"
 #include "wbl_system.h"
 #include "ltr390.h"
+#include "ui_sysinfo.h"
 
 using namespace wbl;
 using namespace Sprites;
@@ -45,6 +46,8 @@ UI::ScreenBaseT<> gpsscreen("GPSInfo");
 UI::ElementGPST<DisplayTexture> uigps(display);
 UI::ScreenBaseT<> imuscreen("IMUInfo");
 UI::ElementIMUT<DisplayTexture> uiimu(display);
+UI::ScreenBaseT<> sysinfoscreen("System");
+UI::ElementSysInfoT<DisplayTexture> uisysinfo(display);
 
 void demo() {
     /*
@@ -90,7 +93,7 @@ void demo() {
     if (cnt % 200 == 0)
         uibattery.set_battery_level((uint8_t)wbl_system.getBatteryLevel());
 
-    esp_err_t ret = gps.update();
+    gps.update();
     gps.setSystemTime();
 
     #ifdef __linux__
@@ -131,6 +134,8 @@ void init() {
     gpsscreen << uigps;
     imuscreen << uiimu;
 
+    StyleInfo screenremaining { .height{92} };
+
     block << UI::StyleInfo { .height{26} };
     inner << StyleInfo {.height {14}};
     block2 << UI::StyleInfo { .width{32}, .height{26} };
@@ -143,6 +148,9 @@ void init() {
     uigps << StyleInfo { .height{92}, .overflow{AUTO,AUTO} } << "GPS";
     uiimu << StyleInfo { .height{92} } << "IMU";
     StyleInfo logstyle = { .display{INLINE}, .width {62}, .height{40}, .margin{1} };
+    
+    uisysinfo << screenremaining;
+    sysinfoscreen << uisysinfo;
 
     e_sawlog << logstyle << "saw";
     e_voltlog << logstyle << "volts"; 
@@ -230,7 +238,8 @@ void init() {
     //uiroot.set_screen(mainscreen);
     //uiroot.set_screen(settingscreen);
     //uiroot.set_screen(gpsscreen);
-    uiroot.set_screen(imuscreen);
+    //uiroot.set_screen(imuscreen);
+    uiroot.set_screen(sysinfoscreen);
 
     uiroot.dispatch(EventTypes::CONTENT_SIZE);
     uiroot.resolve_layout();

@@ -1,3 +1,5 @@
+#pragma once
+
 #include "config.h"
 #include "esp_system.h"
 #include "wbl_func.h"
