@@ -90,8 +90,11 @@ void demo() {
         //e_voltlog.push_back(t, (uu)(4000 + ((((t ^ 0xDEADBEEF) % 0xC0FFEE) | t) & 31)));
         e_voltlog.push_back(t, wbl_system.getBatteryVoltage() * 1000);
 
-    if (cnt % 200 == 0)
+    if (cnt % 200 == 0) {
         uibattery.set_battery_level((uint8_t)wbl_system.getBatteryLevel());
+        
+    }
+    wbl_system.setDisplayBrightness(ltr390.getLux());
 
     gps.update();
     gps.setSystemTime();

@@ -55,7 +55,7 @@
         - 0.040A @ 5v -> 0.2W
     - [ ] LTR-390 UV
         - [ ] UV daily exposure alert
-        - [ ] Ambient light for auto brightness
+        - [x] Ambient light for auto brightness
         - 400 kHz I2C
         - 3.3V input voltage
         - 100 uA max duty cycle

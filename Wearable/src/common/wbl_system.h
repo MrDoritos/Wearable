@@ -19,6 +19,7 @@ struct wbl_System {
     float getBatteryVoltage();
     float getBatteryVoltageMean();
     float getBatteryLevel();
+    void setDisplayBrightness(const float &lux);
 
     bool use_audible_feedback = true;
     bool use_haptic_feedback = true;

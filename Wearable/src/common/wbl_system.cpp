@@ -7,6 +7,7 @@
 #include "esp_adc/adc_cali_scheme.h"
 #include "driver/ledc.h"
 #include "esp_timer.h"
+#include "sprites.h"
 
 #include <stdio.h>
 
@@ -212,6 +213,24 @@ float wbl_System::getBatteryLevel() {
     if (p < 0)
         return 0;
     return p;
+}
+
+void wbl_System::setDisplayBrightness(const float &lux) {
+    // 0lx - no light
+    // 3.4lx - civil twilight
+    // 20-50 - public areas with dark surroundings
+    // 50-100 - living room
+    // 100 - very dark overcast day
+    // 320-500 - office lighting
+    // 400 - sunrise/sunset
+    // 1000 - overcast day
+    // 10000-25000 indirect sunlight on a clear day
+    // 32000-100000 direct sunlight
+
+    float per = logf(lux) * 0.15f;
+    if (per < 0.1f) per = 0.1f;
+    if (per > 1.0f) per = 1.0f;
+    Sprites::display.setContrast((uint8_t)(per * 255));
 }
 
 }
