@@ -74,6 +74,15 @@ void demo() {
         display.setState(!isDisplayOff);
     }
 
+    int64_t tt = millis() / 200;
+    uint8_t c = (tt % 0x10)*16;//((tt/0x10) % 16)*16;
+    uint8_t v = ((tt / 0x10) % 0x10)*4;//(tt % 0x10)*4;
+    uint8_t chg = (tt / (0x10*16));
+    
+    display.setChargePeriod(chg % 16, (chg / 16) % 16);
+    display.setContrast(c);
+    display.setVCOM(v);
+
     uiroot.once();
 
     static int cnt = 0;
@@ -94,7 +103,8 @@ void demo() {
         uibattery.set_battery_level((uint8_t)wbl_system.getBatteryLevel());
         
     }
-    wbl_system.setDisplayBrightness(ltr390.getLux());
+
+    //wbl_system.setDisplayBrightness(ltr390.getLux());
 
     gps.update();
     gps.setSystemTime();

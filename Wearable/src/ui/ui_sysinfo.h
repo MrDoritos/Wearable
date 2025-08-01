@@ -26,8 +26,9 @@ struct ElementSysInfoT : public ElementT {
         writer.printf(Sprites::font, "UVS %li %.01fUVI\n", uvs, ltr390.getUVI(uvs));
         uint32_t als = ltr390.getALS();
         writer.printf(Sprites::font, "ALS %li %.01flx\n", als, ltr390.getLux(als));
-        writer.printf(Sprites::font, "OLED %.3fmA %.1fHz\n", Sprites::display.getDisplayCurrentDraw()*1000.0f, Sprites::display.getDisplayRefreshFrequency());
-        writer.printf(Sprites::font, "OLED %.3fV\n", Sprites::display.getVoltageCOM());
+        writer.printf(Sprites::font, "OLED %.3fV %.3fmA\n", Sprites::display.getVoltageCOM(), Sprites::display.getDisplayCurrentDraw()*1000.0f);
+        writer.printf(Sprites::font, "OLED %.1f%% %.1fHz\n", float(Sprites::display.display_contrast)/255.0f*100.0f, Sprites::display.getDisplayRefreshFrequency());
+        writer.printf(Sprites::minifont, "OLED pre %i dis %i\n", Sprites::display.precharge_period, Sprites::display.discharge_period);
     }
 };
 

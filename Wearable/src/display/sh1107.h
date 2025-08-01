@@ -186,9 +186,16 @@ struct Display : public I2C {
         if (this->vcom == vcom)
             return ESP_OK;
 
+        bool modify_state = isDisplayOn();
+        uint8_t prev_state = display_state;
+
         this->vcom = vcom;
 
-        return this->write_command(SH1107::SET_VCOM, vcom);
+        if (modify_state) setState(false);
+        this->write_command(SH1107::SET_VCOM, vcom);
+        if (modify_state) setDisplayState(prev_state);
+
+        return ESP_OK;
     }
 
     inline esp_err_t setDCDC(const uint8_t dcdc_source, const uint8_t &dcdc_switching_scale) {
