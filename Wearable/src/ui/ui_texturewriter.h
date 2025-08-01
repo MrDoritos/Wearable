@@ -9,40 +9,46 @@ namespace UI {
 template<typename ElementT>
 struct TextureWriterT {
     ElementT &ref;
-    Origin pos;
-    Origin origin;
-    Length inline_length;
-    Length total_length;
+    bool wrap, clip_x, clip_y;
+    Size size;
 
-    constexpr TextureWriterT(ElementT &ref, const Origin &origin=Origin(0)):
+    constexpr TextureWriterT(ElementT &ref, const Origin &pos):
         ref(ref),
-        pos(origin),
-        origin(origin),
-        inline_length(0),
-        total_length(0) {}
-    constexpr TextureWriterT(ElementT *ref):TextureWriterT(*ref){}
+        wrap(ref.wrap & WRAP),
+        clip_x(ref.overflow.x & HIDDEN),
+        clip_y(ref.overflow.y & HIDDEN),
+        size(pos, Length(0)) {}
+
+    constexpr TextureWriterT(ElementT &ref):TextureWriterT(ref, ref.getOffset()) {}
+    constexpr TextureWriterT(ElementT *ref, const Origin &pos):TextureWriterT(*ref,pos){}
+    constexpr TextureWriterT(ElementT *ref):TextureWriterT(*ref) {}
 
     void add_break() {
-        pos.y += inline_length.height;
-
-        if (pos.y - origin.y > total_length.height)
-            total_length.height = pos.y - origin.y;
-
-        inline_length = 0;
-        pos.x = origin.x;
+        size.y += size.height;
+        size.x = 0;
+        size.height = 0;
     }
 
-    void add_length(const Length &length) {
-        if (length.height > inline_length.height)
-            inline_length.height = length.height;
+    bool add_length(const Length &length, Origin &pos) {
+        if (length.width + size.x > ref.getWidth()) {
+            if (wrap)
+                add_break();
+            else
+            if (clip_x)
+                return false;
+        }
 
-        pos.x += length.width;
+        if (clip_y && length.height + size.y > ref.getHeight())
+            return false;
 
-        if (pos.x - origin.x > total_length.width)
-            total_length.width = pos.x - origin.x;
+        if (size.height < length.height)
+            size.height = length.height;
+        
+        pos = size;
 
-        if (pos.x > ref.getRight())
-            add_break();
+        size.x += length.width;
+
+        return true;
     }
 
     template<typename FontProvider, typename Format, int buflen=100, typename ...Args>
@@ -50,25 +56,32 @@ struct TextureWriterT {
         char buf[buflen];
         snprintf(buf, buflen, format, args...);
         text(font, buf);
-        add_break();
     }
 
     template<typename Sprite>
     void sprite(const Sprite &sp) {
-        const Length use = ref.template draw_sprites(&sp, 1, pos);
-        add_length(use);
+        Origin pos;
+        if (!add_length(sp, pos))
+            return;
+        ref.buffer.putSprite(sp, pos);
+    }
+
+    template<typename Glyph>
+    void glyph(const Glyph &gl) {
+        Origin pos;
+        const Length glyph_size(
+            gl.font_width + gl.advance_x,
+            gl.font_height + gl.advance_y  
+        );
+        if (!add_length(glyph_size, pos))
+            return;
+        ref.buffer.putSprite(gl, pos);
     }
 
     template<typename Sprite>
     void sprite(const Sprite *sp, const int &num_sp=1) {
         for (int i = 0; i < num_sp; i++)
             sprite(*sp);
-    }
-
-    template<typename FontProvider>
-    void text(const FontProvider &font, const char *txt) {
-        const Length use = ref.template draw_text(txt, font, pos);
-        add_length(use);
     }
 
     template<typename Sprite>
@@ -82,6 +95,21 @@ struct TextureWriterT {
         sprites(args...);
     }
 
+    template<typename FontProvider>
+    void text(const FontProvider &font, const char *txt) {
+        const int length = strlen(txt);
+
+        for (int i = 0; i < length; i++) {
+            const char ch = txt[i];
+
+            if (ch == '\n') {
+                add_break();
+                continue;
+            }
+
+            glyph(font.getCharacter(ch));
+        }
+    }
 };
 
 }
