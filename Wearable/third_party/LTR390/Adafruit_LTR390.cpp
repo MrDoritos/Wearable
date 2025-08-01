@@ -155,7 +155,9 @@ void Adafruit_LTR390::enable(bool en) {
   //Adafruit_I2CRegisterBits enbit =
   //    Adafruit_I2CRegisterBits(&mainreg, 1, 1); // # bits, bit_shift
   uint8_t mainreg = wbl::i2c_ltr390.read_register(LTR390_MAIN_CTRL);
-  wbl::i2c_ltr390.write_command_prefix(LTR390_MAIN_CTRL, mainreg | 2);
+  mainreg &= ~2;
+  mainreg |= (en ? 2 : 0);
+  wbl::i2c_ltr390.write_command_prefix(LTR390_MAIN_CTRL, mainreg);
 
   //enbit.write(en);
 }
@@ -253,7 +255,7 @@ void Adafruit_LTR390::setResolution(ltr390_resolution_t res) {
   //resbits.write(res);
   uint8_t reg = wbl::i2c_ltr390.read_register(LTR390_MEAS_RATE);
   reg &= (~0b111)<<4;
-  reg |= res;
+  reg |= res<<4;
   wbl::i2c_ltr390.write_command_prefix(LTR390_MEAS_RATE, reg);
 }
 

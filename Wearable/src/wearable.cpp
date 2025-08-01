@@ -76,8 +76,10 @@ void demo() {
     static int cnt = 0;
     int64_t t = micros();
     if (cnt++ % 4 == 0) {
-        e_sinelog.push_back(t, (uu)(sinf(float((int(t))/(M_PI * 2 * 100000)))*500.0f+1500.0f));
-        e_squarelog.push_back(t, (cnt & 64));
+        //e_sinelog.push_back(t, (uu)(sinf(float((int(t))/(M_PI * 2 * 100000)))*500.0f+1500.0f));
+        //e_squarelog.push_back(t, (cnt & 64));
+        e_squarelog.push_back(t, (uu)ltr390.getUVS());
+        e_sinelog.push_back(t, (uu)ltr390.getALS());
         e_sawlog.push_back(t, (uu)(int(t/5000)%1000));
     }
 
