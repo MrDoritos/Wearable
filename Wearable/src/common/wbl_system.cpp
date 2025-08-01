@@ -227,7 +227,7 @@ void wbl_System::setDisplayBrightness(const float &lux) {
     // 10000-25000 indirect sunlight on a clear day
     // 32000-100000 direct sunlight
 
-    float per = logf(lux) * 0.15f;
+    float per = log10f(lux) * 0.25f;
     if (per < 0.1f) per = 0.1f;
     if (per > 1.0f) per = 1.0f;
     Sprites::display.setContrast((uint8_t)(per * 255));
