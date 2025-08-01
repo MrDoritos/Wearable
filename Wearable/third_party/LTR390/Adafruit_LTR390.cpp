@@ -190,7 +190,7 @@ void Adafruit_LTR390::setMode(ltr390_mode_t mode) {
 
   //modebit.write(mode);
   uint8_t mainreg = wbl::i2c_ltr390.read_register(LTR390_MAIN_CTRL);
-  mainreg &= 1<<3;
+  mainreg &= ~(1<<3);
   mainreg |= mode<<3;
   wbl::i2c_ltr390.write_command_prefix(LTR390_MAIN_CTRL, mainreg);
 }
@@ -254,7 +254,7 @@ void Adafruit_LTR390::setResolution(ltr390_resolution_t res) {
 
   //resbits.write(res);
   uint8_t reg = wbl::i2c_ltr390.read_register(LTR390_MEAS_RATE);
-  reg &= (~0b111)<<4;
+  reg &= ~(0b111<<4);
   reg |= res<<4;
   wbl::i2c_ltr390.write_command_prefix(LTR390_MEAS_RATE, reg);
 }

@@ -12,6 +12,7 @@ struct LTR390 {
     uint32_t getALS();
     void setState(const bool &state);
     bool isActive();
+    void setMeasurementRate(uint32_t ms);
 };
 
 extern LTR390 ltr390;

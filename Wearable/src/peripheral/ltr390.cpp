@@ -22,6 +22,7 @@ esp_err_t LTR390::init() {
     s_ltr390.setMode(LTR390_MODE_UVS);
     s_ltr390.setGain(LTR390_GAIN_3);
     s_ltr390.setResolution(LTR390_RESOLUTION_16BIT);
+    setMeasurementRate(200);
     setState(true);
     //s_ltr390.setThresholds(100,1000);
     uv_mode = true;
@@ -55,6 +56,22 @@ void LTR390::setState(const bool &state) {
 
 bool LTR390::isActive() {
     return s_ltr390.enabled();
+}
+
+void LTR390::setMeasurementRate(uint32_t ms) {
+    uint8_t flag = 0;
+
+    if (ms > 25) flag = 0b001;
+    if (ms > 50) flag = 0b010;
+    if (ms > 100) flag = 0b011;
+    if (ms > 200) flag = 0b100;
+    if (ms > 500) flag = 0b101;
+    if (ms > 1000) flag = 0b111;
+
+    uint8_t reg = i2c_ltr390.read_register(LTR390_MEAS_RATE);
+    reg &= ~0b111;
+    reg |= flag;
+    i2c_ltr390.write_command_prefix(LTR390_MEAS_RATE, reg);
 }
 
 }
