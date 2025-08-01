@@ -92,8 +92,12 @@ void demo() {
     if (cnt++ % 4 == 0) {
         //e_sinelog.push_back(t, (uu)(sinf(float((int(t))/(M_PI * 2 * 100000)))*500.0f+1500.0f));
         //e_squarelog.push_back(t, (cnt & 64));
-        //e_squarelog.push_back(t, (uu)ltr390.getUVS());
-        //e_sinelog.push_back(t, (uu)ltr390.getALS());
+        if (cnt & 4) {
+            e_squarelog.push_back(t, (uu)ltr390.getUVS());
+        } else {
+            wbl_system.setDisplayBrightness(ltr390.getLux());
+            e_sinelog.push_back(t, (uu)ltr390.getALS());
+        }
         e_sawlog.push_back(t, (uu)(int(t/5000)%1000));
     }
 
@@ -105,8 +109,6 @@ void demo() {
         uibattery.set_battery_level((uint8_t)wbl_system.getBatteryLevel());
         
     }
-
-    wbl_system.setDisplayBrightness(ltr390.getLux());
 
     gps.update();
     bool time_set = gps.last_time_update > 0;
