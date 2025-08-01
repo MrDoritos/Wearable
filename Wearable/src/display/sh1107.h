@@ -261,6 +261,7 @@ struct Display : public I2C {
 
         setDisplayState(OFF);
         setOscillator(OSCILLATOR_0, DIVIDE_RATION_POR);
+        setChargePeriod(8, 8);
         setAddressingMode(MEMORYMODE);
         setContrast(0x7f);
         setDCDC(DCDC_BUILTIN, DCDC_SWITCH_POR);
