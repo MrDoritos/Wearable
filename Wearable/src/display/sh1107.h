@@ -89,8 +89,33 @@ struct Display : public I2C {
         return ESP_OK;
     }
 
+    inline esp_err_t setChargePeriod(const uint8_t &precharge, const uint8_t &discharge) {
+        uint8_t reg = (precharge & 0x0F) | (discharge << 4);
+
+        return this->write_command(SH1107::SET_PRECHARGE, reg);
+    }
+
+    inline esp_err_t setOscillator(const uint8_t &divide_ration, const uint8_t &oscillator_frequency) {
+        uint8_t reg = (divide_ration & 0x0F) | (oscillator_frequency << 4);
+
+        return this->write_command(SH1107::SET_CLOCKDIV, reg);
+    }
+
+    inline esp_err_t setVCOM(const uint8_t &vcom) {
+        return this->write_command(SH1107::SET_VCOM, vcom);
+    }
+
+    inline esp_err_t setDCDC(const uint8_t &dcdc) {
+        ESP_RETURN_ON_ERROR(this->setState(false), TAG, "Failed to turn off display in setDCDC");
+        ESP_RETURN_ON_ERROR(this->write_command(SH1107::SET_DCDC, dcdc), TAG, "Failed to write dcdc in setDCDC");
+        ESP_RETURN_ON_ERROR(this->setState(true), TAG, "Failed to turn on display in setDCDC");
+
+        return ESP_OK;
+    }
+
     inline esp_err_t reset() {
         ESP_RETURN_ON_ERROR(this->write_commands(SH1107::initcmds, sizeof(SH1107::initcmds)), TAG, "initcmds failed");
+        
         return ESP_OK;
     }
 
