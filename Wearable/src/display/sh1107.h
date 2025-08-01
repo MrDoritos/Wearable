@@ -97,6 +97,10 @@ struct Display : public I2C {
         return setDisplayState(on ? SH1107::ON : SH1107::OFF);
     }
 
+    inline bool isDisplayOn() {
+        return display_state != SH1107::OFF;
+    }
+
     inline esp_err_t setContrast(const uint8_t &contrast = 0x7f) {
         if (display_contrast == contrast) return ESP_OK;
         
@@ -208,6 +212,39 @@ struct Display : public I2C {
             ESP_RETURN_ON_ERROR(this->setDisplayState(prev_state), TAG, "Failed to turn on display in setDCDC");
 
         return ESP_OK;
+    }
+
+    inline float getDisplayCurrentDraw() {
+        if (!isDisplayOn())
+            return 0.00000001; // 0.01uA
+
+        const float power = float(display_contrast) / 256.0f;
+        const float sf = 32.0f;
+        const float iref = 0.000015625f * sf; // Iref * 32 = 15.625uA * 32
+
+        const float idd2 = 0.000190; // Idd2 190uA
+        const float ipp = 0.001;     // Ipp  1mA
+
+        return power * iref + idd2 + ipp;
+    }
+
+    inline float getDisplayOscillatorFrequency() {
+        const float base = 720000.0f;
+
+        const float mult = 1.0f+((int(oscillator_scale * 5) - 25) * 0.01f);
+        const float div = oscillator_divide + 1;
+
+        return (base * mult) / div;
+    }
+
+    inline float getDisplayRefreshFrequency() {
+        const int dclks = (precharge_period == 0 ? 2 : precharge_period) + discharge_period;
+
+        return (getDisplayOscillatorFrequency() / float(HEIGHT)) / float(dclks);
+    }
+
+    inline float getVoltageCOM() {
+        return float(vcom) * 0.006415f + 0.430f;
     }
 
     inline esp_err_t reset() {

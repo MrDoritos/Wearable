@@ -6,6 +6,7 @@
 
 #include "ltr390.h"
 #include "wbl_system.h"
+#include "sh1107.h"
 
 namespace wbl {
 namespace UI {
@@ -25,6 +26,8 @@ struct ElementSysInfoT : public ElementT {
         writer.printf(Sprites::font, "UVS %li %.01fUVI\n", uvs, ltr390.getUVI(uvs));
         uint32_t als = ltr390.getALS();
         writer.printf(Sprites::font, "ALS %li %.01flx\n", als, ltr390.getLux(als));
+        writer.printf(Sprites::font, "OLED %.3fmA %.1fHz\n", Sprites::display.getDisplayCurrentDraw()*1000.0f, Sprites::display.getDisplayRefreshFrequency());
+        writer.printf(Sprites::font, "OLED %.3fV\n", Sprites::display.getVoltageCOM());
     }
 };
 
