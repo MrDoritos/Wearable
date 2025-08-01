@@ -292,5 +292,7 @@ void app_main() {
     fflush(stdout);
     
     delay(1000);
+
+    esp_restart();
 }
 }
