@@ -77,6 +77,10 @@ struct I2C {
         return ESP_OK;
     }
 
+    inline esp_err_t write(const uint8_t &v) {
+        return write(&v, 1);
+    }
+
     template<uint8_t prefix=0x0, typename ...T> 
     inline esp_err_t write_command(const uint8_t &c, const T&... payload) {
         const uint8_t buf[] = {prefix, c, payload...};
@@ -117,6 +121,12 @@ struct I2C {
         ESP_RETURN_ON_ERROR(i2c_master_receive(dev, buffer, bytes, I2C_TIMEOUT / portTICK_PERIOD_MS), TAG, "read failed");
 
         return ESP_OK;
+    }
+
+    inline uint8_t read_register(const uint8_t &reg) {
+        uint8_t ret = 0;
+        ESP_ERROR_CHECK(write_read(&reg, 1, &ret, 1));
+        return ret;
     }
 
     inline esp_err_t write_read(const uint8_t *c, const uint8_t &n, uint8_t *recv, const uint16_t &recv_len) {

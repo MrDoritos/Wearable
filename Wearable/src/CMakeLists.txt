@@ -12,6 +12,8 @@ idf_component_register(
     "./peripheral/gps_imu.cpp"
     "./peripheral/i2c.cpp"
     "./common/wbl_system.cpp"
+    "./peripheral/ltr390.cpp"
+    "../third_party/LTR390/Adafruit_LTR390.cpp"
     INCLUDE_DIRS
     "."
     "./display"
@@ -21,6 +23,7 @@ idf_component_register(
     "./log"
     "../third_party/u-blox-m8/src"
     "../third_party/LSM6DSL"
+    "../third_party/LTR390"
     PRIV_REQUIRES
     spi_flash
     esp_driver_i2c

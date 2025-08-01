@@ -19,6 +19,7 @@
 #include "gps_imu.h"
 #include "ui_imu.h"
 #include "wbl_system.h"
+#include "ltr390.h"
 
 using namespace wbl;
 using namespace Sprites;
@@ -252,6 +253,10 @@ void app_main() {
     }
     if (gpsimu.init() != ESP_OK) {
         printf("Failed to initialize imu\n");
+        goto end;
+    }
+    if (ltr390.init() != ESP_OK) {
+        printf("Failed to initialize ltr390\n");
         goto end;
     }
     if (display.init() != ESP_OK) {

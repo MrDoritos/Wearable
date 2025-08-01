@@ -27,8 +27,8 @@
  *     v1.0 - First release
  */
 
-#include "Arduino.h"
-#include <Wire.h>
+//#include "Arduino.h"
+//#include <Wire.h>
 
 #include "Adafruit_LTR390.h"
 
@@ -42,16 +42,10 @@ Adafruit_LTR390::Adafruit_LTR390(void) {}
  *    @param  theWire An optional pointer to an I2C interface
  *    @return True if initialization was successful, otherwise false.
  */
-bool Adafruit_LTR390::begin(TwoWire *theWire) {
-  i2c_dev = new Adafruit_I2CDevice(LTR390_I2CADDR_DEFAULT, theWire);
-
-  if (!i2c_dev->begin()) {
-    return false;
-  }
-
+bool Adafruit_LTR390::begin() {
   // check part ID!
-  Adafruit_I2CRegister idreg = Adafruit_I2CRegister(i2c_dev, LTR390_PART_ID);
-  if ((idreg.read() >> 4) != 0xB) {
+  //Adafruit_I2CRegister idreg = Adafruit_I2CRegister(i2c_dev, LTR390_PART_ID);
+  if ((wbl::i2c_ltr390.read_register(LTR390_PART_ID) >> 4) != 0xB) {
     return false;
   }
 
@@ -66,8 +60,8 @@ bool Adafruit_LTR390::begin(TwoWire *theWire) {
     return false;
   }
 
-  StatusReg = new Adafruit_I2CRegister(i2c_dev, LTR390_MAIN_STATUS);
-  DataReadyBit = new Adafruit_I2CRegisterBits(StatusReg, 1, 3);
+  StatusReg = wbl::i2c_ltr390.read_register(LTR390_MAIN_STATUS);
+  DataReadyBit = (StatusReg >> 3) & 1;
 
   return true;
 }
@@ -77,23 +71,27 @@ bool Adafruit_LTR390::begin(TwoWire *theWire) {
  *  @returns True on success (reset bit was cleared post-write)
  */
 bool Adafruit_LTR390::reset(void) {
-  Adafruit_I2CRegister mainreg =
-      Adafruit_I2CRegister(i2c_dev, LTR390_MAIN_CTRL);
-  Adafruit_I2CRegisterBits softreset =
-      Adafruit_I2CRegisterBits(&mainreg, 1, 4); // # bits, bit_shift
+  //Adafruit_I2CRegister mainreg =
+  //    Adafruit_I2CRegister(i2c_dev, LTR390_MAIN_CTRL);
+  uint8_t mainreg = wbl::i2c_ltr390.read_register(LTR390_MAIN_CTRL);
+  //Adafruit_I2CRegisterBits softreset =
+  //    Adafruit_I2CRegisterBits(&mainreg, 1, 4); // # bits, bit_shift
+  uint8_t softreset = mainreg | (1<<4);
 
   // this write will fail because it resets before acking?
-  softreset.write(1);
+  //softreset.write(1);
+  wbl::i2c_ltr390.write_command_prefix(LTR390_MAIN_CTRL, softreset);
   delay(10);
 
   // Missing ACK from above soft-reset cause permanent bus issue with
   // port such as nRF52, RP2040. Re-init I2C peripherals is required for
   // recovery
-  i2c_dev->end();
-  i2c_dev->begin();
+  //i2c_dev->end();
+  //i2c_dev->begin();
 
   // however it does reset, check that the value is zero
-  if (softreset.read()) {
+  //if (softreset.read()) {
+  if (wbl::i2c_ltr390.read_register(LTR390_MAIN_CTRL)&(1<<4)) {
     return false;
   }
 
@@ -104,7 +102,11 @@ bool Adafruit_LTR390::reset(void) {
  *  @brief  Checks if new data is available in data register
  *  @returns True on new data available
  */
-bool Adafruit_LTR390::newDataAvailable(void) { return DataReadyBit->read(); }
+bool Adafruit_LTR390::newDataAvailable(void) { 
+  //return DataReadyBit->read(); 
+  StatusReg = wbl::i2c_ltr390.read_register(LTR390_MAIN_STATUS);
+  return (DataReadyBit = ((StatusReg >> 3) & 1));
+}
 
 /*!
  *  @brief  Read 3-bytes out of ambient data register, does not check if data is
@@ -112,9 +114,17 @@ bool Adafruit_LTR390::newDataAvailable(void) { return DataReadyBit->read(); }
  *  @returns Up to 20 bits, right shifted into a 32 bit int
  */
 uint32_t Adafruit_LTR390::readALS(void) {
-  Adafruit_I2CRegister datareg =
-      Adafruit_I2CRegister(i2c_dev, LTR390_ALSDATA, 3, LSBFIRST);
-  return datareg.read();
+  union {
+    uint32_t v;
+    uint8_t b[4];
+  };
+  uint8_t r = LTR390_ALSDATA;
+  
+  wbl::i2c_ltr390.write_read(&r, 1, b, 3);
+  //Adafruit_I2CRegister datareg =
+  //    Adafruit_I2CRegister(i2c_dev, LTR390_ALSDATA, 3, LSBFIRST);
+  //return datareg.read();
+  return v;
 }
 
 /*!
@@ -122,9 +132,17 @@ uint32_t Adafruit_LTR390::readALS(void) {
  *  @returns Up to 20 bits, right shifted into a 32 bit int
  */
 uint32_t Adafruit_LTR390::readUVS(void) {
-  Adafruit_I2CRegister datareg =
-      Adafruit_I2CRegister(i2c_dev, LTR390_UVSDATA, 3, LSBFIRST);
-  return datareg.read();
+  //Adafruit_I2CRegister datareg =
+  //    Adafruit_I2CRegister(i2c_dev, LTR390_UVSDATA, 3, LSBFIRST);
+  //return datareg.read();
+  union {
+    uint32_t v;
+    uint8_t b[4];
+  };
+
+  uint8_t r = LTR390_UVSDATA;
+  wbl::i2c_ltr390.write_read(&r, 1, b, 3);
+  return v;
 }
 
 /*!
@@ -132,12 +150,14 @@ uint32_t Adafruit_LTR390::readUVS(void) {
  *  @param  en True to enable, False to disable
  */
 void Adafruit_LTR390::enable(bool en) {
-  Adafruit_I2CRegister mainreg =
-      Adafruit_I2CRegister(i2c_dev, LTR390_MAIN_CTRL);
-  Adafruit_I2CRegisterBits enbit =
-      Adafruit_I2CRegisterBits(&mainreg, 1, 1); // # bits, bit_shift
+  //Adafruit_I2CRegister mainreg =
+  //    Adafruit_I2CRegister(i2c_dev, LTR390_MAIN_CTRL);
+  //Adafruit_I2CRegisterBits enbit =
+  //    Adafruit_I2CRegisterBits(&mainreg, 1, 1); // # bits, bit_shift
+  uint8_t mainreg = wbl::i2c_ltr390.read_register(LTR390_MAIN_CTRL);
+  wbl::i2c_ltr390.write_command_prefix(LTR390_MAIN_CTRL, mainreg | 2);
 
-  enbit.write(en);
+  //enbit.write(en);
 }
 
 /*!
@@ -145,12 +165,14 @@ void Adafruit_LTR390::enable(bool en) {
  *  @returns True if enabled
  */
 bool Adafruit_LTR390::enabled(void) {
-  Adafruit_I2CRegister mainreg =
-      Adafruit_I2CRegister(i2c_dev, LTR390_MAIN_CTRL);
-  Adafruit_I2CRegisterBits enbit =
-      Adafruit_I2CRegisterBits(&mainreg, 1, 1); // # bits, bit_shift
+  //Adafruit_I2CRegister mainreg =
+  //    Adafruit_I2CRegister(i2c_dev, LTR390_MAIN_CTRL);
+  //Adafruit_I2CRegisterBits enbit =
+  //    Adafruit_I2CRegisterBits(&mainreg, 1, 1); // # bits, bit_shift
 
-  return enbit.read();
+  //return enbit.read();
+
+  return wbl::i2c_ltr390.read_register(LTR390_MAIN_CTRL) & 2;
 }
 
 /*!
@@ -159,12 +181,16 @@ bool Adafruit_LTR390::enabled(void) {
  *  @param  mode The desired mode - LTR390_MODE_UVS or LTR390_MODE_ALS
  */
 void Adafruit_LTR390::setMode(ltr390_mode_t mode) {
-  Adafruit_I2CRegister mainreg =
-      Adafruit_I2CRegister(i2c_dev, LTR390_MAIN_CTRL);
-  Adafruit_I2CRegisterBits modebit =
-      Adafruit_I2CRegisterBits(&mainreg, 1, 3); // # bits, bit_shift
+  //Adafruit_I2CRegister mainreg =
+  //    Adafruit_I2CRegister(i2c_dev, LTR390_MAIN_CTRL);
+  //Adafruit_I2CRegisterBits modebit =
+  //    Adafruit_I2CRegisterBits(&mainreg, 1, 3); // # bits, bit_shift
 
-  modebit.write(mode);
+  //modebit.write(mode);
+  uint8_t mainreg = wbl::i2c_ltr390.read_register(LTR390_MAIN_CTRL);
+  mainreg &= 1<<3;
+  mainreg |= mode<<3;
+  wbl::i2c_ltr390.write_command_prefix(LTR390_MAIN_CTRL, mainreg);
 }
 
 /*!
@@ -172,12 +198,13 @@ void Adafruit_LTR390::setMode(ltr390_mode_t mode) {
  *  @returns The current mode - LTR390_MODE_UVS or LTR390_MODE_ALS
  */
 ltr390_mode_t Adafruit_LTR390::getMode(void) {
-  Adafruit_I2CRegister mainreg =
-      Adafruit_I2CRegister(i2c_dev, LTR390_MAIN_CTRL);
-  Adafruit_I2CRegisterBits modebit =
-      Adafruit_I2CRegisterBits(&mainreg, 1, 3); // # bits, bit_shift
+  //Adafruit_I2CRegister mainreg =
+  //    Adafruit_I2CRegister(i2c_dev, LTR390_MAIN_CTRL);
+  //Adafruit_I2CRegisterBits modebit =
+  //    Adafruit_I2CRegisterBits(&mainreg, 1, 3); // # bits, bit_shift
 
-  return (ltr390_mode_t)modebit.read();
+  //return (ltr390_mode_t)modebit.read();
+  return (ltr390_mode_t)((wbl::i2c_ltr390.read_register(LTR390_MAIN_CTRL) >> 3) & 1);
 }
 
 /*!
@@ -186,11 +213,15 @@ ltr390_mode_t Adafruit_LTR390::getMode(void) {
  *  LTR390_GAIN_9 or LTR390_GAIN_18
  */
 void Adafruit_LTR390::setGain(ltr390_gain_t gain) {
-  Adafruit_I2CRegister gainreg = Adafruit_I2CRegister(i2c_dev, LTR390_GAIN);
-  Adafruit_I2CRegisterBits gainbits =
-      Adafruit_I2CRegisterBits(&gainreg, 3, 0); // # bits, bit_shift
+  //Adafruit_I2CRegister gainreg = Adafruit_I2CRegister(i2c_dev, LTR390_GAIN);
+  //Adafruit_I2CRegisterBits gainbits =
+  //    Adafruit_I2CRegisterBits(&gainreg, 3, 0); // # bits, bit_shift
 
-  gainbits.write(gain);
+  //gainbits.write(gain);
+  uint8_t reg = wbl::i2c_ltr390.read_register(LTR390_GAIN);
+  reg &= ~0b111;
+  reg |= gain;
+  wbl::i2c_ltr390.write_command_prefix(LTR390_GAIN, reg);
 }
 
 /*!
@@ -199,11 +230,12 @@ void Adafruit_LTR390::setGain(ltr390_gain_t gain) {
  *  LTR390_GAIN_9 or LTR390_GAIN_18
  */
 ltr390_gain_t Adafruit_LTR390::getGain(void) {
-  Adafruit_I2CRegister gainreg = Adafruit_I2CRegister(i2c_dev, LTR390_GAIN);
-  Adafruit_I2CRegisterBits gainbits =
-      Adafruit_I2CRegisterBits(&gainreg, 3, 0); // # bits, bit_shift
+  //Adafruit_I2CRegister gainreg = Adafruit_I2CRegister(i2c_dev, LTR390_GAIN);
+  //Adafruit_I2CRegisterBits gainbits =
+  //    Adafruit_I2CRegisterBits(&gainreg, 3, 0); // # bits, bit_shift
 
-  return (ltr390_gain_t)gainbits.read();
+  //return (ltr390_gain_t)gainbits.read();
+  return (ltr390_gain_t)((wbl::i2c_ltr390.read_register(LTR390_GAIN) & 0b111));
 }
 
 /*!
@@ -213,12 +245,16 @@ ltr390_gain_t Adafruit_LTR390::getGain(void) {
  *  LTR390_RESOLUTION_19BIT or LTR390_RESOLUTION_20BIT
  */
 void Adafruit_LTR390::setResolution(ltr390_resolution_t res) {
-  Adafruit_I2CRegister ratereg =
-      Adafruit_I2CRegister(i2c_dev, LTR390_MEAS_RATE);
-  Adafruit_I2CRegisterBits resbits =
-      Adafruit_I2CRegisterBits(&ratereg, 3, 4); // # bits, bit_shift
+  //Adafruit_I2CRegister ratereg =
+  //    Adafruit_I2CRegister(i2c_dev, LTR390_MEAS_RATE);
+  //Adafruit_I2CRegisterBits resbits =
+  //    Adafruit_I2CRegisterBits(&ratereg, 3, 4); // # bits, bit_shift
 
-  resbits.write(res);
+  //resbits.write(res);
+  uint8_t reg = wbl::i2c_ltr390.read_register(LTR390_MEAS_RATE);
+  reg &= (~0b111)<<4;
+  reg |= res;
+  wbl::i2c_ltr390.write_command_prefix(LTR390_MEAS_RATE, reg);
 }
 
 /*!
@@ -228,12 +264,13 @@ void Adafruit_LTR390::setResolution(ltr390_resolution_t res) {
  *  LTR390_RESOLUTION_19BIT or LTR390_RESOLUTION_20BIT
  */
 ltr390_resolution_t Adafruit_LTR390::getResolution(void) {
-  Adafruit_I2CRegister ratereg =
-      Adafruit_I2CRegister(i2c_dev, LTR390_MEAS_RATE);
-  Adafruit_I2CRegisterBits resbits =
-      Adafruit_I2CRegisterBits(&ratereg, 3, 4); // # bits, bit_shift
+  //Adafruit_I2CRegister ratereg =
+  //    Adafruit_I2CRegister(i2c_dev, LTR390_MEAS_RATE);
+  //Adafruit_I2CRegisterBits resbits =
+  //    Adafruit_I2CRegisterBits(&ratereg, 3, 4); // # bits, bit_shift
 
-  return (ltr390_resolution_t)resbits.read();
+  //return (ltr390_resolution_t)resbits.read();
+  return (ltr390_resolution_t)((wbl::i2c_ltr390.read_register(LTR390_MEAS_RATE) >> 4) & 0b111);
 }
 
 /*!
@@ -243,13 +280,15 @@ ltr390_resolution_t Adafruit_LTR390::getResolution(void) {
  *  @param  higher The higher value to compare against the data register.
  */
 void Adafruit_LTR390::setThresholds(uint32_t lower, uint32_t higher) {
-  Adafruit_I2CRegister lowreg =
-      Adafruit_I2CRegister(i2c_dev, LTR390_THRESH_LOW, 3, LSBFIRST);
-  lowreg.write(lower);
+  //Adafruit_I2CRegister lowreg =
+  //    Adafruit_I2CRegister(i2c_dev, LTR390_THRESH_LOW, 3, LSBFIRST);
+  //lowreg.write(lower);
 
-  Adafruit_I2CRegister upreg =
-      Adafruit_I2CRegister(i2c_dev, LTR390_THRESH_UP, 3, LSBFIRST);
-  upreg.write(higher);
+  //Adafruit_I2CRegister upreg =
+  //    Adafruit_I2CRegister(i2c_dev, LTR390_THRESH_UP, 3, LSBFIRST);
+  //upreg.write(higher);
+  wbl::i2c_ltr390.write_commands((uint8_t*)&lower, 3, LTR390_THRESH_LOW);
+  wbl::i2c_ltr390.write_commands((uint8_t*)&higher, 3, LTR390_THRESH_UP);
 }
 
 /*!
@@ -261,6 +300,7 @@ void Adafruit_LTR390::setThresholds(uint32_t lower, uint32_t higher) {
  *  @param  persistance The number of consecutive out-of-range readings before
  *          we fire the IRQ. Default is 0 (each reading will fire)
  */
+/*
 void Adafruit_LTR390::configInterrupt(bool enable, ltr390_mode_t source,
                                       uint8_t persistance) {
   Adafruit_I2CRegister intcfgreg =
@@ -284,3 +324,4 @@ void Adafruit_LTR390::configInterrupt(bool enable, ltr390_mode_t source,
       Adafruit_I2CRegisterBits(&persreg, 4, 4); // # bits, bit_shift
   pstbits.write(persistance);
 }
+*/

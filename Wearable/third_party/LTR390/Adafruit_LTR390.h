@@ -17,10 +17,8 @@
 #ifndef _ADAFRUIT_LTR390_H
 #define _ADAFRUIT_LTR390_H
 
-#include "Arduino.h"
-#include <Adafruit_I2CDevice.h>
-#include <Adafruit_I2CRegister.h>
-#include <Wire.h>
+#include <inttypes.h>
+#include "i2c_dev.h"
 
 #define LTR390_I2CADDR_DEFAULT 0x53 ///< I2C address
 #define LTR390_MAIN_CTRL 0x00       ///< Main control register
@@ -64,10 +62,9 @@ typedef enum {
  *    @brief  Class that stores state and functions for interacting with
  *            LTR390 UV Sensor
  */
-class Adafruit_LTR390 {
-public:
+struct Adafruit_LTR390 {
   Adafruit_LTR390();
-  bool begin(TwoWire *theWire = &Wire);
+  bool begin();
   bool reset(void);
 
   void enable(bool en);
@@ -84,18 +81,12 @@ public:
 
   void setThresholds(uint32_t lower, uint32_t higher);
 
-  void configInterrupt(bool enable, ltr390_mode_t source,
-                       uint8_t persistance = 0);
-
   bool newDataAvailable(void);
   uint32_t readUVS(void);
   uint32_t readALS(void);
 
-private:
-  Adafruit_I2CRegister *StatusReg;
-  Adafruit_I2CRegisterBits *DataReadyBit;
-
-  Adafruit_I2CDevice *i2c_dev;
+  uint8_t StatusReg;
+  uint8_t DataReadyBit;
 };
 
 #endif
