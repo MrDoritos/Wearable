@@ -233,6 +233,7 @@ void init() {
     mainscreen.set_right(settingscreen);
     settingscreen.set_right(gpsscreen);
     gpsscreen.set_right(imuscreen);
+    imuscreen.set_right(sysinfoscreen);
 
     uiroot.set_header(header);
     //uiroot.set_screen(mainscreen);
