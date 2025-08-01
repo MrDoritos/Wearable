@@ -19,9 +19,10 @@ struct ElementSysInfoT : public ElementT {
         this->clear();
 
         TextureWriterT<ElementSysInfoT> writer(this);
-        
+
         writer.printf(Sprites::font, "BAT %.03fV %.01f%%\n", wbl_system.getBatteryVoltage(), wbl_system.getBatteryLevel());
-        writer.printf(Sprites::font, "UVS %li\n", /*ltr390.getUVS()*/0);
+        uint32_t uvs = ltr390.getUVS();
+        writer.printf(Sprites::font, "UVS %li %.01fUVI\n", uvs, ltr390.getUVI(uvs));
         uint32_t als = ltr390.getALS();
         writer.printf(Sprites::font, "ALS %li %.01flx\n", als, ltr390.getLux(als));
     }

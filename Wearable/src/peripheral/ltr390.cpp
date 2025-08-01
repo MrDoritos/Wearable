@@ -11,6 +11,18 @@ I2C i2c_ltr390(I2C_BUS_1, I2C_LTR390_ADDR, 1000, I2C_LTR390_FREQ, 40000);
 LTR390 ltr390;
 Adafruit_LTR390 s_ltr390;
 
+const uint16_t rates[] = {
+    25, 50, 100, 200, 500, 1000, 2000, 2000
+};
+
+const uint16_t integrations[] = {
+    400, 200, 100, 50, 25
+};
+
+const uint8_t gains[] = {
+    1, 3, 6, 9, 18
+};
+
 static constexpr const char *TAG = "wbl::ltr390.cpp";
 
 esp_err_t LTR390::init() {
@@ -24,11 +36,13 @@ esp_err_t LTR390::init() {
     setMeasurementRate(200);
     setState(true);
     
+    /*
     printf("gain: %i, mode: %i, resolution: %i, active: %i\n", s_ltr390.getGain(), s_ltr390.getMode(), s_ltr390.getResolution(), s_ltr390.enabled());
     printf("status: %i\n", i2c_ltr390.read_register(LTR390_MAIN_STATUS));
     printf("ctrl: %i\n", i2c_ltr390.read_register(LTR390_MAIN_CTRL));
     printf("als_uvs_meas_rate: %i\n", i2c_ltr390.read_register(LTR390_MEAS_RATE));
     printf("als_uvs_gain: %i\n", i2c_ltr390.read_register(LTR390_GAIN));
+    */
     
     return ESP_OK;
 }
@@ -49,12 +63,31 @@ uint32_t LTR390::getUVS() {
     return s_ltr390.readUVS();
 }
 
+uint32_t LTR390::getIntegrationTime() {
+    return integrations[resolution];
+}
+
+int LTR390::getGainMultiplier() {
+    return gains[gain];
+}
+
+float LTR390::getUVI(const uint32_t &uvs) {
+    return float(uvs) * (1.0f/float(getGainMultiplier()));
+}
+
+float LTR390::getUVI() {
+    return getUVI(getUVS());
+}
+
 float LTR390::getLux(const uint32_t &als) {
-    float lux;
+    //return (als * 0.523636f) + 7.9449;
 
-    lux = (als * 0.523636f) + 7.9449;
+    int gain = getGainMultiplier();
+    gain *= gain;
+    int rate = getIntegrationTime() * gain;
+    float scale = measurement_rate / float(rate);
 
-    return lux;
+    return float(als) * 0.6f * scale;
 }
 
 float LTR390::getLux() {
@@ -91,10 +124,6 @@ void LTR390::setMeasurementRate(const uint32_t &ms) {
     i2c_ltr390.write_command_prefix(LTR390_MEAS_RATE, reg);
 
     measurement_rate_flag = i2c_ltr390.read_register(LTR390_MEAS_RATE)&0b111;
-
-    const uint32_t rates[] = {
-        25, 50, 100, 200, 500, 1000, 2000, 2000
-    };
 
     measurement_rate = rates[measurement_rate_flag];
 }
