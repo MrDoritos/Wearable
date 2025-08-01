@@ -9,19 +9,19 @@
 ## To-Do
 
 - [ ] UI library
-    - [ ] Layout
-    - [ ] Auto sizing
-    - [ ] Display timeout
+    - [x] Layout
+    - [x] Auto sizing
+    - [x] Display timeout
     - [ ] Overlays
     - [ ] Popovers
     - [ ] Footer
     - [ ] Focus
 - [ ] ESP32
     - [ ] Basic functions
-        - [ ] Display
-        - [ ] Buttons
+        - [x] Display
+        - [x] Buttons
         - [ ] 3.7v \- 4.2v input
-        - [ ] Battery sense
+        - [x] Battery sense
     - [ ] Display interface
         - [ ] Async buffer flush
         - [ ] Rotation
@@ -41,7 +41,7 @@
         - [ ] Magnetometer
             - 0x1C
             - LIS3MDL
-        - [ ] Gyroscope and Accelerometer
+        - [x] Gyroscope and Accelerometer
             - 0x6A
             - LSM6DSL
         - [ ] Barometer
@@ -54,7 +54,6 @@
         - [x] GPS time sync
         - 0.040A @ 5v -> 0.2W
     - [ ] LTR-390 UV
-        - [ ] UV Wavelength
         - [ ] UV daily exposure alert
         - [ ] Ambient light for auto brightness
         - 400 kHz I2C
@@ -62,7 +61,7 @@
         - 100 uA max duty cycle
         - 1 uA standby
         - 5-10ms standby to active
-        - [ ] UVS/ALS
+        - [x] UVS/ALS
             - 13 - 20 bits resolution
             - 1:18,000,000 dynamic range
         - UV spectral response 300-350 nm
