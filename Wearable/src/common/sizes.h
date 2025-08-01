@@ -134,6 +134,7 @@ struct OriginT {
     T x, y;
     constexpr OriginT():x(0),y(0){}
     constexpr OriginT(const T &x, const T &y):x(x),y(y){}
+    constexpr OriginT(const T &v):OriginT(v,v){}
     constexpr OriginT(const Box &b);
 
     constexpr inline OriginT getOffset() const { return *this; }
