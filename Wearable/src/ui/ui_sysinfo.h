@@ -23,7 +23,7 @@ struct ElementSysInfoT : public ElementT {
 
         writer.printf(Sprites::font, "BAT %.03fV %.01f%%\n", wbl_system.getBatteryVoltage(), wbl_system.getBatteryLevel());
         uint32_t uvs = ltr390.getUVS();
-        writer.printf(Sprites::font, "UVS %li %.01fUVI\n", uvs, ltr390.getUVI(uvs));
+        writer.printf(Sprites::font, "UVS %li %.01fUVI\n", uvs, ltr390.getUVIhr(uvs));
         uint32_t als = ltr390.getALS();
         writer.printf(Sprites::font, "ALS %li %.01flx\n", als, ltr390.getLux(als));
         writer.printf(Sprites::font, "OLED %.3fV %.3fmA\n", Sprites::display.getVoltageCOM(), Sprites::display.getDisplayCurrentDraw()*1000.0f);

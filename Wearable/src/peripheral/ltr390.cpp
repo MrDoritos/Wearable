@@ -71,12 +71,47 @@ int LTR390::getGainMultiplier() {
     return gains[gain];
 }
 
+
+/*
+    1hr = 60min * 60sec = 3600s
+
+    1J = 1W * 1s
+
+    1 UV Index Hour = 9mJ / cm^2
+
+    1 UV Index = 9mJ / 3600s = 2.5uW/cm^2
+
+
+    Datasheet
+    UV LED 310nm, 18-bit, gain 18, irradiance 70uW/cm^2
+    160 counts
+
+    160/6=26.6667 @ gain 3
+    26.6667 / 2 / 2 = 6.66667 @ 16-bit
+
+    70uW * 3600s = 252mJ / cm^2
+
+    252mJ/9mJ = 28 UV Index
+
+*/
 float LTR390::getUVI(const uint32_t &uvs) {
-    return float(uvs) * (1.0f/float(getGainMultiplier()));
+    //return float(uvs) * (1.0f/float(getGainMultiplier()));
+    const int gain = getGainMultiplier();
+    const float sensitivity = 2300.0f;
+    const float conv = (1000.0f/measurement_rate) / (gain * sensitivity);
+    return float(uvs) * conv;
 }
 
 float LTR390::getUVI() {
     return getUVI(getUVS());
+}
+
+float LTR390::getUVIhr(const uint32_t &uvs) {
+    return getUVI(uvs) * 60.0f;
+}
+
+float LTR390::getUVIhr() {
+    return getUVIhr(getUVS());
 }
 
 float LTR390::getLux(const uint32_t &als) {

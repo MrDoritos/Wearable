@@ -19,6 +19,8 @@ struct LTR390 {
     float getLux(const uint32_t &als);
     float getUVI();
     float getUVI(const uint32_t &uvs);
+    float getUVIhr();
+    float getUVIhr(const uint32_t &uvs);
     void setState(const bool &state);
     bool isActive();
     void setMeasurementRate(const uint32_t &ms);
