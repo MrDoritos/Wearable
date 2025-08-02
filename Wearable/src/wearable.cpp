@@ -21,6 +21,7 @@
 #include "wbl_system.h"
 #include "ltr390.h"
 #include "ui_sysinfo.h"
+#include "mics6814.h"
 
 using namespace wbl;
 using namespace Sprites;
@@ -48,6 +49,9 @@ UI::ScreenBaseT<> imuscreen("IMUInfo");
 UI::ElementIMUT<DisplayTexture> uiimu(display);
 UI::ScreenBaseT<> sysinfoscreen("System");
 UI::ElementSysInfoT<DisplayTexture> uisysinfo(display);
+LoopBuffer colog, nh3log, no2log;
+UI::ElementLogT<DisplayTexture, DataLog> e_colog(display, colog), e_nh3log(display, nh3log), e_no2log(display, no2log);
+UI::ScreenBaseT<> gasscreen("Gases");
 
 void demo() {
     /*
@@ -99,6 +103,10 @@ void demo() {
             e_sinelog.push_back(t, (uu)ltr390.getALS());
         }
         e_sawlog.push_back(t, (uu)(int(t/5000)%1000));
+
+        e_colog.push_back(t, mics6814.getCOVoltage() * 1000.0f);
+        e_nh3log.push_back(t, mics6814.getNH3Voltage() * 1000.0f);
+        e_no2log.push_back(t, mics6814.getNO2Voltage() * 1000.0f);
     }
 
     if (cnt % 32 == 0)
@@ -179,6 +187,12 @@ void init() {
     e_sinelog << logstyle << "sine";
     e_squarelog << logstyle << "square";
 
+    StyleInfo gaslogstyle = { .height{32}, .margin{1,0,0,0} };
+    e_colog << gaslogstyle << "CO";
+    e_nh3log << gaslogstyle << "NH3";
+    e_no2log << gaslogstyle << "NO2";
+    gasscreen << e_colog << e_nh3log << e_no2log;
+
     uiroot << UI::StyleInfo { .width{128}, .height{128} };
 
     block << inner;
@@ -256,13 +270,15 @@ void init() {
     settingscreen.set_right(gpsscreen);
     gpsscreen.set_right(imuscreen);
     imuscreen.set_right(sysinfoscreen);
+    sysinfoscreen.set_right(gasscreen);
 
     uiroot.set_header(header);
     //uiroot.set_screen(mainscreen);
     //uiroot.set_screen(settingscreen);
     //uiroot.set_screen(gpsscreen);
     //uiroot.set_screen(imuscreen);
-    uiroot.set_screen(sysinfoscreen);
+    //uiroot.set_screen(sysinfoscreen);
+    uiroot.set_screen(gasscreen);
 
     uiroot.dispatch(EventTypes::CONTENT_SIZE);
     uiroot.resolve_layout();
@@ -276,6 +292,10 @@ extern "C" {
 void app_main() {
     if (wbl_system.init() != ESP_OK) {
         printf("Failed to initialize system\n");
+        goto end;
+    }
+    if (mics6814.init() != ESP_OK) {
+        printf("Failed to initialize mics6814\n");
         goto end;
     }
     wbl_system.beginHapticFeedback(0.5, 500);

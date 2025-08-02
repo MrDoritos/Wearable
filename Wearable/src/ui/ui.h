@@ -676,7 +676,8 @@ struct IElement : public Style, public NodeMovementOpsT<IElement> {
     }
 
     constexpr inline IElement &operator<<(IElement &element) {
-        return append_child(element);
+        append_child(element);
+        return *this;
     }
 
     constexpr inline IElement *append_sibling(IElement *element) {

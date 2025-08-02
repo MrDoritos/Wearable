@@ -14,6 +14,7 @@ idf_component_register(
     "./common/wbl_system.cpp"
     "./peripheral/ltr390.cpp"
     "../third_party/LTR390/Adafruit_LTR390.cpp"
+    "./peripheral/mics6814.cpp"
     INCLUDE_DIRS
     "."
     "./display"
