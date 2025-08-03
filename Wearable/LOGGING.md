@@ -32,6 +32,7 @@ IMU|Accelerometer X|10ms (100Hz)|1000
 -|Gyroscope X|-|-
 -|Gyroscope Y|-|-
 -|Gyroscope Z|-|-
+-|Pedometer|1000ms (1Hz)|10
 BME688|Humidity|1000ms (1Hz)|10
 -|Temperature|-|-
 -|Pressure|-|-
