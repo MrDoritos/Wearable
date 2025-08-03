@@ -38,15 +38,15 @@ BME688|Humidity|1000ms (1Hz)|10
 -|VOC|-|-
 -|AQI|-|-
 -|CO2|-|-
--|Gas Scan H2S|30000ms|-
--|Gas Scan EtOH|30000ms|-
--|Gas Scan CO|30000ms|-
+-|Gas Scan H2S|30000ms (0.0333Hz)|10
+-|Gas Scan EtOH|-|-
+-|Gas Scan CO|-|-
 BMP388|Pressure|1000ms (1Hz)|10
 LTR390|ALS|1000ms (1Hz)|10
 -|Lux|-|-
 -|UVS|-|-
 -|UVI|-|-
-MAX30102|IR value|50ms|200
--|Red value|50ms|200
+MAX30102|IR value|50ms (20Hz)|200
+-|Red value|-|-
 -|Heart Rate|1000ms (1Hz)|10
--|SpO2|1000ms (1Hz)|10
+-|SpO2|-|-
