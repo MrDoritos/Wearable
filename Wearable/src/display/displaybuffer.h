@@ -7,13 +7,18 @@ namespace wbl {
 
 template<uint8_t WIDTH, uint8_t HEIGHT, uint8_t BPP>
 struct FramebufferPageT : public FramebufferT<StaticbufferT<WIDTH, HEIGHT, BPP>> {
+    bool rotate = false;
+
     inline constexpr fb getOffset(const fb &x, const fb &y) const {
-        return (y / 8) * this->WIDTH + x;
+        return rotate ?
+        ((x / 8) * this->HEIGHT + y): 
+        ((y / 8) * this->WIDTH + x);
     }
 
     inline constexpr fb getBitOffset(const fb &x, const fb &y) const {
-        return y & 7;
-        //return 0;
+        return rotate ?
+        (x & 7):
+        (y & 7);
     }
 
     inline constexpr fb getByteMask(const fb &x, const fb &y) const {
@@ -21,8 +26,8 @@ struct FramebufferPageT : public FramebufferT<StaticbufferT<WIDTH, HEIGHT, BPP>>
     }
 
     inline constexpr void putPixel(const fb &x, const fb &y, const pixel &px) {
-        const fb offset=(y/8)*this->WIDTH+x;
-        const fb shift=(y&7);
+        const fb offset=this->getOffset(x,y);//(y/8)*this->WIDTH+x;
+        const fb shift=this->getBitOffset(x,y);//(y&7);
         this->buffer[offset] &= ~(1<<shift);
         this->buffer[offset] |= (px<<shift);
         //this->buffer[offset] 
@@ -60,6 +65,7 @@ struct DisplayBufferT : public Frame, public Display {
         const uint8_t size = 32;
         const uint8_t dc = 0x40;
         uint8_t *ptr = &this->buffer[0];
+
         for (uint8_t page = 0; page < Display::PAGES; page++) {
             uint8_t bytes_remaining = Display::BYTES_PER_PAGE;
             ESP_RETURN_ON_ERROR(Display::setPagePosition(page), TAG, "setPagePosition failed");

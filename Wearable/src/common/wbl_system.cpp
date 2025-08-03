@@ -233,4 +233,30 @@ void wbl_System::setDisplayBrightness(const float &lux) {
     Sprites::display.setContrast((uint8_t)(per * 255));
 }
 
+void wbl_System::setDisplayRotation(const uint8_t &rotation) {
+    if (rotation == display_rotation)
+        return;
+
+    display_rotation = rotation;
+
+    switch (rotation) {
+        case 0:
+            Sprites::display.setOrientation(DisplayBuffer::FLIP_NONE);
+            Sprites::display.rotate = false;
+            break;
+        case 1:
+            Sprites::display.setOrientation(DisplayBuffer::FLIP_HORIZONTAL);
+            Sprites::display.rotate = true;
+            break;
+        case 2:
+            Sprites::display.setOrientation(DisplayBuffer::FLIP_VERTICAL | DisplayBuffer::FLIP_HORIZONTAL);
+            Sprites::display.rotate = false;
+            break;
+        case 3:
+            Sprites::display.setOrientation(DisplayBuffer::FLIP_VERTICAL);
+            Sprites::display.rotate = true;
+            break;
+    }
+}
+
 }

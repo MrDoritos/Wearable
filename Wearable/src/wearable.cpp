@@ -112,11 +112,11 @@ void demo() {
         e_colog.push_back(t, (uu)(mics6814.getCOVoltage() * 1000.0f));
         e_nh3log.push_back(t, (uu)(mics6814.getNH3Voltage() * 1000.0f));
         e_no2log.push_back(t, (uu)(mics6814.getNO2Voltage() * 1000.0f));
+        wbl_system.setDisplayRotation((wbl_system.display_rotation+1)&3);
     }
 
     if (cnt % 200 == 0) {
         uibattery.set_battery_level((uint8_t)wbl_system.getBatteryLevel());
-        
     }
 
     gps.update();

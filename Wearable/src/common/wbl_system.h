@@ -20,6 +20,7 @@ struct wbl_System {
     float getBatteryVoltageMean();
     float getBatteryLevel();
     void setDisplayBrightness(const float &lux);
+    void setDisplayRotation(const uint8_t &rotation);
 
     bool use_audible_feedback = true;
     bool use_haptic_feedback = true;
@@ -29,6 +30,7 @@ struct wbl_System {
     uint16_t audible_feedback_level = 0;
     bool haptic_timer_state = false;
     bool audible_timer_state = false;
+    uint8_t display_rotation = 0;
 };
 
 extern wbl_System wbl_system;
