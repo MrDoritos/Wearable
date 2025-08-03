@@ -204,8 +204,8 @@ float wbl_System::getBatteryVoltageMean() {
 float wbl_System::getBatteryLevel() {
     float v = getBatteryVoltageMean();
 
-    const float pscale = 1.0/0.005;
-    const float poff = 3.7;
+    const float pscale = 117.0f;
+    const float poff = 3.2f;
 
     float p = (v - poff) * pscale;
     if (p > 100)

@@ -260,14 +260,14 @@ struct Display : public I2C {
         using namespace SH1107;
 
         setDisplayState(OFF);
-        setOscillator(OSCILLATOR_0, DIVIDE_RATION_POR);
-        setChargePeriod(8, 8);
+        setOscillator(OSCILLATOR_P50, DIVIDE_RATION_POR);
+        setChargePeriod(2, 1);
         setAddressingMode(MEMORYMODE);
         setContrast(0x7f);
         setDCDC(DCDC_BUILTIN, DCDC_SWITCH_POR);
         setRemappingMode(SEGREMAP);
         setScanningMode(COMSCANINC);
-        setVCOM(VCOM_POR);
+        setVCOM(VCOM_63);
         this->write_command(SET_DISPLAYSTARTLINE, 0, SET_OFFSET, 0, SET_MUX, 0x7f, ALL_OFF);
         setDisplayMode(NORMAL);
         setDisplayState(ON);
