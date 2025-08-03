@@ -22,7 +22,7 @@ idf_component_register(
     "./common"
     "./peripheral"
     "./log"
-    "../third_party/u-blox-m8/src"
+    "../third_party/u-blox-m8"
     "../third_party/LSM6DSL"
     "../third_party/LTR390"
     PRIV_REQUIRES
