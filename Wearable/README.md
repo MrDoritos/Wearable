@@ -25,6 +25,7 @@
     - [ ] Display interface
         - [ ] Async buffer flush
         - [x] Rotation
+        - [ ] Screen wake on arm lift and hold
     - [ ] Vibration
         - 3.3V, starting voltage 2.3V
         - less than 75mA, starting current 120mA
