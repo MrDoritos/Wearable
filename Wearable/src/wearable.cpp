@@ -23,6 +23,7 @@
 #include "ui_sysinfo.h"
 #include "mics6814.h"
 #include "sdcard.h"
+#include "peripheral_log.h"
 
 using namespace wbl;
 using namespace Sprites;

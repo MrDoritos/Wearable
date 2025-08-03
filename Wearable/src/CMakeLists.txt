@@ -16,6 +16,7 @@ idf_component_register(
     "../third_party/LTR390/Adafruit_LTR390.cpp"
     "./peripheral/mics6814.cpp"
     "./peripheral/sdcard.cpp"
+    "./log/peripheral_log.cpp"
     INCLUDE_DIRS
     "."
     "./display"
