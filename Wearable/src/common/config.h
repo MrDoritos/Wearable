@@ -31,6 +31,7 @@
 #define SDCARD_SPI_MOSI     GPIO_NUM_41
 #define SDCARD_SPI_MISO     GPIO_NUM_42
 #define SDCARD_SPI_CLK      GPIO_NUM_40
+#define SDCARD_SPI_CS       GPIO_NUM_NC
 
 
 #ifdef __linux__

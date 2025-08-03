@@ -17,22 +17,22 @@
     - [ ] Footer
     - [ ] Focus
 - [ ] ESP32
-    - [ ] Basic functions
+    - [x] Basic functions
         - [x] Display
         - [x] Buttons
-        - [ ] 3.7v \- 4.2v input
+        - [x] 3.7v \- 4.2v input
         - [x] Battery sense
     - [ ] Display interface
         - [ ] Async buffer flush
-        - [ ] Rotation
+        - [x] Rotation
     - [ ] Vibration
         - 3.3V, starting voltage 2.3V
         - less than 75mA, starting current 120mA
     - [ ] Buzzer
     - [ ] LED status
 - [ ] Logging
-    - [ ] SD Card
-        - [ ] Remaining / total size
+    - [x] SD Card
+        - [x] Remaining / total size
         - 3.3v
         - CS pullup to 3.3v permanently, if display remains I2C
     - [ ] Sync GPS time to exported log
@@ -94,10 +94,10 @@
             - [ ] Methane (CH4) >1000ppm
             - [ ] Propane (C3H8) >1000ppm
             - [ ] Iso-butane (C4H10) >1000ppm
-        - [ ] Reality
-            - [ ] CO (RED reducing gases)
-            - [ ] NO2 (OX oxidizing gases)
-            - [ ] NH3
+        - [x] Reality
+            - [x] CO (RED reducing gases)
+            - [x] NO2 (OX oxidizing gases)
+            - [x] NH3
             - Only relative readings. Typical resulting voltages are CO=2.4V NO2=1.7V NH3=2.2V. May work on 3.3v with resistor swapping
             - Heating current is 30mA.. 88mW (5V)
             - Must be read with analog

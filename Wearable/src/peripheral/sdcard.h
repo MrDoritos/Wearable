@@ -6,6 +6,9 @@
 namespace wbl {
     struct SDCard {
         esp_err_t init();
+
+        uint64_t getTotalSize();
+        uint64_t getFreeSize();
     };
 
     extern SDCard sdcard;

@@ -57,6 +57,8 @@ struct SDCardDev {
 
     sdmmc_card_t *card = nullptr;
 
+    uint64_t total_size;
+
     constexpr SDCardDev(SPI &spi,
                         const char *mount_point,
                         const gpio_num_t &cs_pin = GPIO_NUM_NC,
@@ -81,14 +83,25 @@ struct SDCardDev {
 
         ESP_RETURN_ON_ERROR(esp_vfs_fat_sdspi_mount(mount_point, &host, &sdspi_cfg, &mount_cfg, &card), TAG, "Failed to mount sd card");
 
-        sdmmc_card_print_info(stdout, card);
+        uint64_t dummy;
+        ESP_RETURN_ON_ERROR(esp_vfs_fat_info(mount_point, &total_size, &dummy), TAG, "Could not get SD card info");
 
         return ESP_OK;
+    }
+
+    uint64_t getFreeSize() {
+        uint64_t dummy, ret=0;
+        esp_vfs_fat_info(mount_point, &dummy, &ret);
+        return ret;
+    }
+
+    uint64_t getTotalSize() {
+        return total_size;
     }
 };
 
 SPI sdbus(SDCARD_SPI_HOST, SDCARD_SPI_MOSI, SDCARD_SPI_MISO, SDCARD_SPI_CLK);
-SDCardDev sddev(sdbus, "/sdcard");
+SDCardDev sddev(sdbus, "/sdcard", SDCARD_SPI_CS, 5);
 SDCard sdcard;
 
 esp_err_t SDCard::init() {
@@ -96,6 +109,14 @@ esp_err_t SDCard::init() {
     ESP_RETURN_ON_ERROR(sddev.init(), TAG, "Failed to init sdcard");
 
     return ESP_OK;
+}
+
+uint64_t SDCard::getFreeSize() {
+    return sddev.getFreeSize();
+}
+
+uint64_t SDCard::getTotalSize() {
+    return sddev.getTotalSize();
 }
 
 }
