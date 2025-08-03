@@ -97,21 +97,21 @@ void demo() {
         //e_sinelog.push_back(t, (uu)(sinf(float((int(t))/(M_PI * 2 * 100000)))*500.0f+1500.0f));
         //e_squarelog.push_back(t, (cnt & 64));
         if (cnt & 4) {
-            e_squarelog.push_back(t, (uu)ltr390.getUVS());
+            e_squarelog.push_back(t, (uu)(ltr390.getUVIhr()*10.0f));
         } else {
             wbl_system.setDisplayBrightness(ltr390.getLux());
-            e_sinelog.push_back(t, (uu)ltr390.getALS());
+            e_sinelog.push_back(t, (uu)ltr390.getLux());
         }
         e_sawlog.push_back(t, (uu)(int(t/5000)%1000));
-
-        e_colog.push_back(t, mics6814.getCOVoltage() * 1000.0f);
-        e_nh3log.push_back(t, mics6814.getNH3Voltage() * 1000.0f);
-        e_no2log.push_back(t, mics6814.getNO2Voltage() * 1000.0f);
     }
 
-    if (cnt % 32 == 0)
+    if (cnt % 32 == 0) {
         //e_voltlog.push_back(t, (uu)(4000 + ((((t ^ 0xDEADBEEF) % 0xC0FFEE) | t) & 31)));
         e_voltlog.push_back(t, wbl_system.getBatteryVoltage() * 1000);
+        e_colog.push_back(t, (uu)(mics6814.getCOVoltage() * 1000.0f));
+        e_nh3log.push_back(t, (uu)(mics6814.getNH3Voltage() * 1000.0f));
+        e_no2log.push_back(t, (uu)(mics6814.getNO2Voltage() * 1000.0f));
+    }
 
     if (cnt % 200 == 0) {
         uibattery.set_battery_level((uint8_t)wbl_system.getBatteryLevel());
