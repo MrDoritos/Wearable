@@ -245,7 +245,7 @@ void wbl_System::setDisplayRotation(const uint8_t &rotation) {
             Sprites::display.rotate = false;
             break;
         case 1:
-            Sprites::display.setOrientation(DisplayBuffer::FLIP_HORIZONTAL);
+            Sprites::display.setOrientation(DisplayBuffer::FLIP_VERTICAL);
             Sprites::display.rotate = true;
             break;
         case 2:
@@ -253,7 +253,7 @@ void wbl_System::setDisplayRotation(const uint8_t &rotation) {
             Sprites::display.rotate = false;
             break;
         case 3:
-            Sprites::display.setOrientation(DisplayBuffer::FLIP_VERTICAL);
+            Sprites::display.setOrientation(DisplayBuffer::FLIP_HORIZONTAL);
             Sprites::display.rotate = true;
             break;
     }
