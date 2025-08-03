@@ -22,6 +22,7 @@
 #include "ltr390.h"
 #include "ui_sysinfo.h"
 #include "mics6814.h"
+#include "sdcard.h"
 
 using namespace wbl;
 using namespace Sprites;
@@ -311,6 +312,10 @@ void app_main() {
     }
     if (ltr390.init() != ESP_OK) {
         printf("Failed to initialize ltr390\n");
+        goto end;
+    }
+    if (sdcard.init() != ESP_OK) {
+        printf("Failed to initialize sdcard\n");
         goto end;
     }
     if (display.init() != ESP_OK) {

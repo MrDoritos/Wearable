@@ -15,6 +15,7 @@ idf_component_register(
     "./peripheral/ltr390.cpp"
     "../third_party/LTR390/Adafruit_LTR390.cpp"
     "./peripheral/mics6814.cpp"
+    "./peripheral/sdcard.cpp"
     INCLUDE_DIRS
     "."
     "./display"
@@ -32,6 +33,7 @@ idf_component_register(
     esp_driver_gpio
     esp_adc
     esp_driver_ledc
+    fatfs
 )
 
 target_compile_options(${COMPONENT_LIB} PRIVATE
