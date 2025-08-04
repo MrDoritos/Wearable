@@ -254,7 +254,7 @@ uint16_t wbl_System::getBatteryMillivolts() {
 float wbl_System::getBatteryVoltage() {
     const float vscale = 2.619789893;//(4.23/1.3);
     const float voff = 0.83;
-    return getBatteryMillivolts() * 0.001f * vscale + voff;
+    return float(getBatteryRawMillivolts()) * 0.001f * vscale + voff;
 }
 
 static constexpr const int voltage_count = 3;

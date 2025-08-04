@@ -94,3 +94,10 @@
 #endif
 
 #define USE_LAYOUT_DBG
+#define WBL_DEBUG
+
+#ifdef WBL_DEBUG
+#define WBL_D(x) puts(x)
+#else
+#define WBL_D(x)
+#endif

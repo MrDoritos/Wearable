@@ -145,6 +145,7 @@ void demo() {
 
 void init() {
     //uiroot.setDebug(true);
+    WBL_D("UI Init");
     using namespace UI;
     using DElem = UI::ElementT<DisplayTexture>;
     using FElem = UI::ElementFocusT<DisplayTexture>;
@@ -293,12 +294,18 @@ void init() {
     //uiroot.set_screen(sysinfoscreen);
     uiroot.set_screen(gasscreen);
 
+    WBL_D("Screen set");
+
     uiroot.dispatch(EventTypes::CONTENT_SIZE);
     uiroot.resolve_layout();
+
+    WBL_D("First layout");
 
     for (int i = 0; i < 3; i++)
         wbl_system.getBatteryVoltageMean();
     uibattery.set_battery_level(wbl_system.getBatteryLevel());
+
+    WBL_D("UI endinit");
 }
 
 extern "C" {
@@ -316,8 +323,6 @@ void app_main() {
     wbl_system.beginHapticFeedback(0.5, 500);
     dpad.init();
     puts("Initialized DPAD");
-    init();
-    puts("Initialized UI");
     if (gps.init() != ESP_OK) {
         printf("Failed to initialize gps\n");
         goto end;
@@ -343,6 +348,8 @@ void app_main() {
         goto end;
     }
     puts("Initialized log");
+    init();
+    puts("Initialized UI");
     if (display.init() != ESP_OK) {
         printf("Failed to initialize display\n");
         goto end;
