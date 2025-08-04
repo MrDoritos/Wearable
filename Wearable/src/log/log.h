@@ -42,10 +42,11 @@ struct DataPointT : public DataPointBase {
 
     constexpr inline POINT_T get_value() const { return value; }
 
-    constexpr inline DataPointT interpolate(const DataPointT &other, float factor) {
+    template<typename FType = float>
+    constexpr inline DataPointT interpolate(const DataPointT &other, const FType &factor) {
         return DataPointT(
-            lerp(this->time, other.time, factor),
-            lerp(value, other.value, factor)
+            lerp<time_type, FType, time_type>(this->time, other.time, factor),
+            lerp<value_type, FType, value_type>(value, other.value, factor)
         );
     }
 };

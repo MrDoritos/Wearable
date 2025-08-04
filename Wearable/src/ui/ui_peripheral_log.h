@@ -210,9 +210,17 @@ struct LogField : public Derived {
         return a.template interpolate(b, factor);
     }
 
-    template<typename FType=float>
-    inline value_type get_value_interpolate_time(const time_type &time) {
-        return get_point_interpolate_time(time).value;
+    template<typename RType = point_type, typename FType = float>
+    inline RType get_value_interpolate_time(const time_type &time) {
+        //return get_point_interpolate_time(time).value;
+        point_type a, b;
+
+        if (!get_time_pair_point(time, a, b))
+            return RType(0);
+
+        FType factor = a.template get_factor<FType>(b, time);
+
+        return lerp<decltype(a.value), FType, RType>(a.value, b.value, factor);
     }
 
     inline point_type get_binary_point(const time_type &time) {
@@ -410,9 +418,10 @@ struct ElementPeripheralLogT : public ElementT {
             return (uu)x;
         }
 
-        constexpr inline uu get_y(const value_type &value) const {
-            const int y = plot_size.height - ((value - value_min) * value_range_inv * plot_size.height) + plot_size.y;
-            return (y > plot_size.height) ? plot_size.height : ((y < 0) ? 0 : (uu)y);
+        template<typename T = value_type>
+        constexpr inline uu get_y(const T &value) const {
+            const int y = plot_size.height - ((value - value_min) * value_range_inv * plot_size.height);
+            return ((y > plot_size.height) ? plot_size.height : ((y < 0) ? 0 : (uu)y)) + plot_size.y;
         }
 
         constexpr inline time_type get_time(const uu &x) const {
@@ -428,7 +437,7 @@ struct ElementPeripheralLogT : public ElementT {
     };
 
     inline bool is_stale() const {
-        return last_data_time == log->template get_time_max();
+        return last_data_time != log->template get_time_max();
     }
 
     constexpr inline PlotContext get_plot_context() const {
@@ -475,14 +484,19 @@ struct ElementPeripheralLogT : public ElementT {
         py = ctx.get_y(log->template get_value(0));
         const int len = log->template get_size();
 
+        //printf("%i %i %i %i %lli\n", ctx.plot_size.x, ctx.plot_size.y, ctx.plot_size.width, ctx.plot_size.height, ctx.time_max);
+        //printf("%lli %u %.f %.f\n", ctx.time_range, ctx.value_range, ctx.time_range_inv, ctx.value_range_inv);
+
         for (uu x = 1; x < ctx.plot_size.width; x++) {
             const time_type time = ctx.get_time(x);
 
             const float v = len < ctx.plot_size.width ? log->template get_value_interpolate_time<float>(time) : log->template get_value_average_time<float>(pt - inc, time + inc);
             
-            const uu y = ctx.get_y(v);
+            const uu y = ctx.template get_y<float>(v);
 
             this->buffer.line(uu(px + ctx.plot_size.x), py, uu(x + ctx.plot_size.x), y, 1);
+
+            //printf("%lli %.f %u %u\n", time, v, x, y);
 
             py = y;
             px = x;
