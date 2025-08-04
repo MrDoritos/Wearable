@@ -101,24 +101,28 @@ struct LogFieldProvider : public Derived {
         return point_type(point.time, Derived::get_point_value(point));
     }
 
-    inline time_type &get_time(const int &index) {
+    constexpr inline const time_type &get_time(const int &index) const {
         const dl_point_type &point = log->template get(index);
         return point.time;
+    }
+
+    inline time_type &get_time(const int &index) {
+        return log->template get(index).time;
     }
 };
 
 template<typename DataPoint, typename ValueT, int N>
 struct DataValueAccessor {
     using DataValue = typename DataPoint::value_type;
-    using DVT = typename DataValue::DVT;
+    //using DVT = typename DataValue::value_type;
     using value_type = ValueT;
     using point_type = DataPoint;
 
-    static constexpr inline const value_type &get_point_value(const point_type &point) {
+    static constexpr inline const value_type get_point_value(const point_type &point) {
         return point.template get_value().template get<N>();
     }
 
-    static inline value_type &get_point_value(point_type &point) {
+    static inline value_type get_point_value(point_type &point) {
         return point.template get_value().template get<N>();
     }
 };
@@ -208,7 +212,7 @@ struct LogField : public Derived {
 
     template<typename FType=float>
     inline value_type get_value_interpolate_time(const time_type &time) {
-        return Derived::get_point_value(get_point_interpolate_time(time));
+        return get_point_interpolate_time(time).value;
     }
 
     inline point_type get_binary_point(const time_type &time) {
@@ -356,7 +360,7 @@ struct LogField : public Derived {
         if (!range || !len)
             return RType();
 
-        return this->get_value_range_sum<RType>(start_index, end_index) / RType(range);
+        return get_value_sum<RType>(start_index, end_index) / RType(range);
     }
 
     template<typename RType = double>
@@ -375,7 +379,10 @@ struct ElementPeripheralLogT : public ElementT {
     using value_type = typename log_type::value_type;
     using point_type = typename log_type::point_type;
 
-    log_type *log;
+    log_type *log = nullptr;
+    time_type last_data_time = 0;
+
+    constexpr ElementPeripheralLogT(Buffer &buffer, log_type &log):ElementT(buffer),log(&log) {}
 
     struct PlotContext {
         const Size plot_size;
@@ -420,12 +427,16 @@ struct ElementPeripheralLogT : public ElementT {
         }
     };
 
+    inline bool is_stale() const {
+        return last_data_time == log->template get_time_max();
+    }
+
     constexpr inline PlotContext get_plot_context() const {
         time_type tmin = 0, tmax = 0, trange = 0;
-        value_type vmin = 0, vmax = 0, vrange = 0;
+        value_type vmin = 0, vmax = 0, vrange = 0, vsum;
 
         log->template get_time_axis(tmin, tmax, trange);
-        log->template get_value_axis(vmin, vmax, vrange);
+        log->template get_value_axis(vmin, vmax, vrange, vsum);
 
         const Size window = *this;
         const Size plot_size(
@@ -437,8 +448,46 @@ struct ElementPeripheralLogT : public ElementT {
             plot_size,
             tmin, tmax, trange,
             vmin, vmax, vrange,
-            1.0f / float(trange), 1.0f / float(vrange)
+            (trange > 0) ? 1.0f / float(trange) : 0, (vrange > 0) ? 1.0f / float(vrange) : 0
         );
+    }
+
+    void on_draw(Event *event) override {
+        if (log == nullptr || log->template get_size() < 2)
+            return;
+
+        if (!this->is_stale())
+            if (!(event->value & Event::REDRAW))
+                return;
+
+        last_data_time = log->template get_time_max();
+
+        this->clear();
+
+        const PlotContext ctx = get_plot_context();
+
+        if (ctx.time_range == 0 || ctx.value_range == 0)
+            return;
+
+        uu py = 0, px = ctx.plot_size.x;
+        time_type pt = ctx.time_min;
+        const time_type inc = ctx.get_time(1);
+        py = ctx.get_y(log->template get_value(0));
+        const int len = log->template get_size();
+
+        for (uu x = 1; x < ctx.plot_size.width; x++) {
+            const time_type time = ctx.get_time(x);
+
+            const float v = len < ctx.plot_size.width ? log->template get_value_interpolate_time<float>(time) : log->template get_value_average_time<float>(pt - inc, time + inc);
+            
+            const uu y = ctx.get_y(v);
+
+            this->buffer.line(uu(px + ctx.plot_size.x), py, uu(x + ctx.plot_size.x), y, 1);
+
+            py = y;
+            px = x;
+            pt = time;
+        }
     }
 };
 
