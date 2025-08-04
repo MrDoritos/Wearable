@@ -207,7 +207,7 @@ void init() {
     e_nh3log << gaslogstyle << "NH3";
     e_no2log << gaslogstyle << "NO2";
     e_pbatterylog << StyleInfo { .display{INLINE}, .width {96}, .height{32}, .margin{1,1,0,0} } << "VBAT";
-    e_pbatterylogst << StyleInfo { .display{INLINE}, .width {30}, .height{32}, .margin{1,1,0,0} } << "VBAT";
+    e_pbatterylogst << StyleInfo { .display{INLINE}, .width {30}, .height{32}, .margin{1,0,0,0} } << "VBAT";
     gasscreen << e_colog << e_nh3log << e_pbatterylog << e_pbatterylogst;//e_no2log;
 
     uiroot << UI::StyleInfo { .width{128}, .height{128} };

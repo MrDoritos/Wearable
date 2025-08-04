@@ -453,6 +453,8 @@ struct ElementPeripheralLogT : public ElementT {
             window.width, window.height - 1
         );
 
+        //WBL_DF("%s window_size [%u %u %u %u] plot_size [%u %u %u %u]\n", this->name, window.x, window.y, window.width, window.height, plot_size.x, plot_size.y, plot_size.width, plot_size.height);
+
         return PlotContext(
             plot_size,
             tmin, tmax, trange,
@@ -478,7 +480,7 @@ struct ElementPeripheralLogT : public ElementT {
         if (ctx.time_range == 0 || ctx.value_range == 0)
             return;
 
-        uu py = 0, px = ctx.plot_size.x;
+        uu py = 0, px = 0;
         time_type pt = ctx.time_min;
         const time_type inc = ctx.get_time(1);
         py = ctx.get_y(log->template get_value(0));

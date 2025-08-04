@@ -116,7 +116,7 @@ bool update_camm8() {
 }
 
 bool update_vbat() {
-    int64_t t = millis();
+    int64_t t = micros();
     uint16_t bv = wbl_system.getBatteryMillivolts();
     
     if (LOG_BATTERY_ST_RATE * 1000 + log.battery_st.get_data_end_time() < t)
