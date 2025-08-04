@@ -37,6 +37,7 @@ idf_component_register(
     fatfs
     esp_psram
     esp_pm
+    esp_hw_support
 )
 
 target_compile_options(${COMPONENT_LIB} PRIVATE

@@ -127,6 +127,9 @@ void demo() {
     if (gps.last_time_update > 0 && !time_set)
         displayTimeout.any_user_input();
 
+    wbl_system.acquirePMLock();
+    wbl_system.releasePMLock();
+
     #ifdef __linux__
     delay(30);
     #endif

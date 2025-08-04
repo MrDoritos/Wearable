@@ -24,6 +24,7 @@ struct wbl_System {
     esp_err_t acquirePMLock();
     esp_err_t releasePMLock();
     uint32_t getCPUFreq();
+    uint32_t testCPUFreq();
 
     bool use_audible_feedback = true;
     bool use_haptic_feedback = true;

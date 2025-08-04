@@ -9,7 +9,7 @@
 #include "esp_timer.h"
 #include "sprites.h"
 #include "esp_pm.h"
-#include "esp_clk.h"
+#include "esp_clk_tree.h"
 
 #include <stdio.h>
 
@@ -103,7 +103,23 @@ esp_err_t wbl_System::releasePMLock() {
 }
 
 uint32_t wbl_System::getCPUFreq() {
-    return esp_clk_cpu_freq();
+    uint32_t ret = 0;
+    ESP_ERROR_CHECK(esp_clk_tree_src_get_freq_hz(SOC_MOD_CLK_CPU, ESP_CLK_TREE_SRC_FREQ_PRECISION_EXACT, &ret));
+    return ret;
+}
+
+uint32_t wbl_System::testCPUFreq() {
+    const int num_instr = 15;
+    const int num_times = 10000;
+    volatile double num_div = num_instr * num_times;
+    volatile int i = 0;
+    int64_t now = esp_timer_get_time();
+    while (i < 10000) {
+        i = i + 1;
+    }
+    now = esp_timer_get_time() - now;
+    double tpi = (double(now) * double(0.000001)) / num_div;
+    return uint32_t(double(1)/tpi);
 }
 
 esp_err_t init_pwm() {
