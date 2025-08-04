@@ -165,20 +165,20 @@ struct DataLogT {
     using value_type = typename DataPoint::value_type;
     using storage_type = DataStorage;
 
-    DataStorage &log;
+    DataStorage *log;
     int64_t time_start;
 
     constexpr DataLogT(DataLogT &data_log):log(data_log.log),time_start(data_log.time_start){}
-    constexpr DataLogT(DataStorage &log):log(log),time_start(0){}
-    constexpr DataLogT(DataStorage &log, const int64_t &time_start):log(log),time_start(time_start){}
-    constexpr DataLogT(DataStorage *log):log(*log),time_start(0) {}
-    constexpr DataLogT():time_start(0) {}
+    constexpr DataLogT(DataStorage &log):log(&log),time_start(0){}
+    constexpr DataLogT(DataStorage &log, const int64_t &time_start):log(&log),time_start(time_start){}
+    constexpr DataLogT(DataStorage *log):log(log),time_start(0) {}
+    constexpr DataLogT():log(nullptr),time_start(0) {}
     
     constexpr inline void set_start_time(const int64_t &time) { time_start = time; }
 
-    constexpr inline void set_log(DataStorage &log) { this->log = log; }
+    constexpr inline void set_log(DataStorage &log) { this->log = &log; }
 
-    constexpr inline void set_log(DataStorage *log) { set_log(*log); }
+    constexpr inline void set_log(DataStorage *log) { this->log = log; }
 
     constexpr inline int64_t get_start_time() const { return time_start; }
 
@@ -194,23 +194,23 @@ struct DataLogT {
 
     constexpr inline time_type get_data_range_time() const { return time_type(get_data_end_time() - get_data_start_time()); }
 
-    constexpr inline int size() const { return log.template size(); }
+    constexpr inline int size() const { return log->template size(); }
 
-    constexpr inline int capacity() const { return log.template capacity(); }
+    constexpr inline int capacity() const { return log->template capacity(); }
 
-    constexpr inline void clear() { log.template clear(); }
+    constexpr inline void clear() { log->template clear(); }
 
-    constexpr inline void push_back(const DataPoint &point) { log.template push_back(point); }
+    constexpr inline void push_back(const DataPoint &point) { log->template push_back(point); }
 
     constexpr inline void push_back(const time_type &time, const value_type &value) {
         push_back(point_type(time - time_start, value));
     }
 
-    constexpr inline bool has(const int &pos) const { return log.template has(pos); }
+    constexpr inline bool has(const int &pos) const { return log->template has(pos); }
 
-    constexpr inline DataPoint &get(const int &pos) { return log.template get(pos); }
+    constexpr inline DataPoint &get(const int &pos) { return log->template get(pos); }
 
-    constexpr inline const DataPoint &get(const int &pos) const { return log.template get(pos); }
+    constexpr inline const DataPoint &get(const int &pos) const { return log->template get(pos); }
 
     /*
         Returns the previous nearest value or the exact match, never the upper bound
