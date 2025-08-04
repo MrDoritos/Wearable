@@ -1,4 +1,6 @@
 #include "peripheral_log.h"
+#include "wbl_func.h"
+#include "wbl_system.h"
 
 #include "esp_check.h"
 #include "esp_heap_caps.h"
@@ -12,6 +14,7 @@ PeripheralLog log;
 
 template<typename DL, typename DS = typename DL::storage_type>
 void make_dl(DL &log, DS *data_storage) {
+    new (data_storage) DS();
     new (&log) DL(data_storage);
 }
 
@@ -50,6 +53,14 @@ esp_err_t PeripheralLog::init() {
 #undef LOGALLOC
 
 esp_err_t PeripheralLog::update() {
+    int64_t t = millis();
+    uint16_t bv = wbl_system.getBatteryMillivolts();
+    
+    if (battery_st.get_data_end_time() + LOG_BATTERY_ST_RATE < millis())
+        battery_st.push_back(t, bv);
+    if (battery_lt.get_data_end_time() + LOG_BATTERY_LT_RATE < millis())
+        battery_lt.push_back(t, bv);
+
     return ESP_OK;
 }
 

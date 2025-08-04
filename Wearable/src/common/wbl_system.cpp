@@ -234,20 +234,23 @@ void wbl_System::beginAudibleFeedback(const float &level, const int32_t &duratio
     setAudibleFeedbackLevel(level);
 }
 
-float wbl_System::getBatteryVoltage() {
+uint16_t wbl_System::getBatteryMillivolts() {
     int raw = 0;
     adc_oneshot_read(adc_handle, VBAT_CHANNEL, &raw);
-    const float vscale = 2.619789893;//(4.23/1.3);
-    const float voff = 0.83;
 
     if (adc_calib) {
         int v = 0;
         adc_cali_raw_to_voltage(adc_chars, raw, &v);
-        return v * 0.001 * vscale + voff;
+        return v;
     }
 
-    return raw * (1600.0/3333.0) * 0.001 * vscale + voff;
-    return 0;
+    return raw * (1600.0/3333.0);
+}
+
+float wbl_System::getBatteryVoltage() {
+    const float vscale = 2.619789893;//(4.23/1.3);
+    const float voff = 0.83;
+    return getBatteryMillivolts() * 0.001f * vscale + voff;
 }
 
 static constexpr const int voltage_count = 3;
