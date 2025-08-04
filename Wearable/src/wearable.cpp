@@ -56,7 +56,9 @@ LoopBuffer colog, nh3log, no2log;
 UI::ElementLogT<DisplayTexture, DataLog> e_colog(display, colog), e_nh3log(display, nh3log), e_no2log(display, no2log);
 UI::ScreenBaseT<> gasscreen("Gases");
 UI::LogField<UI::LogFieldProvider<DLBatteryLT, UI::DataValueAccessor<DPBattery, uint16_t, 0>>> lfpb(&wbl::log.battery_lt);
+UI::LogField<UI::LogFieldProvider<DLBatteryST, UI::DataValueAccessor<DPBattery, uint16_t, 0>>> lfpbst(&wbl::log.battery_st);
 UI::ElementPeripheralLogT<DisplayTexture, decltype(lfpb)> e_pbatterylog(display, lfpb);
+UI::ElementPeripheralLogT<DisplayTexture, decltype(lfpbst)> e_pbatterylogst(display, lfpbst);
 
 void demo() {
     /*
@@ -204,8 +206,9 @@ void init() {
     e_colog << gaslogstyle << "CO";
     e_nh3log << gaslogstyle << "NH3";
     e_no2log << gaslogstyle << "NO2";
-    e_pbatterylog << gaslogstyle << "VBAT";
-    gasscreen << e_colog << e_nh3log << e_pbatterylog;//e_no2log;
+    e_pbatterylog << StyleInfo { .display{INLINE}, .width {96}, .height{32}, .margin{1,1,0,0} } << "VBAT";
+    e_pbatterylogst << StyleInfo { .display{INLINE}, .width {30}, .height{32}, .margin{1,1,0,0} } << "VBAT";
+    gasscreen << e_colog << e_nh3log << e_pbatterylog << e_pbatterylogst;//e_no2log;
 
     uiroot << UI::StyleInfo { .width{128}, .height{128} };
 

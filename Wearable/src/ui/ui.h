@@ -1740,8 +1740,8 @@ struct ElementRootT : public ElementT {
         log_time("DRAW.");
         int64_t log_flush_time = 0;
         if (debug) {
-            if (debug_details)
-                this->overlay_tree_positions(debug_details==2, true);
+            if (debug_details>1)
+                this->overlay_tree_positions(debug_details==3, true);
 
             log_time("OVRLY");
 
@@ -1795,11 +1795,12 @@ struct ElementRootT : public ElementT {
 
         #ifdef USE_LAYOUT_DBG
         if (event->value & EventValues::PRESSED) {
+            //if (event->value & EventValues::DPAD_UP)
+            //    debug = !debug;
             if (event->value & EventValues::DPAD_UP)
-                debug = !debug;
-            if (event->value & EventValues::DPAD_DOWN)
                 debug_details++;
-            debug_details %= 3;
+            debug_details %= 4;
+            debug = debug_details > 0;
             layout_dirty = true;
         }
         #endif

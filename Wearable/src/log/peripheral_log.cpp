@@ -138,8 +138,8 @@ bool update_vbat() {
 }
 
 esp_err_t PeripheralLog::update() {
-    //update_vbat();
-    //update_camm8();
+    update_vbat();
+    update_camm8();
 
     return ESP_OK;
 }
