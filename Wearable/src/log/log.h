@@ -3,6 +3,8 @@
 #include "types.h"
 #include "config.h"
 #include <assert.h>
+#include <tuple>
+#include <string>
 
 namespace wbl {
 
@@ -11,30 +13,105 @@ constexpr inline RType lerp(const IType &v1, const IType &v2, const FType &facto
     return RType(RType(v1) * (FType(1) - factor) + RType(v2) * factor);
 }
 
-template<typename TIME_T = int, typename POINT_T = unsigned short>
-struct DataPointT {
+template<typename TIME_T = int64_t>
+struct DataPointTimeBaseT {
     using time_type = TIME_T;
+
+    time_type time;
+
+    constexpr DataPointTimeBaseT(const time_type &time):time(time) {}
+    constexpr DataPointTimeBaseT():DataPointTimeBaseT(time_type()) {}
+
+    constexpr inline time_type get_time() const { return time; }
+
+    template<typename RType=float>
+    constexpr inline RType get_factor(const DataPointTimeBaseT &other, const time_type &time) const {
+        return RType(time - this->time) / RType(other.time - this->time);
+    }
+};
+
+template<typename TIME_T = int64_t, typename POINT_T = unsigned short, typename DataPointBase = DataPointTimeBaseT<TIME_T>>
+struct DataPointT : public DataPointBase {
+    using time_type = typename DataPointBase::time_type;
     using value_type = POINT_T;
 
-    TIME_T time;
-    POINT_T value;
+    value_type value;
 
-    constexpr DataPointT(const TIME_T &time, const POINT_T &value):time(time),value(value){}
-    constexpr DataPointT():DataPointT(0,0){}
-
-    constexpr inline TIME_T get_time() const { return time; }
+    constexpr DataPointT(const time_type &time, const value_type &value):time(time),value(value) {}
+    constexpr DataPointT():DataPointT(time_type(),value_type()) {}
 
     constexpr inline POINT_T get_value() const { return value; }
 
     constexpr inline DataPointT interpolate(const DataPointT &other, float factor) {
         return DataPointT(
-            lerp(time, other.time, factor),
+            lerp(this->time, other.time, factor),
             lerp(value, other.value, factor)
         );
     }
+};
 
-    constexpr inline float get_factor(const DataPointT &other, const time_type &time) {
-        return float(time - this->time) / float(other.time - this->time);
+template<typename ...Args>
+struct DataValueTupleT {
+    using DPTup = DataValueTupleT<Args...>;
+
+    std::tuple<Args...> members;
+
+    constexpr DataValueTupleT(Args ...args):members(std::make_tuple(args...)) {}
+    constexpr DataValueTupleT():members() {}
+
+    template<typename Op, size_t ...Is>
+    static inline constexpr DPTup apply_op(const DPTup &lhs, const DPTup &rhs, Op op, std::index_sequence<Is...>) {
+        return DPTup(op(std::get<Is>(lhs.members), std::get<Is>(rhs.members))...);
+    }
+
+    template<typename RHSType, typename Op, size_t ...Is>
+    static inline constexpr DPTup apply_op(const DPTup &lhs, const RHSType &rhs, Op op, std::index_sequence<Is...>) {
+        return DPTup(op(std::get<Is>(lhs.members), rhs)...);
+    }
+
+    template<typename OtherT = DPTup>
+    inline constexpr DPTup operator*(const OtherT &other) const {
+        return apply_op(*this, other, [](auto a, auto b){return a * b;}, std::index_sequence_for<Args...>{});
+    }
+
+    template<typename OtherT = DPTup>
+    inline constexpr DPTup operator+(const OtherT &other) const {
+        return apply_op(*this, other, [](auto a, auto b){return a + b;}, std::index_sequence_for<Args...>{});
+    }
+
+    template<size_t N>
+    inline constexpr const auto &get() const {
+        return std::get<N>(members);
+    }
+
+    template<size_t N>
+    inline constexpr auto &get() {
+        return std::get<N>(members);
+    }
+};
+
+template<typename TimeBase, typename Derived>
+struct DataPointImplT : public TimeBase, public Derived {
+    using time_type = typename TimeBase::time_type;
+    using value_type = typename Derived::value_type;
+    using dp_type = DataPointImplT<TimeBase, Derived>;
+
+    using Derived::Derived;
+
+    template<typename ...Args>
+    constexpr DataPointImplT(const time_type &time, const Args& ...args):
+        TimeBase(time),Derived(args...) {}
+    constexpr DataPointImplT(const time_type &time, const value_type &value):
+        TimeBase(time),Derived(value) {}
+    constexpr DataPointImplT():
+        DataPointImplT(time_type(),value_type()) {}
+
+    template<typename FType=float>
+    constexpr inline dp_type interpolate(const dp_type &other, const FType &factor) {
+        return dp_type(
+            lerp(this->time, other.time, factor),
+            lerp(this->get_value(), other.get_value(), factor)
+        );
     }
 };
 
@@ -219,17 +296,17 @@ struct DataLogT {
 
         float factor = v1.get_factor(v2, time);
 
-        return lerp<value_type, float, RType>(v1.value, v2.value, factor);
+        return lerp<value_type, float, RType>(v1.get_value(), v2.get_value(), factor);
     }
 
     constexpr inline value_type min() const {
         if (!size())
             return 0;
 
-        value_type v = get(0).value;
+        value_type v = get(0).get_value();
 
         for (int i = 1; i < size(); i++) {
-            const value_type &p = get(i).value;
+            const value_type &p = get(i).get_value();
             if (p < v)
                 v = p;
         }
@@ -241,10 +318,10 @@ struct DataLogT {
         if (!size())
             return 0;
 
-        value_type v = get(0).value;
+        value_type v = get(0).get_value();
 
         for (int i = 1; i < size(); i++) {
-            const value_type &p = get(i).value;
+            const value_type &p = get(i).get_value();
             if (p > v)
                 v = p;
         }
@@ -260,7 +337,7 @@ struct DataLogT {
     constexpr inline int64_t sum() const {
         RType s = RType(0);
 
-        for (int i = 0; i < size(); s += get(i).value, i++);
+        for (int i = 0; i < size(); s += get(i).get_value(), i++);
         
         return s;
     }
@@ -278,7 +355,7 @@ struct DataLogT {
     constexpr inline int64_t sum_range(const int &start_index, const int &end_index) const {
         RType s = RType(0);
 
-        for (int i = start_index; i < size() && i < end_index; s += get(i).value, i++);
+        for (int i = start_index; i < size() && i < end_index; s += get(i).get_value(), i++);
 
         return s;
     }

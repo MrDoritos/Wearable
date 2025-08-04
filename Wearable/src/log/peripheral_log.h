@@ -9,16 +9,61 @@
 namespace wbl {
 
 struct DVBAT {
-    uint16_t voltage;
+    using v_type = uint16_t;
+    using DVT = DataValueTupleT<v_type>;
+
+    v_type voltage;
+
+    constexpr DVBAT(const v_type &voltage):voltage(voltage) {}
+    constexpr DVBAT(const DVT &value):DVBAT(value.get<0>()) {}
+
+    constexpr inline DVT get_value() const { return DVT(voltage); }
 };
 
 struct DVMICS6814 {
+    using v_type = uint16_t;
+    using DVT = DataValueTupleT<v_type, v_type, v_type>;
+
     uint16_t co, nh3, no2;
+
+    constexpr DVMICS6814(const v_type &co, const v_type &nh3, const v_type &no2):
+        co(co),nh3(nh3),no2(no2) {}
+    constexpr DVMICS6814(const DVT &value):
+        DVMICS6814(value.get<0>(), value.get<1>(), value.get<2>()) {}
+
+    constexpr inline DVT get_value() const { return DVT(co, nh3, no2); }
+
 };
 
 struct DVCAMM8ST {
+    using f_type = float;
+    using v_type = uint8_t;
+    using DVT = DataValueTupleT<f_type, f_type, f_type, f_type, f_type, f_type, f_type, f_type, f_type, v_type>;
+
     float latitude, longitude, altitude, bearing, ground_speed, horizontal_accuracy, vertical_accuracy, odometer, pdop;
     uint8_t satellites;
+
+    constexpr DVCAMM8ST(const f_type &latitude,
+                        const f_type &longitude,
+                        const f_type &altitude,
+                        const f_type &bearing,
+                        const f_type &ground_speed,
+                        const f_type &horizontal_accuracy,
+                        const f_type &vertical_accuracy,
+                        const f_type &odometer,
+                        const f_type &pdop,
+                        const v_type &satellites):
+        latitude(latitude),longitude(longitude),altitude(altitude),
+        bearing(bearing),ground_speed(ground_speed),horizontal_accuracy(horizontal_accuracy),
+        vertical_accuracy(vertical_accuracy),odometer(odometer),pdop(pdop),
+        satellites(satellites) {}
+    constexpr DVCAMM8ST(const DVT &v):
+        DVCAMM8ST(v.get<0>(), v.get<1>(), v.get<2>(),
+                  v.get<3>(), v.get<4>(), v.get<5>(),
+                  v.get<6>(), v.get<7>(), v.get<8>(),
+                  v.get<9>()) {}
+
+    constexpr inline DVT get_value() const { return DVT(latitude, longitude, altitude, bearing, ground_speed, horizontal_accuracy, vertical_accuracy, odometer, pdop, satellites); }
 };
 
 struct DVCAMM8LT {
