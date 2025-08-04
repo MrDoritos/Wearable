@@ -85,6 +85,9 @@ GPSPoint GPS::getFix() {
     return ret;
 }
 
+/*
+    @brief Microseconds
+*/
 int64_t GPS::getGPSTime() {
     return getFix().time;
 }

@@ -80,6 +80,17 @@ struct DataValueTupleT {
         return apply_op(*this, other, [](auto a, auto b){return a + b;}, std::index_sequence_for<Args...>{});
     }
 
+    template<typename OtherT = DPTup>
+    inline constexpr DPTup operator/(const OtherT &other) const {
+        return apply_op(*this, other, [](auto a, auto b){return a / b;}, std::index_sequence_for<Args...>{});
+    }
+
+    template<typename OtherT = DPTup>
+    inline constexpr DPTup &operator+=(const OtherT &other) {
+        *this = (*this + other);
+        return *this;
+    }
+
     template<size_t N>
     inline constexpr const auto &get() const {
         return std::get<N>(members);
@@ -295,7 +306,7 @@ struct DataLogT {
         point_type v1, v2;
 
         if (!time_pair(time, v1, v2))
-            return RType(0);
+            return RType();
 
         float factor = v1.get_factor(v2, time);
 
@@ -338,7 +349,7 @@ struct DataLogT {
 
     template<typename RType = int64_t>
     constexpr inline int64_t sum() const {
-        RType s = RType(0);
+        RType s = RType();
 
         for (int i = 0; i < size(); s += get(i).get_value(), i++);
         
@@ -348,15 +359,15 @@ struct DataLogT {
     template<typename RType = value_type>
     constexpr inline RType avg() const {
         if (!size())
-            return RType(0);
+            return RType();
 
         return
             this->sum<RType>() / RType(size());
     }
 
     template<typename RType = int64_t>
-    constexpr inline int64_t sum_range(const int &start_index, const int &end_index) const {
-        RType s = RType(0);
+    constexpr inline RType sum_range(const int &start_index, const int &end_index) const {
+        RType s = RType();
 
         for (int i = start_index; i < size() && i < end_index; s += get(i).get_value(), i++);
 
@@ -372,10 +383,10 @@ struct DataLogT {
     constexpr inline RType avg_range(int start_index, int end_index) const {
         const int range = end_index - start_index;
         if (!range || !size())
-            return RType(0);
+            return RType();
 
         return
-            this->sum_range<RType>(start_index, end_index) / RType(range);
+            this->sum_range<RType>(start_index, end_index) / range;
     }
 
     template<typename RType = value_type>
