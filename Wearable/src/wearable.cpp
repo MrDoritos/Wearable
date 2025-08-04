@@ -25,6 +25,7 @@
 #include "sdcard.h"
 #include "peripheral_log.h"
 #include "ui_peripheral_log.h"
+#include "ui_gps_log.h"
 
 using namespace wbl;
 using namespace Sprites;
@@ -59,6 +60,9 @@ UI::LogField<UI::LogFieldProvider<DLBatteryLT, UI::DataValueAccessor<DPBattery, 
 UI::LogField<UI::LogFieldProvider<DLBatteryST, UI::DataValueAccessor<DPBattery, uint16_t, 0>>> lfpbst(&wbl::log.battery_st);
 UI::ElementPeripheralLogT<DisplayTexture, decltype(lfpb)> e_pbatterylog(display, lfpb);
 UI::ElementPeripheralLogT<DisplayTexture, decltype(lfpbst)> e_pbatterylogst(display, lfpbst);
+UI::ScreenBaseT<> gpsview("GPS");
+UI::UIGPSLogT<DisplayTexture, DLCAMM8ST> uigpsst(display, wbl::log.camm8_st);
+UI::UIGPSLogT<DisplayTexture, DLCAMM8LT> uigpslt(display, wbl::log.camm8_lt);
 
 void demo() {
     /*
@@ -119,6 +123,10 @@ void demo() {
         e_nh3log.push_back(t, (uu)(mics6814.getNH3Voltage() * 1000.0f));
         e_no2log.push_back(t, (uu)(mics6814.getNO2Voltage() * 1000.0f));
         //wbl::log.battery_st.push_back(t, wbl_system.getBatteryVoltage() * 1000);
+        float th = (float(((t/1000000) % 100))/100.0f)*(M_PI * 2.0f);
+        float x = cos(th) * 10.0f + 20.0f;
+        float y = sin(th) * 10.0f + 20.0f;
+        //wbl::log.camm8_st.push_back(DPCAMM8ST(t, y, x, 10, 10, 10, 10, 10, 10, 10, 10));
     }
 
     wbl::log.update();
@@ -210,6 +218,10 @@ void init() {
     e_pbatterylogst << StyleInfo { .display{INLINE}, .width {30}, .height{32}, .margin{1,0,0,0} } << "VBAT";
     gasscreen << e_colog << e_nh3log << e_pbatterylog << e_pbatterylogst;//e_no2log;
 
+    uigpslt << StyleInfo { .display{INLINE}, .width {96}, .height{96} } << "GPSLT";
+    uigpsst << StyleInfo { .display{INLINE}, .width {32}, .height{32} } << "GPSST";
+    gpsview << uigpslt << uigpsst;
+
     uiroot << UI::StyleInfo { .width{128}, .height{128} };
 
     block << inner;
@@ -288,6 +300,7 @@ void init() {
     gpsscreen.set_right(imuscreen);
     imuscreen.set_right(sysinfoscreen);
     sysinfoscreen.set_right(gasscreen);
+    gasscreen.set_right(gpsview);
 
     uiroot.set_header(header);
     //uiroot.set_screen(mainscreen);
@@ -295,7 +308,8 @@ void init() {
     //uiroot.set_screen(gpsscreen);
     //uiroot.set_screen(imuscreen);
     //uiroot.set_screen(sysinfoscreen);
-    uiroot.set_screen(gasscreen);
+    //uiroot.set_screen(gasscreen);
+    uiroot.set_screen(gpsview);
 
     WBL_D("Screen set");
 

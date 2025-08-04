@@ -32,9 +32,9 @@ struct ValueInfo {
     }
 };
 
-template<typename T, typename T_format_type = float>
+template<typename T_value, typename T_format_type = float>
 struct ValueSI {
-    using value_type = T;
+    using value_type = T_value;
     using format_type = T_format_type;
 
     static constexpr const char *v_prefix;
@@ -65,8 +65,8 @@ struct ValueSI {
         return 0;
     }
 
-    template<typename T = value_type>
-    static constexpr inline const char *unit(const T &v) {
+    template<typename IType = value_type>
+    static constexpr inline const char *unit(const IType &v) {
         return units[get_n(v * v_scale)];
     }
 
@@ -82,20 +82,22 @@ struct ValueSI {
     }
 };
 
+/*
 using ValueTimeMilli = ValueSI<int64_t, float>;
-constexpr const char *ValueTimeMilli::v_format = "%.f%s%s";
-constexpr const char *ValueTimeMilli::v_prefix = "s";
-constexpr ValueTimeMilli::format_type ValueTimeMilli::v_scale = 0.001f;
+template<> constexpr const char *ValueTimeMilli::v_format = "%.f%s%s";
+template<> constexpr const char *ValueTimeMilli::v_prefix = "s";
+template<> constexpr ValueTimeMilli::format_type ValueTimeMilli::v_scale = 0.001f;
 using ValueTimeMicro = ValueSI<int64_t, float>;
-constexpr const char *ValueTimeMicro::v_format = "%.f%s%s";
-constexpr const char *ValueTimeMicro::v_prefix = "s";
-constexpr ValueTimeMicro::format_type ValueTimeMicro::v_scale = 0.000001f;
+template<> constexpr const char *ValueTimeMicro::v_format = "%.f%s%s";
+template<> constexpr const char *ValueTimeMicro::v_prefix = "s";
+template<> constexpr ValueTimeMicro::format_type ValueTimeMicro::v_scale = 0.000001f;
 using ValueSIBase = ValueSI<float, float>;
-constexpr const char *ValueSIBase::v_format = "%.f%s%s";
-constexpr const char *ValueSIBase::v_prefix = "";
-constexpr ValueSIBase::format_type ValueSIBase::v_scale = 1.0f;
+template<> constexpr const char *ValueSIBase::v_format = "%.f%s%s";
+template<> constexpr const char *ValueSIBase::v_prefix = "";
+template<> constexpr ValueSIBase::format_type ValueSIBase::v_scale = 1.0f;
+*/
 
-template<typename DataLog, typename Derived, typename TimeUnit = ValueTimeMicro, typename ValueUnit = ValueSIBase>
+template<typename DataLog, typename Derived, typename TimeUnit = int, typename ValueUnit = int>
 struct LogFieldProvider : public Derived {
     using log_type = DataLog;
     using value_type = typename Derived::value_type;
