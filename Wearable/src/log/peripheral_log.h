@@ -3,6 +3,8 @@
 #include "log.h"
 #include "config.h"
 
+#include "esp_system.h"
+
 #include <stdio.h>
 #include <inttypes.h>
 
@@ -11,6 +13,7 @@ namespace wbl {
 struct DVBAT {
     using v_type = uint16_t;
     using DVT = DataValueTupleT<v_type>;
+    using value_type = DVT;
 
     v_type voltage;
 
@@ -23,6 +26,7 @@ struct DVBAT {
 struct DVMICS6814 {
     using v_type = uint16_t;
     using DVT = DataValueTupleT<v_type, v_type, v_type>;
+    using value_type = DVT;
 
     uint16_t co, nh3, no2;
 
@@ -39,6 +43,7 @@ struct DVCAMM8ST {
     using f_type = float;
     using v_type = uint8_t;
     using DVT = DataValueTupleT<f_type, f_type, f_type, f_type, f_type, f_type, f_type, f_type, f_type, v_type>;
+    using value_type = DVT;
 
     float latitude, longitude, altitude, bearing, ground_speed, horizontal_accuracy, vertical_accuracy, odometer, pdop;
     uint8_t satellites;
@@ -69,6 +74,7 @@ struct DVCAMM8ST {
 struct DVCAMM8LT {
     using f_type = float;
     using DVT = DataValueTupleT<f_type, f_type, f_type>;
+    using value_type = DVT;
     
     float latitude, longitude, altitude;
 
@@ -83,6 +89,7 @@ struct DVCAMM8LT {
 struct DVIMU {
     using f_type = float;
     using DVT = DataValueTupleT<f_type, f_type, f_type, f_type, f_type, f_type>;
+    using value_type = DVT;
 
     float accelerometer_x, accelerometer_y, accelerometer_z;
     float gyroscope_x, gyroscope_y, gyroscope_z;
@@ -100,6 +107,7 @@ struct DVIMU {
 struct DVPED {
     using v_type = uint16_t;
     using DVT = DataValueTupleT<v_type>;
+    using value_type = DVT;
 
     uint16_t steps;
 
@@ -112,6 +120,7 @@ struct DVPED {
 struct DVBME688 {
     using f_type = float;
     using DVT = DataValueTupleT<f_type, f_type, f_type, f_type, f_type, f_type>;
+    using value_type = DVT;
 
     float humidity, temperature, pressure, voc, aqi, co2;
 
@@ -132,6 +141,7 @@ struct DVBME688 {
 struct DVBME688GAS {
     using f_type = float;
     using DVT = DataValueTupleT<f_type, f_type, f_type>;
+    using value_type = DVT;
 
     float h2s, etoh, co;
 
@@ -146,6 +156,7 @@ struct DVBME688GAS {
 struct DVBMP388 {
     using f_type = float;
     using DVT = DataValueTupleT<f_type>;
+    using value_type = DVT;
 
     float pressure;
 
@@ -159,6 +170,7 @@ struct DVLTR390ST {
     using f_type = float;
     using v_type = uint32_t;
     using DVT = DataValueTupleT<v_type, v_type, f_type, f_type>;
+    using value_type = DVT;
 
     uint32_t als, uvs;
     float lux, uvi;
@@ -173,6 +185,7 @@ struct DVLTR390ST {
 struct DVLTR390LT {
     using f_type = float;
     using DVT = DataValueTupleT<f_type, f_type>;
+    using value_type = DVT;
     
     float lux, uvi;
 
@@ -185,6 +198,7 @@ struct DVLTR390LT {
 struct DVMAX30102 {
     using v_type = uint32_t;
     using DVT = DataValueTupleT<v_type, v_type>;
+    using value_type = DVT;
 
     uint32_t red, ir;
 
@@ -197,6 +211,7 @@ struct DVMAX30102 {
 struct DVMAX30102_EVAL {
     using v_type = uint16_t;
     using DVT = DataValueTupleT<v_type, v_type>;
+    using value_type = DVT;
 
     uint16_t hr, spo2;
 
@@ -233,6 +248,8 @@ using DLMICS6814LT = DL<DPMICS6814, LOG_MICS6814_LT_SIZE>;
 using DLCAMM8ST = DL<DPCAMM8ST, LOG_CAMM8_ST_SIZE>;
 using DLCAMM8LT = DL<DPCAMM8LT, LOG_CAMM8_LT_SIZE>;
 using DLCAMM8LT2 = DL<DPCAMM8LT, LOG_CAMM8_LT2_SIZE>;
+using DLIMUST = DL<DPIMU, LOG_IMU_ST_SIZE>;
+using DLPEDST = DL<DPPED, LOG_IMU_PED_ST_SIZE>;
 using DLBME688ST = DL<DPBME688, LOG_BME688_ST_SIZE>;
 using DLBME688LT = DL<DPBME688, LOG_BME688_LT_SIZE>;
 using DLLTR390ST = DL<DPLTR390ST, LOG_LTR390_ST_SIZE>;
@@ -244,7 +261,37 @@ using DLMAX30102EVALLT2 = DL<DPMAX30102_EVAL, LOG_MAX30102_EVAL_LT2_SIZE>;
 
 
 struct PeripheralLog {
+    esp_err_t init();
+    esp_err_t update();
+    int64_t getNextPollTime();
 
+    DLBatteryST battery_st;
+    DLBatteryLT battery_lt;
+
+    DLMICS6814ST mics6814_st;
+    DLMICS6814LT mics6814_lt;
+
+    DLCAMM8ST camm8_st;
+    DLCAMM8LT camm8_lt;
+    DLCAMM8LT2 camm8_lt2;
+
+    DLIMUST imu_st;
+
+    DLPEDST ped_st;
+
+    DLBME688ST bme688_st;
+    DLBME688LT bme688_lt;
+
+    DLLTR390ST ltr390_st;
+    DLLTR390LT ltr390_lt;
+
+    DLMAX30102ST max30102_st;
+
+    DLMAX30102EVALST max30102_eval_st;
+    DLMAX30102EVALLT max30102_eval_lt;
+    DLMAX30102EVALLT2 max30102_eval_lt2;
+
+    int64_t last_poll = 0;
 };
 
 extern PeripheralLog log;

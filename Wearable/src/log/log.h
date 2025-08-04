@@ -37,7 +37,7 @@ struct DataPointT : public DataPointBase {
 
     value_type value;
 
-    constexpr DataPointT(const time_type &time, const value_type &value):time(time),value(value) {}
+    constexpr DataPointT(const time_type &time, const value_type &value):DataPointBase(time),value(value) {}
     constexpr DataPointT():DataPointT(time_type(),value_type()) {}
 
     constexpr inline POINT_T get_value() const { return value; }
@@ -171,6 +171,8 @@ struct DataLogT {
     constexpr DataLogT(DataLogT &data_log):log(data_log.log),time_start(data_log.time_start){}
     constexpr DataLogT(DataStorage &log):log(log),time_start(0){}
     constexpr DataLogT(DataStorage &log, const int64_t &time_start):log(log),time_start(time_start){}
+    constexpr DataLogT(DataStorage *log):log(*log),time_start(0) {}
+    constexpr DataLogT(){}
     
     constexpr inline void set_start_time(const int64_t &time) { time_start = time; }
 

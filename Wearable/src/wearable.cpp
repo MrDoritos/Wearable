@@ -318,6 +318,10 @@ void app_main() {
         printf("Failed to initialize sdcard\n");
         goto end;
     }
+    if (wbl::log.init() != ESP_OK) {
+        printf("Failed to initialize log\n");
+        goto end;
+    }
     if (display.init() != ESP_OK) {
         printf("Failed to initialize display\n");
         goto end;
