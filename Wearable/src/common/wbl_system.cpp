@@ -8,6 +8,8 @@
 #include "driver/ledc.h"
 #include "esp_timer.h"
 #include "sprites.h"
+#include "esp_pm.h"
+#include "esp_clk.h"
 
 #include <stdio.h>
 
@@ -37,6 +39,8 @@ adc_oneshot_unit_handle_t adc_handle;
 adc_cali_handle_t adc_chars;
 bool adc_calib = false;
 esp_timer_handle_t timer_handle;
+esp_pm_lock_handle_t pm_lock = nullptr;
+bool pm_lock_acquired = false;
 
 static void pwm_timer_callback(void *arg) {
     int32_t &dur = wbl_system.haptic_feedback_end;
@@ -57,6 +61,49 @@ static void pwm_timer_callback(void *arg) {
 
     ledc_set_duty(HAPTIC_MODE, HAPTIC_CHANNEL, state ? level : 0);
     ledc_update_duty(HAPTIC_MODE, HAPTIC_CHANNEL);
+}
+
+esp_err_t init_pm() {
+    #ifdef CONFIG_PM_ENABLE
+    esp_pm_config_t pm_cfg = {
+        .max_freq_mhz = 80,
+        .min_freq_mhz = 10,
+        .light_sleep_enable = true,
+    };
+    
+    ESP_RETURN_ON_ERROR(esp_pm_configure(&pm_cfg), TAG, "Failed to configure power management");
+
+    ESP_RETURN_ON_ERROR(esp_pm_lock_create(ESP_PM_APB_FREQ_MAX, 0, "wbl_apb", &pm_lock), TAG, "Failed to create power management lock");
+    #endif
+    return ESP_OK;
+}
+
+esp_err_t wbl_System::acquirePMLock() {
+    #ifdef CONFIG_PM_ENABLE
+    if (pm_lock_acquired)
+        return ESP_OK;
+
+    ESP_RETURN_ON_ERROR(esp_pm_lock_acquire(pm_lock), TAG, "Failed to acquire power management lock");
+
+    pm_lock_acquired = true;
+    #endif
+    return ESP_OK;
+}
+
+esp_err_t wbl_System::releasePMLock() {
+    #ifdef CONFIG_PM_ENABLE
+    if (!pm_lock_acquired)
+        return ESP_OK;
+
+    ESP_RETURN_ON_ERROR(esp_pm_lock_release(pm_lock), TAG, "Failed to release power management lock");
+
+    pm_lock_acquired = false;
+    #endif
+    return ESP_OK;
+}
+
+uint32_t wbl_System::getCPUFreq() {
+    return esp_clk_cpu_freq();
 }
 
 esp_err_t init_pwm() {
@@ -130,6 +177,8 @@ esp_err_t wbl_System::init() {
     ESP_RETURN_ON_ERROR(gpio_set_pull_mode(VBAT_GPIO, GPIO_PULLDOWN_ONLY), TAG, "Failed to set VBAT pulldown");
 
     ESP_RETURN_ON_ERROR(init_pwm(), TAG, "Failed to init pwm");
+
+    ESP_RETURN_ON_ERROR(init_pm(), TAG, "Failed to init power management");
 
     return ESP_OK;
 }

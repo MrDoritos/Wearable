@@ -21,6 +21,9 @@ struct wbl_System {
     float getBatteryLevel();
     void setDisplayBrightness(const float &lux);
     void setDisplayRotation(const uint8_t &rotation);
+    esp_err_t acquirePMLock();
+    esp_err_t releasePMLock();
+    uint32_t getCPUFreq();
 
     bool use_audible_feedback = true;
     bool use_haptic_feedback = true;
