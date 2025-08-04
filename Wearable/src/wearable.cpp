@@ -127,7 +127,7 @@ void demo() {
         uibattery.set_battery_level((uint8_t)wbl_system.getBatteryLevel());
     }
 
-    gps.update();
+    //gps.update();
     bool time_set = gps.last_time_update > 0;
 
     gps.setSystemTime();
@@ -307,33 +307,42 @@ void app_main() {
         printf("Failed to initialize system\n");
         goto end;
     }
+    puts("Initialized system");
     if (mics6814.init() != ESP_OK) {
         printf("Failed to initialize mics6814\n");
         goto end;
     }
+    puts("Initialized MiCS-6814");
     wbl_system.beginHapticFeedback(0.5, 500);
     dpad.init();
+    puts("Initialized DPAD");
     init();
+    puts("Initialized UI");
     if (gps.init() != ESP_OK) {
         printf("Failed to initialize gps\n");
         goto end;
     }
+    puts("Initialized GPS");
     if (gpsimu.init() != ESP_OK) {
         printf("Failed to initialize imu\n");
         goto end;
     }
+    puts("Initialized IMU");
     if (ltr390.init() != ESP_OK) {
         printf("Failed to initialize ltr390\n");
         goto end;
     }
+    puts("Initialized LTR390");
     if (sdcard.init() != ESP_OK) {
         printf("Failed to initialize sdcard\n");
         goto end;
     }
+    puts("Initialized SDCard");
     if (wbl::log.init() != ESP_OK) {
         printf("Failed to initialize log\n");
         goto end;
     }
+    puts("Initialized log");
     if (display.init() != ESP_OK) {
         printf("Failed to initialize display\n");
         goto end;

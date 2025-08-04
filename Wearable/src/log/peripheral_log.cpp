@@ -131,14 +131,15 @@ bool update_vbat() {
         DVBAT v = log.battery_st.avg_range_time(last - rate, last);
         DPBattery p(last - (rate / 2), v.voltage);
         log.battery_lt.push_back(p);
+        log.battery_lt.push_back(micros(), bv);
     }
 
     return true;
 }
 
 esp_err_t PeripheralLog::update() {
-    update_vbat();
-    update_camm8();
+    //update_vbat();
+    //update_camm8();
 
     return ESP_OK;
 }
