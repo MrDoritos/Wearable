@@ -23,6 +23,7 @@ struct ElementSysInfoT : public ElementT {
         TextureWriterT<ElementSysInfoT> writer(this);
 
         writer.printf(Sprites::font, "BAT %.03fV %.01f%%\n", wbl_system.getBatteryVoltage(), wbl_system.getBatteryLevel());
+        writer.printf(Sprites::minifont, "BAT %umV\n", wbl_system.getBatteryMillivolts());
         uint32_t uvs = ltr390.getUVS();
         writer.printf(Sprites::minifont, "UVS %li %.01fUVI\n", uvs, ltr390.getUVIhr(uvs));
         uint32_t als = ltr390.getALS();

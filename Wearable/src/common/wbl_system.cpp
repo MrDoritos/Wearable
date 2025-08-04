@@ -234,7 +234,7 @@ void wbl_System::beginAudibleFeedback(const float &level, const int32_t &duratio
     setAudibleFeedbackLevel(level);
 }
 
-uint16_t wbl_System::getBatteryMillivolts() {
+uint16_t wbl_System::getBatteryRawMillivolts() {
     int raw = 0;
     adc_oneshot_read(adc_handle, VBAT_CHANNEL, &raw);
 
@@ -245,6 +245,10 @@ uint16_t wbl_System::getBatteryMillivolts() {
     }
 
     return raw * (1600.0/3333.0);
+}
+
+uint16_t wbl_System::getBatteryMillivolts() {
+    return (uint16_t)(getBatteryVoltage() * 1000.0f);
 }
 
 float wbl_System::getBatteryVoltage() {

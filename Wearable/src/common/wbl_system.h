@@ -20,6 +20,7 @@ struct wbl_System {
     float getBatteryVoltageMean();
     float getBatteryLevel();
     uint16_t getBatteryMillivolts();
+    uint16_t getBatteryRawMillivolts();
     void setDisplayBrightness(const float &lux);
     void setDisplayRotation(const uint8_t &rotation);
     esp_err_t acquirePMLock();
