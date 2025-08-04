@@ -7,35 +7,39 @@
 namespace wbl {
 namespace UI {
 
-template<typename T, const char *T_prefix = "", const char *T_format = "%.f%s", typename T_format_type = float>
+template<typename T, typename T_format_type = float>
 struct ValueInfo {
     using value_type = T;
+    using format_type = T_format_type;
 
-    static constexpr inline const char *v_prefix = T_prefix;
-    static constexpr inline const char *v_format = T_format;
+    static constexpr const char *v_prefix;
+    static constexpr const char *v_format;
+    static constexpr const format_type v_scale;
 
     static constexpr inline const char *prefix() { return v_prefix; }
 
     static constexpr inline const char *unit(const value_type &v) { return ""; }
 
-    template<typename RType = value_type>
-    static constexpr inline RType scale(const value_type &v) {
-        return RType(v);
+    template<typename RType = value_type, typename IType = value_type>
+    static constexpr inline RType scale(const IType &v) {
+        return RType(v * v_scale);
     }
 
     static inline int printf(char *buffer, int maxlen, const value_type &v) {
         const char *v_unit = unit(v);
-        T_format_type scaled = scale<T_format_type>(v);
-        return snprintf(buffer, maxlen, v_format, scaled, v_unit);
+        format_type scaled = scale<format_type>(v);
+        return snprintf(buffer, maxlen, v_format, scaled, v_unit, v_prefix);
     }
 };
 
-template<typename T, const char *T_prefix = "", const char *T_format = "%.f%s", typename T_format_type = float>
+template<typename T, typename T_format_type = float>
 struct ValueSI {
     using value_type = T;
+    using format_type = T_format_type;
 
-    static constexpr inline const char *v_prefix = T_prefix;
-    static constexpr inline const char *v_format = T_format;
+    static constexpr const char *v_prefix;
+    static constexpr const char *v_format;
+    static constexpr const format_type v_scale;
 
     static constexpr const char *units[] = {
         "", "T", "G", "M", "k", "m", "u", "n", "p"
@@ -47,7 +51,8 @@ struct ValueSI {
 
     static constexpr inline const char *prefix() { return v_prefix; }
 
-    static constexpr inline int get_n(const value_type &v) {
+    template<typename T = value_type>
+    static constexpr inline int get_n(const T &v) {
         if (v > 1e12) return 1;
         if (v > 1e9) return 2;
         if (v > 1e6) return 3;
@@ -60,29 +65,45 @@ struct ValueSI {
         return 0;
     }
 
-    static constexpr inline const char *unit(const value_type &v) {
-        return units[get_n(v)];
+    template<typename T = value_type>
+    static constexpr inline const char *unit(const T &v) {
+        return units[get_n(v * v_scale)];
     }
 
-    template<typename RType = value_type>
-    static constexpr inline RType scale(const value_type &v) {
-        return RType(v) / RType(scales[get_n(v)]);
+    template<typename RType = value_type, typename IType = value_type>
+    static constexpr inline RType scale(const IType &v) {
+        return RType(v * v_scale) / RType(scales[get_n(v * v_scale)]);
     }
 
     static inline int printf(char *buffer, int maxlen, const value_type &v) {
         const char *v_unit = unit(v);
-        T_format_type scaled = scale<T_format_type>(v);
-        return snprintf(buffer, maxlen, v_format, scaled, v_unit);
+        format_type scaled = scale<format_type>(v);
+        return snprintf(buffer, maxlen, v_format, scaled, v_unit, v_prefix);
     }
 };
 
-template<typename DataLog, typename Derived>
+using ValueTimeMilli = ValueSI<int64_t, float>;
+constexpr const char *ValueTimeMilli::v_format = "%.f%s%s";
+constexpr const char *ValueTimeMilli::v_prefix = "s";
+constexpr ValueTimeMilli::format_type ValueTimeMilli::v_scale = 0.001f;
+using ValueTimeMicro = ValueSI<int64_t, float>;
+constexpr const char *ValueTimeMicro::v_format = "%.f%s%s";
+constexpr const char *ValueTimeMicro::v_prefix = "s";
+constexpr ValueTimeMicro::format_type ValueTimeMicro::v_scale = 0.000001f;
+using ValueSIBase = ValueSI<float, float>;
+constexpr const char *ValueSIBase::v_format = "%.f%s%s";
+constexpr const char *ValueSIBase::v_prefix = "";
+constexpr ValueSIBase::format_type ValueSIBase::v_scale = 1.0f;
+
+template<typename DataLog, typename Derived, typename TimeUnit = ValueTimeMicro, typename ValueUnit = ValueSIBase>
 struct LogFieldProvider : public Derived {
     using log_type = DataLog;
     using value_type = typename Derived::value_type;
     using time_type = typename DataLog::time_type;
     using point_type = DataPointT<time_type, value_type>;
     using dl_point_type = typename DataLog::point_type;
+    using time_unit = TimeUnit;
+    using value_unit = ValueUnit;
 
     using Derived::get_point_value;
 
@@ -132,6 +153,8 @@ struct LogField : public Derived {
     using time_type = typename Derived::time_type;
     using value_type = typename Derived::value_type;
     using point_type = typename Derived::point_type;
+    using time_unit = typename Derived::time_unit;
+    using value_unit = typename Derived::value_unit;
 
     using Derived::Derived;
 
