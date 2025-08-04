@@ -12,13 +12,13 @@ PeripheralLog log;
 
 template<typename DL, typename DS = typename DL::storage_type>
 void make_dl(DL &log, DS *data_storage) {
-    log = DL(data_storage);
+    new (&log) DL(data_storage);
 }
 
 template<typename DL, typename DS = typename DL::storage_type>
 esp_err_t make_ext(DL &log) {
     DS *storage = nullptr;
-    storage = heap_caps_malloc(sizeof(DS), MALLOC_CAP_SPIRAM);
+    storage = (DS*)heap_caps_malloc(sizeof(DS), MALLOC_CAP_SPIRAM);
 
     if (storage == nullptr)
         return ESP_ERR_NO_MEM;

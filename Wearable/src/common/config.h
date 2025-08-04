@@ -2,6 +2,12 @@
 
 #include "types.h"
 
+#define I2C_BUS_0_SDA   GPIO_NUM_6
+#define I2C_BUS_0_SCL   GPIO_NUM_5
+
+#define I2C_BUS_1_SDA   GPIO_NUM_0
+#define I2C_BUS_1_SCL   GPIO_NUM_45
+
 #define I2C_DISPLAY_FREQ 1000000
 #define I2C_SH1107_ADDR 0x3C
 
