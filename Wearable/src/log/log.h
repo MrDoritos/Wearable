@@ -172,7 +172,7 @@ struct DataLogT {
     constexpr DataLogT(DataStorage &log):log(log),time_start(0){}
     constexpr DataLogT(DataStorage &log, const int64_t &time_start):log(log),time_start(time_start){}
     constexpr DataLogT(DataStorage *log):log(*log),time_start(0) {}
-    constexpr DataLogT(){}
+    constexpr DataLogT():time_start(0) {}
     
     constexpr inline void set_start_time(const int64_t &time) { time_start = time; }
 

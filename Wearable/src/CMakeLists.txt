@@ -35,6 +35,7 @@ idf_component_register(
     esp_adc
     esp_driver_ledc
     fatfs
+    esp_psram
 )
 
 target_compile_options(${COMPONENT_LIB} PRIVATE
