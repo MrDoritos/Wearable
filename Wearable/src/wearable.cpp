@@ -27,6 +27,7 @@
 #include "ui_peripheral_log.h"
 #include "ui_gps_log.h"
 #include "ui_footer.h"
+#include "ui_distancetracker.h"
 
 using namespace wbl;
 using namespace Sprites;
@@ -65,6 +66,8 @@ UI::ScreenBaseT<> gpsview("GPS");
 UI::UIGPSLogT<DisplayTexture, DLCAMM8ST> uigpsst(display, wbl::log.camm8_st);
 UI::UIGPSLogT<DisplayTexture, DLCAMM8LT2> uigpslt(display, wbl::log.camm8_lt2);
 UI::ElementFooterT<DisplayTexture> uigpsfooter(display, "GPS View");
+UI::ScreenBaseT<> distscreen("Tracker");
+UI::UIDistanceTrackerT<DisplayTexture> uitracker(display);
 
 void demo() {
     /*
@@ -223,6 +226,7 @@ void init() {
     e_pbatterylog << StyleInfo { .display{INLINE}, .width {96}, .height{32}, .margin{1,1,0,0} } << "VBAT";
     e_pbatterylogst << StyleInfo { .display{INLINE}, .width {30}, .height{32}, .margin{1,0,0,0} } << "VBAT";
     gasscreen << e_colog << e_nh3log << e_pbatterylog << e_pbatterylogst;//e_no2log;
+    distscreen << uitracker;
 
     uigpslt << StyleInfo { .display{INLINE}, .width {96}, .height{96} } << "GPSLT";
     uigpsst << StyleInfo { .display{INLINE}, .width {32}, .height{64} } << "GPSST";
@@ -307,6 +311,7 @@ void init() {
     imuscreen.set_right(sysinfoscreen);
     sysinfoscreen.set_right(gasscreen);
     gasscreen.set_right(gpsview);
+    gpsview.set_right(distscreen);
 
     uiroot.set_header(header);
     //uiroot.set_screen(mainscreen);
@@ -315,7 +320,8 @@ void init() {
     //uiroot.set_screen(imuscreen);
     //uiroot.set_screen(sysinfoscreen);
     //uiroot.set_screen(gasscreen);
-    uiroot.set_screen(gpsview);
+    //uiroot.set_screen(gpsview);
+    uiroot.set_screen(distscreen);
 
     WBL_D("Screen set");
 
