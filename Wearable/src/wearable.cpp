@@ -115,9 +115,10 @@ void demo() {
         }
         e_sawlog.push_back(t, (uu)(int(t/5000)%1000));
 
-        float th = (float(((t/3000) % 1000))/1000.0f)*(M_PI * 2.0f);
-        float x = -cos(th) * 10.0f;
-        float y = -sin(th) * 10.0f;
+        float th = (float(((t/30000) % 1000))/1000.0f)*(M_PI * 2.0f);
+        float tr = sin(float(t)*0.000000003f)*5.0f;
+        float x = cos(th) * tr;
+        float y = sin(th) * tr;
         wbl::log.camm8_st.push_back(DPCAMM8ST(t, y, x, 10, 10, 10, 10, 10, 10, 10, 10));
     }
 
