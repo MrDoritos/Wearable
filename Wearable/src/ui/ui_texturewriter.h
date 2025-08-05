@@ -112,6 +112,21 @@ struct TextureWriterT {
             glyph(font.getCharacter(ch));
         }
     }
+
+    template<typename FontProvider>
+    void print_timer_time(const FontProvider &font, const int64_t &time, const int64_t &div = 1000) {
+        int64_t t_millis = time / div;
+        int millis = t_millis % 1000;
+        int seconds = (t_millis / 1000) % 60;
+        int mins = (t_millis / 60000) % 60;
+        int hrs = (t_millis / (60*60*1000));
+
+        if (hrs) printf(font, "%i:", hrs);
+        if (mins) printf(font, "%02i:", mins);
+        printf(font, "%02i", seconds);
+        size.x++;
+        printf(Sprites::minifont, "%03i", millis);
+    }
 };
 
 }

@@ -16,6 +16,8 @@ namespace UI {
 
 template<typename Buffer, typename ElementT = ElementBaseT<Buffer>>
 struct UIDistanceTrackerT : public ElementT {
+    using UIDistanceTracker = UIDistanceTrackerT<Buffer>;
+
     template<typename Log, typename T, int N>
     struct FieldProvider {
         using log_type = Log;
@@ -32,10 +34,18 @@ struct UIDistanceTrackerT : public ElementT {
     using FPODOTOTALST = FieldProvider<DLCAMM8ODOST, uint32_t, 1>;
 
     struct ElementInfo : public ElementT {
-        using ElementT::ElementT;
+        //using ElementT::ElementT;
         using ElementT::operator<<;
 
+        UIDistanceTracker &tracker;
+
+        constexpr ElementInfo(Buffer &buffer, UIDistanceTracker &tracker):
+            ElementT(buffer),tracker(tracker) {}
+        //constexpr ElementInfo():ElementT() {}
+
         void on_draw(Event *event) override {
+            this->clear();
+
             TextureWriterT<> writer(this);
 
             typename FPODOTOTALST::provider_type odo(&wbl::log.camm8_odo_st);
@@ -44,7 +54,12 @@ struct UIDistanceTrackerT : public ElementT {
             uint16_t cur_steps = ped.has_index(-1) ? ped.get_value(-1) : 0;
             uint32_t tot_dist = odo.has_index(-1) ? odo.get_value(-1) : 0;
 
-            writer.printf(Sprites::font, "%u Steps %lum", cur_steps, tot_dist);
+            bool flash = tracker.is_stopped() ? (millis() % 1000 >= 500) : false;
+
+            writer.printf(Sprites::font, "%u Steps %lum ", cur_steps, tot_dist);
+
+            if (!flash)
+            writer.print_timer_time(Sprites::font, tracker.get_time());
         }
     };
 
@@ -64,6 +79,8 @@ struct UIDistanceTrackerT : public ElementT {
         }
 
         void on_draw(Event *event) override {
+            this->clear();
+
             TextureWriterT<> writer(this);
 
             typename FPODOLT::provider_type odo(wbl::log.camm8_odo_lt);
@@ -72,27 +89,15 @@ struct UIDistanceTrackerT : public ElementT {
             uint16_t steps = ped.get_size() > 0 ? ped.get_binary_value(dp_time) : 0;
             uint32_t dist = odo.get_size() > 0 ? odo.get_binary_value(dp_time) : 0;
 
-            int64_t t_milliseconds = split_time / 1000;
-            int seconds = (t_milliseconds / 1000) % 60;
-            int millis = t_milliseconds % 1000;
-            int mins = (t_milliseconds / 60000) % 60;
-            int hrs = (t_milliseconds / (60*60*1000));
-
             writer.printf(Sprites::font, "%u %lum ", steps, dist);
-
-            if (hrs)
-                writer.printf(Sprites::font, "%i:", hrs);
-            if (mins)
-                writer.printf(Sprites::font, "%02i:", mins);
-            writer.printf(Sprites::font, "%02i", seconds);
-            writer.printf(Sprites::minifont, ".%03i", millis);
+            writer.print_timer_time(Sprites::font, split_time);
         }
     };
 
     LoopBufferT<ElementSplit, 4> splits;
     ElementInfo info;
 
-    constexpr UIDistanceTrackerT(Buffer &buffer):ElementT(buffer, "dist"),info(buffer) {
+    constexpr UIDistanceTrackerT(Buffer &buffer):ElementT(buffer, "dist"),info(buffer, *this) {
         this->append_child(&info);
 
         *this << StyleInfo { .width {128}, .height{96} };
@@ -169,10 +174,15 @@ struct UIDistanceTrackerT : public ElementT {
         split_timer = 0;
     }
 
+    inline bool is_reset() { return timer_state & TRESET; }
+    inline bool is_running() { return timer_state & TRUNNING; }
+    inline bool is_stopped() { return timer_state & TSTOPPED; }
+
     void stop_timer() {
         WBL_D("Stop timer");
 
         timer_state = TSTOPPED;
+        split_time();
     }
 
     int64_t get_time() {
