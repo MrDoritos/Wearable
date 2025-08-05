@@ -10,8 +10,8 @@ template<typename ElementT = ElementBaseT<Sprites::DisplayTexture>>
 struct TextureWriterT {
     ElementT &ref;
     bool wrap, clip_x, clip_y;
-    Size size;
-    const Origin offset;
+    Size size; // inline x, offset y, inline height
+    const Size boundary;
 
     constexpr TextureWriterT(ElementT &ref, const Origin &pos):
         ref(ref),
@@ -19,20 +19,20 @@ struct TextureWriterT {
         clip_x(ref.overflow.x & HIDDEN),
         clip_y(ref.overflow.y & HIDDEN),
         size(pos, Length(0)),
-        offset(pos) {}
+        boundary(pos, ref.getLength()) {}
 
     constexpr TextureWriterT(ElementT &ref):TextureWriterT(ref, ref.getOffset()) {}
     constexpr TextureWriterT(ElementT *ref, const Origin &pos):TextureWriterT(*ref,pos){}
     constexpr TextureWriterT(ElementT *ref):TextureWriterT(*ref) {}
 
-    void add_break() {
+    inline void add_break() {
         size.y += size.height;
-        size.x = offset.x;
+        size.x = boundary.x;
         size.height = 0;
     }
 
     bool add_length(const Length &length, Origin &pos) {
-        if (length.width + size.x > ref.getWidth()) {
+        if (length.width + size.x > boundary.width + boundary.x) {
             if (wrap)
                 add_break();
             else
@@ -40,7 +40,7 @@ struct TextureWriterT {
                 return false;
         }
 
-        if (clip_y && length.height + size.y > ref.getHeight())
+        if (clip_y && length.height + size.y > boundary.height + boundary.y)
             return false;
 
         if (size.height < length.height)
