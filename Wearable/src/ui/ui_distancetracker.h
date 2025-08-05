@@ -71,11 +71,11 @@ struct UIDistanceTrackerT : public ElementT {
         int64_t dp_time;
 
         constexpr ElementSplit(Buffer &buffer, const int64_t &split_time, const int64_t &dp_time):ElementT(buffer),split_time(split_time),dp_time(dp_time) {
-            this->height = DimensionMinMax(16);
+            this->height = DimensionMinMax(13);
 
         }
         constexpr ElementSplit():ElementT(Sprites::display) {
-            this->height = DimensionMinMax(16);
+            this->height = DimensionMinMax(13);
         }
 
         void on_draw(Event *event) override {
@@ -94,14 +94,14 @@ struct UIDistanceTrackerT : public ElementT {
         }
     };
 
-    LoopBufferT<ElementSplit, 4> splits;
+    LoopBufferT<ElementSplit, 6> splits;
     ElementInfo info;
 
     constexpr UIDistanceTrackerT(Buffer &buffer):ElementT(buffer, "dist"),info(buffer, *this) {
         this->append_child(&info);
 
-        *this << StyleInfo { .width {128}, .height{96} };
-        info << StyleInfo { .height{16} };
+        *this << StyleInfo { .width {128}, .height{112} };
+        info << StyleInfo { .height{13} };
 
         reset_timer();
     }
@@ -204,7 +204,8 @@ struct UIDistanceTrackerT : public ElementT {
             return;
         }
 
-        split_time();
+        //split_time();
+        split_start = timestamp_micros();
 
         timer_state = TRUNNING;
     }

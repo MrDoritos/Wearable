@@ -26,6 +26,7 @@
 #define I2C_LTR390_FREQ 400000
 #define I2C_LTR390_ADDR 0x53
 
+#define DISPLAY_ROTATION 1 // 2
 #define DISPLAY_TIMEOUT 120000
 #define HOLD_TIME_TO_LOCK 500
 
@@ -102,8 +103,8 @@
 
 //#define WBL_ACK_DBG
 #define USE_LAYOUT_DBG
-#define WBL_DEBUG
-#define WBL_LOG_DBG
+//#define WBL_DEBUG
+//#define WBL_LOG_DBG
 
 #ifdef WBL_DEBUG
 #define WBL_D(x) puts(x)

@@ -386,7 +386,7 @@ void app_main() {
     } else {
         printf("Display initialized\n");
         display.clear(0);
-        wbl_system.setDisplayRotation(2);
+        wbl_system.setDisplayRotation(DISPLAY_ROTATION);
         display.flush();
         gps.update();
         gps.setSystemTime();
