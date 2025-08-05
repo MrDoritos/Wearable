@@ -259,6 +259,11 @@ using DLMAX30102EVALST = DL<DPMAX30102_EVAL, LOG_MAX30102_EVAL_ST_SIZE>;
 using DLMAX30102EVALLT = DL<DPMAX30102_EVAL, LOG_MAX30102_EVAL_LT_SIZE>;
 using DLMAX30102EVALLT2 = DL<DPMAX30102_EVAL, LOG_MAX30102_EVAL_LT2_SIZE>;
 
+enum TimeState : uint8_t {
+    NOT_SET = 0,
+    FIRST_SET,
+    DONE,   
+};
 
 struct PeripheralLog {
     esp_err_t init();
@@ -290,6 +295,8 @@ struct PeripheralLog {
     DLMAX30102EVALST max30102_eval_st;
     DLMAX30102EVALLT max30102_eval_lt;
     DLMAX30102EVALLT2 max30102_eval_lt2;
+
+    TimeState getTimeState();
 
     int64_t last_poll = 0;
 };

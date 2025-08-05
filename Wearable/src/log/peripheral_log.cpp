@@ -87,11 +87,7 @@ bool get_camm8_lt(DPCAMM8LT &camm8, const int64_t &rate_ms) {
     return true;
 }
 
-enum TIME_STATE : uint8_t {
-    NOT_SET = 0,
-    FIRST_SET,
-    DONE
-} time_state{0};
+TimeState time_state{0};
 
 bool update_camm8() {
     gps.update();
@@ -138,6 +134,10 @@ bool update_camm8() {
     }
 
     return true;
+}
+
+TimeState PeripheralLog::getTimeState() {
+    return time_state;
 }
 
 bool update_vbat() {
