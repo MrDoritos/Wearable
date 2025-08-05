@@ -78,14 +78,14 @@ struct UIDistanceTrackerT : public ElementT {
             int mins = (t_milliseconds / 60000) % 60;
             int hrs = (t_milliseconds / (60*60*1000));
 
-            writer.printf(Sprites::font, "%u Steps %lum ", steps, dist);
+            writer.printf(Sprites::font, "%u %lum ", steps, dist);
 
             if (hrs)
                 writer.printf(Sprites::font, "%i:", hrs);
             if (mins)
                 writer.printf(Sprites::font, "%02i:", mins);
             writer.printf(Sprites::font, "%02i", seconds);
-            writer.printf(Sprites::minifont, ".%04i", millis);
+            writer.printf(Sprites::minifont, ".%03i", millis);
         }
     };
 
@@ -106,8 +106,8 @@ struct UIDistanceTrackerT : public ElementT {
 
     enum TimerState : uint8_t {
         TRESET=1,
-        TRUNNING,
-        TSTOPPED,
+        TRUNNING=2,
+        TSTOPPED=4,
     } timer_state;
 
     void add_split() {
@@ -117,17 +117,18 @@ struct UIDistanceTrackerT : public ElementT {
         wbl::log.pushOdometer();
         wbl::log.pushPedometer();
 
-        WBL_DF("Add split %lli %lli\n", dp_t, t);
 
         //splits.push_back(ElementSplit(this->buffer, t, dp_t));
-        if (splits.index >= splits.size())
+        if (splits.index >= splits.capacity())
             splits.index = 0;
-        if (splits.count < splits.size())
+        if (splits.count < splits.capacity())
             splits.count++;
         
         ElementSplit *ee = &splits.data[splits.index++];
 
         new (ee) ElementSplit(this->buffer, t, dp_t);
+
+        WBL_DF("Add split %i %lli %lli\n", splits.size(), dp_t, t);
 
         this->child = &info;
         this->child->parent = this;
@@ -142,10 +143,15 @@ struct UIDistanceTrackerT : public ElementT {
         WBL_D("SET");
 
         for (int i = splits.size() - 2; i > -1; i--) {
+            WBL_DF("%i %p\n", i, ch);
             ch->sibling = &splits.get(i);
             ch->parent = this;
-            ch = ch->sibling;            
+            ch = ch->sibling;    
         }
+
+        ch->sibling = nullptr;
+
+        WBL_D("DONE");
 
         this->dispatch_parent(Event::CONTENT_SIZE, Event::CHANGE);
     }
