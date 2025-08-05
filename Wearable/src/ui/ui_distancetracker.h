@@ -9,6 +9,8 @@
 #include "wbl_func.h"
 #include "peripheral_log.h"
 
+#include "sprites.h"
+
 namespace wbl {
 namespace UI {
 
@@ -36,8 +38,8 @@ struct UIDistanceTrackerT : public ElementT {
         void on_draw(Event *event) override {
             TextureWriterT<> writer(this);
 
-            FPODOTOTALST::provider_type odo(wbl::log.camm8_odo_st);
-            FPPEDST::provider_type ped(wbl::log.ped_st);
+            typename FPODOTOTALST::provider_type odo(&wbl::log.camm8_odo_st);
+            typename FPPEDST::provider_type ped(&wbl::log.ped_st);
 
             uint16_t cur_steps = ped.has_index(-1) ? ped.get_value(-1) : 0;
             uint32_t tot_dist = odo.has_index(-1) ? odo.get_value(-1) : 0;
@@ -54,16 +56,18 @@ struct UIDistanceTrackerT : public ElementT {
         int64_t dp_time;
 
         constexpr ElementSplit(Buffer &buffer, const int64_t &split_time, const int64_t &dp_time):ElementT(buffer),split_time(split_time),dp_time(dp_time) {
-            *this << StyleInfo { .height{16} };
+            this->height = DimensionMinMax(16);
 
         }
-        constexpr ElementSplit(){}
+        constexpr ElementSplit():ElementT(Sprites::display) {
+            this->height = DimensionMinMax(16);
+        }
 
         void on_draw(Event *event) override {
             TextureWriterT<> writer(this);
 
-            FPODOLT::provider_type odo(wbl::log.camm8_odo_lt);
-            FPPEDLT::provider_type ped(wbl::log.ped_st);
+            typename FPODOLT::provider_type odo(wbl::log.camm8_odo_lt);
+            typename FPPEDLT::provider_type ped(wbl::log.ped_st);
 
             uint16_t steps = ped.get_size() > 0 ? ped.get_binary_value(dp_time) : 0;
             uint32_t dist = odo.get_size() > 0 ? odo.get_binary_value(dp_time) : 0;
@@ -81,11 +85,11 @@ struct UIDistanceTrackerT : public ElementT {
             if (mins)
                 writer.printf(Sprites::font, "%02i:", mins);
             writer.printf(Sprites::font, "%02i", seconds);
-            writer.printf(Sprites::minifont, "%04i", millis);
+            writer.printf(Sprites::minifont, ".%04i", millis);
         }
     };
 
-    LoopBuffer<ElementSplit, 4> splits;
+    LoopBufferT<ElementSplit, 4> splits;
     ElementInfo info;
 
     constexpr UIDistanceTrackerT(Buffer &buffer):ElementT(buffer, "dist"),info(buffer) {
@@ -93,6 +97,8 @@ struct UIDistanceTrackerT : public ElementT {
 
         *this << StyleInfo { .width {128}, .height{96} };
         info << StyleInfo { .height{16} };
+
+        reset_timer();
     }
 
     int64_t split_start = 0;
@@ -111,23 +117,37 @@ struct UIDistanceTrackerT : public ElementT {
         wbl::log.pushOdometer();
         wbl::log.pushPedometer();
 
-        splits.push_back(ElementSplit(this->buffer, t, dp_t));
+        WBL_DF("Add split %lli %lli\n", dp_t, t);
+
+        //splits.push_back(ElementSplit(this->buffer, t, dp_t));
+        if (splits.index >= splits.size())
+            splits.index = 0;
+        if (splits.count < splits.size())
+            splits.count++;
+        
+        ElementSplit *ee = &splits.data[splits.index++];
+
+        new (ee) ElementSplit(this->buffer, t, dp_t);
 
         this->child = &info;
         this->child->parent = this;
 
         IElement *ch = this->child;
 
-        ch->sibling = &splits.get(-1);
+        ch->sibling = ee;
 
         ch = ch->sibling;
         ch->parent = this;
+
+        WBL_D("SET");
 
         for (int i = splits.size() - 2; i > -1; i--) {
             ch->sibling = &splits.get(i);
             ch->parent = this;
             ch = ch->sibling;            
         }
+
+        this->dispatch_parent(Event::CONTENT_SIZE, Event::CHANGE);
     }
 
     void split_time() {
@@ -144,6 +164,8 @@ struct UIDistanceTrackerT : public ElementT {
     }
 
     void stop_timer() {
+        WBL_D("Stop timer");
+
         timer_state = TSTOPPED;
     }
 
@@ -152,12 +174,14 @@ struct UIDistanceTrackerT : public ElementT {
             return 0;
 
         if (timer_state & TSTOPPED)
-            return split_time;
+            return split_timer;
 
-        return (timestamp_micros() - split_start) + split_time;
+        return (timestamp_micros() - split_start) + split_timer;
     }
 
     void start_timer() {
+        WBL_D("Start timer");
+
         if (timer_state & TRESET) {
             timer_state = TRUNNING;
             reset_time();
@@ -170,6 +194,8 @@ struct UIDistanceTrackerT : public ElementT {
     }
     
     void reset_timer() {
+        WBL_D("Reset timer");
+
         timer_state = TRESET;
     }
 
