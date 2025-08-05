@@ -266,6 +266,7 @@ using DLCAMM8ODOST = DL<DPCAMM8ODO, LOG_CAMM8_ODO_ST_SIZE>;
 using DLCAMM8ODOLT = DL<DPCAMM8ODO, LOG_CAMM8_ODO_LT_SIZE>;
 using DLIMUST = DL<DPIMU, LOG_IMU_ST_SIZE>;
 using DLPEDST = DL<DPPED, LOG_IMU_PED_ST_SIZE>;
+using DLPEDLT = DL<DPPED, LOG_IMU_PED_LT_SIZE>;
 using DLBME688ST = DL<DPBME688, LOG_BME688_ST_SIZE>;
 using DLBME688LT = DL<DPBME688, LOG_BME688_LT_SIZE>;
 using DLLTR390ST = DL<DPLTR390ST, LOG_LTR390_ST_SIZE>;
@@ -302,6 +303,7 @@ struct PeripheralLog {
     DLIMUST imu_st;
 
     DLPEDST ped_st;
+    DLPEDLT ped_lt;
 
     DLBME688ST bme688_st;
     DLBME688LT bme688_lt;
@@ -317,6 +319,7 @@ struct PeripheralLog {
 
     TimeState getTimeState();
     void pushOdometer();
+    void pushPedometer();
 
     int64_t last_poll = 0;
 };

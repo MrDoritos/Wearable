@@ -3,6 +3,7 @@
 #include "wbl_system.h"
 #include "gps.h"
 #include "display_timeout.h"
+#include "gps_imu.h"
 
 #include "esp_check.h"
 #include "esp_heap_caps.h"
@@ -37,6 +38,7 @@ DLBatteryST::storage_type ds_bat_st;
 DLMICS6814ST::storage_type ds_mics_st;
 DLCAMM8ST::storage_type ds_camm8_st;
 DLCAMM8ODOST::storage_type ds_camm8_odo_st;
+DLPEDST::storage_type ds_ped_st;
 
 #define LOGALLOC(x) ESP_RETURN_ON_ERROR(make_ext(x), TAG, "Failed to alloc")
 
@@ -45,12 +47,14 @@ esp_err_t PeripheralLog::init() {
     mics6814_st.set_log(ds_mics_st);
     camm8_st.set_log(ds_camm8_st);
     camm8_odo_st.set_log(ds_camm8_odo_st);
+    ped_st.set_log(ds_ped_st);
 
     LOGALLOC(battery_lt);
     LOGALLOC(mics6814_lt);
     LOGALLOC(camm8_lt);
     LOGALLOC(camm8_lt2);
     LOGALLOC(camm8_odo_lt);
+    LOGALLOC(ped_lt);
 
     return ESP_OK;
 }
@@ -66,6 +70,17 @@ void PeripheralLog::pushOdometer() {
         odo = camm8_odo_st.get(-1);
     
     camm8_odo_lt.push_back(odo);
+}
+
+void PeripheralLog::pushPedometer() {
+    DPPED p;
+
+    if (ped_st.size() < 1)
+        p = DPPED(timestamp_micros(), 0);
+    else
+        p = ped_st.get(-1);
+
+    ped_lt.push_back(p);
 }
 
 bool update_camm8_odo() {
@@ -181,6 +196,22 @@ TimeState PeripheralLog::getTimeState() {
     return time_state;
 }
 
+bool update_gpsimu() {
+    if (!gpsimu.getPedometerState())
+        return false;
+
+    int64_t t = timestamp_micros();
+
+    if (LOG_IMU_PED_ST_RATE * 1000 + log.ped_st.get_data_end_time() < t) {
+        DPPED p(t, gpsimu.getPedometer());
+        WBL_DF("Push pedometer ST %lli -> %lli (%u)\n", log.ped_st.get_data_end_time(), p.time, p.steps);
+        log.ped_st.push_back(p);
+        return true;
+    }
+
+    return false;
+}
+
 bool update_vbat() {
     int64_t t = micros();
     uint16_t bv = wbl_system.getBatteryMillivolts();
@@ -206,6 +237,7 @@ bool update_vbat() {
 esp_err_t PeripheralLog::update() {
     update_vbat();
     update_camm8();
+    update_gpsimu();
 
     return ESP_OK;
 }

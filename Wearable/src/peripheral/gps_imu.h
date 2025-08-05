@@ -18,6 +18,12 @@ struct GPSIMU {
     esp_err_t init();
     AxisData getGyroscope();
     AxisData getAccelerometer();
+    esp_err_t enablePedometer();
+    esp_err_t disablePedometer();
+    esp_err_t setPedometerState(uint8_t state);
+    esp_err_t resetPedometer();
+    uint16_t getPedometer();
+    uint8_t getPedometerState();
 };
 
 extern GPSIMU gpsimu;
