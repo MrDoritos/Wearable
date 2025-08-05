@@ -2,6 +2,7 @@
 #include "wbl_func.h"
 #include "wbl_system.h"
 #include "gps.h"
+#include "display_timeout.h"
 
 #include "esp_check.h"
 #include "esp_heap_caps.h"
@@ -86,21 +87,45 @@ bool get_camm8_lt(DPCAMM8LT &camm8, const int64_t &rate_ms) {
     return true;
 }
 
-bool update_camm8() {
-    int64_t t = micros();
+enum TIME_STATE : uint8_t {
+    NOT_SET = 0,
+    FIRST_SET,
+    DONE
+} time_state{0};
 
+bool update_camm8() {
     gps.update();
 
+    gps.setSystemTime();
+
+    if (gps.last_time_update > 0) {
+        if (time_state == FIRST_SET)
+            time_state = DONE;
+        if (time_state == NOT_SET)
+            time_state = FIRST_SET;
+
+        if (time_state == FIRST_SET && !displayTimeout.is_display_off())
+            displayTimeout.any_user_input();
+    }
+
+    int64_t t = timestamp_micros();
+
     if (LOG_CAMM8_ST_RATE * 1000 + log.camm8_st.get_data_end_time() < t) {
+        WBL_DF("Push GPS ST %lli -> %lli ->", log.camm8_st.get_data_end_time(), t);
         DPCAMM8ST v;
-        if (get_camm8_st(v))
+        if (get_camm8_st(v)) {
             log.camm8_st.push_back(v);
+            WBL_DF(" %lli", v.time);
+        }
+
+        WBL_DF(" @ %lli\n", micros());
     }
 
     if (log.camm8_st.size() < 2)
         return true;
 
     if (LOG_CAMM8_LT_RATE * 1000 + log.camm8_lt.get_data_end_time() < t) {
+        WBL_DF("Push GPS LT %lli -> %lli\n", log.camm8_lt.get_data_end_time(), t);
         DPCAMM8LT v;
         if (get_camm8_lt(v, LOG_CAMM8_LT_RATE))
             log.camm8_lt.push_back(v);

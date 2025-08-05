@@ -6,7 +6,7 @@
 namespace wbl {
 namespace UI {
 
-template<typename ElementT>
+template<typename ElementT = ElementBaseT<Sprites::DisplayTexture>>
 struct TextureWriterT {
     ElementT &ref;
     bool wrap, clip_x, clip_y;

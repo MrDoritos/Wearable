@@ -5,6 +5,8 @@
 #include "log.h"
 #include "peripheral_log.h"
 #include "ui_peripheral_log.h"
+#include "sprites.h"
+#include "ui_texturewriter.h"
 
 namespace wbl {
 namespace UI {
@@ -54,7 +56,7 @@ struct UIGPSLogT : public ElementT {
             const float w = plot_size.width;
             const float h = plot_size.height;
 
-            WBL_DF("Equal aspect w:%f h:%f x_min:%f x_max:%f x_range:%f y_min:%f y_max:%f y_range:%f", w, h, x_min, x_max, x_range, y_min, y_max, y_range);
+            //WBL_DF("Equal aspect w:%f h:%f x_min:%f x_max:%f x_range:%f y_min:%f y_max:%f y_range:%f", w, h, x_min, x_max, x_range, y_min, y_max, y_range);
             
             if (w / h > x_range / y_range) {
                 const float nx_ratio = (x_range * h) / (y_range * w);
@@ -64,7 +66,7 @@ struct UIGPSLogT : public ElementT {
                 x_max = x_min + nx_range;
                 x_range = nx_range;
                 x_range_inv = 1.0f / x_range;
-                WBL_DF(" set x x_min:%f x_max:%f x_range:%f nx_ratio:%f nx_range:%f nx_scale:%f\n", x_min, x_max, x_range, nx_ratio, nx_range, nx_scale);
+                //WBL_DF(" set x x_min:%f x_max:%f x_range:%f nx_ratio:%f nx_range:%f nx_scale:%f\n", x_min, x_max, x_range, nx_ratio, nx_range, nx_scale);
             } else {
                 const float ny_ratio = (y_range * w) / (x_range * h);
                 const float ny_scale = 1.0f / ny_ratio;
@@ -73,7 +75,7 @@ struct UIGPSLogT : public ElementT {
                 y_max = y_min + ny_range;
                 y_range = ny_range;
                 y_range_inv = 1.0f / y_range;
-                WBL_DF(" set y y_min:%f y_max:%f y_range:%f ny_ratio:%f ny_range:%f ny_scale:%f\n", y_min, y_max, y_range, ny_ratio, ny_range, ny_scale);
+                //WBL_DF(" set y y_min:%f y_max:%f y_range:%f ny_ratio:%f ny_range:%f ny_scale:%f\n", y_min, y_max, y_range, ny_ratio, ny_range, ny_scale);
             }
 
         }
@@ -157,6 +159,10 @@ struct UIGPSLogT : public ElementT {
         }        
 
         WBL_DTIME_END("GPS");
+
+        TextureWriterT<> writer(this);
+
+        writer.printf(Sprites::minifont, "%i", log->template size());
     }
 };
 

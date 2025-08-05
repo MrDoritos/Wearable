@@ -12,3 +12,7 @@ int64_t micros();
 int64_t millis();
 
 int64_t seconds();
+
+int64_t timestamp_micros();
+int64_t timestamp_millis();
+int64_t timestamp_seconds();
