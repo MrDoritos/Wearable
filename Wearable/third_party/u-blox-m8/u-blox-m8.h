@@ -226,6 +226,26 @@ struct _cfggnssblock
   uint32_t  flags;
 };
 
+struct _navodohdr {
+  uint8_t cl = 0x01;
+  uint8_t id = 0x09;
+  uint16_t length = 20;
+};
+
+struct _navodoblock {
+  uint8_t version;
+  uint8_t reserved1, reserved2, reserved3;
+  uint32_t iTOW;
+  uint32_t distance;
+  uint32_t totalDistance;
+  uint32_t distanceStd;
+};
+
+struct _navodo {
+  _navodohdr header;
+  _navodoblock block;
+};
+
 typedef struct
 {
   _cfggnsshdr header;
@@ -244,6 +264,7 @@ typedef union
     _ack ack;
     _navsat navsat;
     _cfggnss cfggnss;
+    _navodo navodo;
     byte data[MAXBUFFERSIZE]; // I added this because you can't predict the size of variable length messages...
 } _buf;
 
@@ -255,13 +276,14 @@ struct _ackhdr     ackhdr;
 struct _nakhdr     nakhdr;
 struct _navsathdr  navsathdr;
 struct _cfggnsshdr cfggnsshdr;
+struct _navodohdr  navodohdr;
 
 // Array of packet headers and array of packet names
 struct _header *packetheaders[] = { (struct _header *)&navpvt7hdr, (struct _header *)&navpvt8hdr, \
   (struct _header *)&cfgtp5hdr, (struct _header *)&ackhdr, (struct _header *)&nakhdr, \
-  (struct _header *)&navsathdr, (struct _header *)&cfggnsshdr };
+  (struct _header *)&navsathdr, (struct _header *)&cfggnsshdr, (struct _header *)&navodohdr };
 
-const char *packetnames[] = { "navpvt7", "navpvt8", "cfgtp5", "ack", "nak", "navsat", "cfggnss" };
+const char *packetnames[] = { "navpvt7", "navpvt8", "cfgtp5", "ack", "nak", "navsat", "cfggnss", "navodo" };
 
 enum class State { sync1, sync2, header, payload, check };
 

@@ -21,6 +21,7 @@ I2C cam(I2C_BUS_1, I2C_CAMM8_ADDR, 1000, I2C_CAMM8_FREQ, 40000);
 ublox _gps;
 navpvt8 nav(_gps);
 cfggnss gc(_gps);
+_navodo currentOdometer;
 
 
 esp_err_t GPS::init() {
@@ -82,8 +83,14 @@ GPSState GPS::update() {
         for (int i = 0; i < bytes_to_read; i++) {
             char *r = (char*)_gps.parse(buffer[i]);
 
-            if (strlen(r) > 0 && strcmp(r, "navpvt8") == 0) {
-                return NAVPVT8;
+            if (strlen(r) > 0) {
+                if (strcmp(r, "navpvt8") == 0) {
+                    return NAVPVT8;
+                }
+                if (strcmp(r, "navodo") == 0) {
+                    memcpy(&currentOdometer, _gps.buffer, sizeof(currentOdometer));
+                    return NAVODO;
+                }
             }
         }
 

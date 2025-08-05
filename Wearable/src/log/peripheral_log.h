@@ -42,10 +42,10 @@ struct DVMICS6814 {
 struct DVCAMM8ST {
     using f_type = float;
     using v_type = uint8_t;
-    using DVT = DataValueTupleT<f_type, f_type, f_type, f_type, f_type, f_type, f_type, f_type, f_type, v_type>;
+    using DVT = DataValueTupleT<f_type, f_type, f_type, f_type, f_type, f_type, f_type, f_type, v_type>;
     using value_type = DVT;
 
-    float latitude, longitude, altitude, bearing, ground_speed, horizontal_accuracy, vertical_accuracy, odometer, pdop;
+    float latitude, longitude, altitude, bearing, ground_speed, horizontal_accuracy, vertical_accuracy, pdop;
     uint8_t satellites;
 
     constexpr DVCAMM8ST(const f_type &latitude,
@@ -55,20 +55,18 @@ struct DVCAMM8ST {
                         const f_type &ground_speed,
                         const f_type &horizontal_accuracy,
                         const f_type &vertical_accuracy,
-                        const f_type &odometer,
                         const f_type &pdop,
                         const v_type &satellites):
         latitude(latitude),longitude(longitude),altitude(altitude),
         bearing(bearing),ground_speed(ground_speed),horizontal_accuracy(horizontal_accuracy),
-        vertical_accuracy(vertical_accuracy),odometer(odometer),pdop(pdop),
+        vertical_accuracy(vertical_accuracy),pdop(pdop),
         satellites(satellites) {}
     constexpr DVCAMM8ST(const DVT &v):
         DVCAMM8ST(v.get<0>(), v.get<1>(), v.get<2>(),
                   v.get<3>(), v.get<4>(), v.get<5>(),
-                  v.get<6>(), v.get<7>(), v.get<8>(),
-                  v.get<9>()) {}
+                  v.get<6>(), v.get<7>(), v.get<8>()) {}
 
-    constexpr inline DVT get_value() const { return DVT(latitude, longitude, altitude, bearing, ground_speed, horizontal_accuracy, vertical_accuracy, odometer, pdop, satellites); }
+    constexpr inline DVT get_value() const { return DVT(latitude, longitude, altitude, bearing, ground_speed, horizontal_accuracy, vertical_accuracy, pdop, satellites); }
 };
 
 struct DVCAMM8LT {
@@ -84,6 +82,21 @@ struct DVCAMM8LT {
         DVCAMM8LT(v.get<0>(), v.get<1>(), v.get<2>()) {}
 
     constexpr inline DVT get_value() const { return DVT(latitude, longitude, altitude); }
+};
+
+struct DVCAMM8ODO {
+    using v_type = uint32_t;
+    using DVT = DataValueTupleT<v_type, v_type, v_type>;
+    using value_type = DVT;
+
+    v_type distance, total_distance, distance_accuracy;
+
+    constexpr DVCAMM8ODO(const v_type &distance, const v_type &total_distance, const v_type &distance_accuracy):
+        distance(distance),total_distance(total_distance),distance_accuracy(distance_accuracy) {}
+    constexpr DVCAMM8ODO(const DVT &v):
+        DVCAMM8ODO(v.get<0>(), v.get<1>(), v.get<2>()) {}
+
+    constexpr inline DVT get_value() const { return DVT(distance, total_distance, distance_accuracy); }
 };
 
 struct DVIMU {
@@ -228,6 +241,7 @@ using DPBattery = DPST<DVBAT>;
 using DPMICS6814 = DPST<DVMICS6814>;
 using DPCAMM8ST = DPST<DVCAMM8ST>;
 using DPCAMM8LT = DPST<DVCAMM8LT>;
+using DPCAMM8ODO = DPST<DVCAMM8ODO>;
 using DPIMU = DPST<DVIMU>;
 using DPPED = DPST<DVPED>;
 using DPBME688 = DPST<DVBME688>;
@@ -248,6 +262,8 @@ using DLMICS6814LT = DL<DPMICS6814, LOG_MICS6814_LT_SIZE>;
 using DLCAMM8ST = DL<DPCAMM8ST, LOG_CAMM8_ST_SIZE>;
 using DLCAMM8LT = DL<DPCAMM8LT, LOG_CAMM8_LT_SIZE>;
 using DLCAMM8LT2 = DL<DPCAMM8LT, LOG_CAMM8_LT2_SIZE>;
+using DLCAMM8ODOST = DL<DPCAMM8ODO, LOG_CAMM8_ODO_ST_SIZE>;
+using DLCAMM8ODOLT = DL<DPCAMM8ODO, LOG_CAMM8_ODO_LT_SIZE>;
 using DLIMUST = DL<DPIMU, LOG_IMU_ST_SIZE>;
 using DLPEDST = DL<DPPED, LOG_IMU_PED_ST_SIZE>;
 using DLBME688ST = DL<DPBME688, LOG_BME688_ST_SIZE>;
@@ -279,6 +295,9 @@ struct PeripheralLog {
     DLCAMM8ST camm8_st;
     DLCAMM8LT camm8_lt;
     DLCAMM8LT2 camm8_lt2;
+    
+    DLCAMM8ODOST camm8_odo_st;
+    DLCAMM8ODOLT camm8_odo_lt;
 
     DLIMUST imu_st;
 
@@ -297,6 +316,7 @@ struct PeripheralLog {
     DLMAX30102EVALLT2 max30102_eval_lt2;
 
     TimeState getTimeState();
+    void pushOdometer();
 
     int64_t last_poll = 0;
 };

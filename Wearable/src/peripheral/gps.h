@@ -16,6 +16,7 @@ namespace wbl {
         NO_DATA=0,
         COMMUNICATION_ERROR,
         NAVPVT8,
+        NAVODO,
     };
 
     struct GPS {
@@ -41,8 +42,13 @@ namespace wbl {
         double getAltitude();
         double getVerticalAccuracy();
         double getHorizontalAccuracy();
+        uint32_t getOdometerTotal();
+        uint32_t getOdometer();
+        uint32_t getOdometerAccuracy();
         uint32_t getTimeAccuracy();
         double getPDOP();
+        void resetOdometer();
+        void pollOdometer();
 
         int64_t last_update = 0;
         int64_t last_time_update = 0;

@@ -36,6 +36,7 @@ esp_err_t make_ext(DL &log) {
 DLBatteryST::storage_type ds_bat_st;
 DLMICS6814ST::storage_type ds_mics_st;
 DLCAMM8ST::storage_type ds_camm8_st;
+DLCAMM8ODOST::storage_type ds_camm8_odo_st;
 
 #define LOGALLOC(x) ESP_RETURN_ON_ERROR(make_ext(x), TAG, "Failed to alloc")
 
@@ -43,16 +44,44 @@ esp_err_t PeripheralLog::init() {
     battery_st.set_log(ds_bat_st);
     mics6814_st.set_log(ds_mics_st);
     camm8_st.set_log(ds_camm8_st);
+    camm8_odo_st.set_log(ds_camm8_odo_st);
 
     LOGALLOC(battery_lt);
     LOGALLOC(mics6814_lt);
     LOGALLOC(camm8_lt);
     LOGALLOC(camm8_lt2);
+    LOGALLOC(camm8_odo_lt);
 
     return ESP_OK;
 }
 
 #undef LOGALLOC
+
+void PeripheralLog::pushOdometer() {
+    DPCAMM8ODO odo;
+
+    if (camm8_odo_st.size() < 1)
+        odo = DPCAMM8ODO(timestamp_micros(), 0, 0, 0);
+    else
+        odo = camm8_odo_st.get(-1);
+    
+    camm8_odo_lt.push_back(odo);
+}
+
+bool update_camm8_odo() {
+    DPCAMM8ODO odo;
+
+    odo.time = timestamp_micros();
+    odo.distance = gps.getOdometer();
+    odo.total_distance = gps.getOdometerTotal();
+    odo.distance_accuracy = gps.getOdometerAccuracy();
+
+    WBL_DF("Time %lli odometer %lu total %lu accuracy %lu\n", odo.time, odo.distance, odo.total_distance, odo.distance_accuracy);
+
+    log.camm8_odo_st.push_back(odo);
+
+    return true;
+}
 
 bool get_camm8_st(DPCAMM8ST &camm8) {
     camm8.satellites = gps.getSatelliteCount();
@@ -67,7 +96,6 @@ bool get_camm8_st(DPCAMM8ST &camm8) {
     camm8.ground_speed = gps.getGroundSpeed();
     camm8.horizontal_accuracy = gps.getHorizontalAccuracy();
     camm8.vertical_accuracy = gps.getVerticalAccuracy();
-    camm8.odometer = 0;
     camm8.pdop = gps.getPDOP();
     camm8.satellites = gps.getSatelliteCount();
     camm8.time = gps.getGPSTime();
@@ -91,6 +119,14 @@ TimeState time_state{0};
 
 bool update_camm8() {
     GPSState ret = gps.update();
+
+    if (ret == NAVODO)
+        return update_camm8_odo();
+
+    if (LOG_CAMM8_ODO_ST_RATE * 1000 + log.camm8_odo_st.get_data_end_time() < timestamp_micros()) {
+        WBL_D("Poll odometer");
+        gps.pollOdometer();
+    }
 
     if (ret != NAVPVT8)
         return false;
