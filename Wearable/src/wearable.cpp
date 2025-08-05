@@ -26,6 +26,7 @@
 #include "peripheral_log.h"
 #include "ui_peripheral_log.h"
 #include "ui_gps_log.h"
+#include "ui_footer.h"
 
 using namespace wbl;
 using namespace Sprites;
@@ -63,6 +64,7 @@ UI::ElementPeripheralLogT<DisplayTexture, decltype(lfpbst)> e_pbatterylogst(disp
 UI::ScreenBaseT<> gpsview("GPS");
 UI::UIGPSLogT<DisplayTexture, DLCAMM8ST> uigpsst(display, wbl::log.camm8_st);
 UI::UIGPSLogT<DisplayTexture, DLCAMM8LT2> uigpslt(display, wbl::log.camm8_lt2);
+UI::ElementFooterT<DisplayTexture> uigpsfooter(display, "GPS View");
 
 void demo() {
     /*
@@ -224,7 +226,7 @@ void init() {
 
     uigpslt << StyleInfo { .display{INLINE}, .width {96}, .height{96} } << "GPSLT";
     uigpsst << StyleInfo { .display{INLINE}, .width {32}, .height{64} } << "GPSST";
-    gpsview << uigpslt << uigpsst;
+    gpsview << uigpslt << uigpsst << uigpsfooter;
 
     uiroot << UI::StyleInfo { .width{128}, .height{128} };
 
