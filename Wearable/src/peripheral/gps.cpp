@@ -35,6 +35,7 @@ esp_err_t GPS::init() {
     delay(100);
     //sendTimePulseParameters(0);
     changeFrequency(1000);
+    configureOdometer(1);
     return ESP_OK;
 }
 
@@ -70,7 +71,7 @@ GPSState GPS::update() {
     const int buflen = 32;
     uint8_t buffer[buflen];
 
-    //WBL_DF("GPS bytes available: %u\n", to_read);
+    WBL_DF("GPS bytes available: %u\n", to_read);
 
     while (available > 0) {
         const int bytes_to_read = available < buflen ? available : buflen;
@@ -228,6 +229,72 @@ double GPS::getLatitude() {
 
 double GPS::getAltitude() {
     return getElevationAboveSeaLevel();
+}
+
+uint32_t GPS::getOdometer() {
+    return currentOdometer.block.distance;
+}
+
+uint32_t GPS::getOdometerTotal() {
+    return currentOdometer.block.totalDistance;
+}
+
+uint32_t GPS::getOdometerAccuracy() {
+    return currentOdometer.block.distanceStd;
+}
+
+void GPS::resetOdometer() {
+    struct {
+        uint8_t cmd[2] = { 0xB5, 0x62 };
+        uint8_t pk[2] = { 0x01, 0x10 };
+        uint8_t ck[2];
+    } packet;
+
+    _gps.calculatechecksum(packet.ck, packet.pk, 2);
+    sendPacket((uint8_t*)&packet, sizeof(packet));
+}
+
+void GPS::pollOdometer() {
+    struct {
+        uint8_t cmd[2] = { 0xB5, 0x62 };
+        uint8_t pk[2] = { 0x01, 0x09 };
+        uint8_t ck[2];
+    } packet;
+
+    _gps.calculatechecksum(packet.ck, packet.pk, 2);
+    sendPacket((uint8_t*)&packet, sizeof(packet));
+}
+
+void GPS::configureOdometer(uint8_t odoflags, uint8_t odofilter, uint8_t odomaxspeed, uint8_t odomaxaccuracy, uint8_t odovelocitylowpass, uint8_t odolowpass) {
+    struct {
+        uint8_t cmd[2] = { 0xB5, 0x62 };
+        struct {
+            uint8_t version = 0;
+            uint8_t res1[3] = {0,0,0};
+            uint8_t flags;
+            uint8_t filter;
+            uint8_t res2[6] = {0,0,0,0,0,0};
+            uint8_t maxspeed;
+            uint8_t maxacc;
+            uint8_t res3[2] = {0,0};
+            uint8_t vellowpass;
+            uint8_t lowpass;
+            uint8_t res4[2] = {0,0};
+        } payload;
+        uint8_t ck[2];
+    } packet;
+
+    packet.payload = {
+        .flags = odoflags,
+        .filter = odofilter,
+        .maxspeed = odomaxspeed,
+        .maxacc = odomaxaccuracy,
+        .vellowpass = odovelocitylowpass,
+        .lowpass = odolowpass,
+    };
+
+    _gps.calculatechecksum(packet.ck, (uint8_t*)&packet.payload, sizeof(packet.payload));
+    sendPacket((uint8_t*)&packet, sizeof(packet));
 }
 
 }

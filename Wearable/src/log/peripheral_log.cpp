@@ -116,6 +116,7 @@ bool get_camm8_lt(DPCAMM8LT &camm8, const int64_t &rate_ms) {
 }
 
 TimeState time_state{0};
+int64_t last_odometer_poll = 0;
 
 bool update_camm8() {
     GPSState ret = gps.update();
@@ -123,9 +124,12 @@ bool update_camm8() {
     if (ret == NAVODO)
         return update_camm8_odo();
 
-    if (LOG_CAMM8_ODO_ST_RATE * 1000 + log.camm8_odo_st.get_data_end_time() < timestamp_micros()) {
-        WBL_D("Poll odometer");
+    int64_t last_odo = LOG_CAMM8_ODO_ST_RATE * 1000 + log.camm8_odo_st.get_data_end_time();
+
+    if (last_odo != last_odometer_poll && last_odo < timestamp_micros()) {
+        WBL_DF("Poll odometer %llu\n", last_odo);
         gps.pollOdometer();
+        last_odometer_poll = last_odo;
     }
 
     if (ret != NAVPVT8)
@@ -158,7 +162,7 @@ bool update_camm8() {
 
     if (LOG_CAMM8_LT_RATE * 1000 + log.camm8_lt.get_data_end_time() < t) {
         DPCAMM8LT v;
-        if (get_camm8_lt(v, LOG_CAMM8_LT_RATE)) {
+        if (log.camm8_lt.get_data_end_time() != log.camm8_st.get_data_end_time() && get_camm8_lt(v, LOG_CAMM8_LT_RATE)) {
             WBL_DF("Push GPS LT %lli -> %lli -> %lli\n", log.camm8_lt.get_data_end_time(), t, v.time);
             log.camm8_lt.push_back(v);
         }
@@ -166,7 +170,7 @@ bool update_camm8() {
 
     if (LOG_CAMM8_LT2_RATE * 1000 + log.camm8_lt2.get_data_end_time() < t) {
         DPCAMM8LT v;
-        if (get_camm8_lt(v, LOG_CAMM8_LT2_RATE))
+        if (log.camm8_lt2.get_data_end_time() != log.camm8_st.get_data_end_time() && get_camm8_lt(v, LOG_CAMM8_LT2_RATE))
             log.camm8_lt2.push_back(v);
     }
 

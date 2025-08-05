@@ -49,6 +49,7 @@ namespace wbl {
         double getPDOP();
         void resetOdometer();
         void pollOdometer();
+        void configureOdometer(uint8_t odoflags, uint8_t odofilter=0, uint8_t odomaxspeed=0, uint8_t odomaxaccuracy=0, uint8_t odovelocitylowpass=0, uint8_t odolowpass=0);
 
         int64_t last_update = 0;
         int64_t last_time_update = 0;
