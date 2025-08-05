@@ -12,11 +12,17 @@ namespace wbl {
         float altitude;
     };
 
+    enum GPSState {
+        NO_DATA=0,
+        COMMUNICATION_ERROR,
+        NAVPVT8,
+    };
+
     struct GPS {
         esp_err_t init();
         int64_t getGPSTime();
         void setSystemTime();
-        esp_err_t update();
+        GPSState update();
         GPSPoint getFix();
         double getGroundSpeed();
         double getGroundSpeedAccuracy();

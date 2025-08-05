@@ -69,25 +69,25 @@ int64_t last_ack = 0;
 
 IRAM_ATTR void handle_ack_dbg(void *arg) {
     ack_count++;
-    last_ack = timestamp_micros();
+    last_ack = esp_timer_get_time();
 }
 
 esp_err_t init_ack_dbg() {
     //gpio_dump_io_configuration(stdout, SOC_GPIO_VALID_GPIO_MASK);
-    esp_intr_dump(stdout);
+    //esp_intr_dump(stdout);
 
-    gpio_num_t pin = I2C_BUS_1_SDA;
+    gpio_num_t pin = GPIO_NUM_4;//I2C_BUS_1_SDA;
     uint32_t pin_bit_mask = 1ULL << pin;
 
     static gpio_config_t conf = {};
 
-    conf.intr_type = GPIO_INTR_LOW_LEVEL;
+    conf.intr_type = GPIO_INTR_NEGEDGE;
     conf.mode = GPIO_MODE_INPUT;
     conf.pin_bit_mask = pin_bit_mask;
     conf.pull_down_en = GPIO_PULLDOWN_DISABLE;
     conf.pull_up_en = GPIO_PULLUP_DISABLE;
 
-    int flags = ESP_INTR_FLAG_IRAM | ESP_INTR_FLAG_SHARED;
+    int flags = ESP_INTR_FLAG_LOWMED | ESP_INTR_FLAG_SHARED;//ESP_INTR_FLAG_IRAM | ESP_INTR_FLAG_SHARED;
 
     ESP_RETURN_ON_ERROR(gpio_config(&conf), TAG, "failed to gpio_config");
 

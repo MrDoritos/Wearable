@@ -37,31 +37,60 @@ esp_err_t GPS::init() {
     return ESP_OK;
 }
 
-esp_err_t GPS::update() {
-    if (micros() - GPS_UPDATE_INTERVAL * 1000 < last_update)
-        return ESP_OK;
+esp_err_t bytes_available(uint16_t &available) {
+    uint8_t r = 0xfd;
+    uint8_t buf[2] = {0,0};
+    available = 0;
+    ESP_RETURN_ON_ERROR(cam.write_read(&r, 1, buf, 2), TAG, "Failed to get bytes available");
+    available = (uint16_t(buf[0])<<8)|buf[1];
+    return ESP_OK;
+}
+
+GPSState GPS::update() {
+    //if (micros() - GPS_UPDATE_INTERVAL * 1000 < last_update)
+    //    return ;
 
     //printf("Updating GPS data %lli -> %lli\n", last_update, micros());
+
+    esp_err_t ret = ESP_OK;
+
+    uint16_t to_read;
+    ret = bytes_available(to_read);
+
+    if (ret != ESP_OK)
+        return COMMUNICATION_ERROR;
+
+    if (!to_read)
+        return NO_DATA;
+
+    int available = to_read;
     last_update = micros();
 
-    const int buflen = 1;
+    const int buflen = 32;
     uint8_t buffer[buflen];
 
-    esp_err_t ret;
+    //WBL_DF("GPS bytes available: %u\n", to_read);
 
-    while (true) {
-        ret = i2c_master_receive(cam.dev, buffer, buflen, 100);
+    while (available > 0) {
+        const int bytes_to_read = available < buflen ? available : buflen;
+
+        ret = i2c_master_receive(cam.dev, buffer, bytes_to_read, 100);
 
         if (ret != ESP_OK)
-            return ret;
+            return COMMUNICATION_ERROR;
 
-        for (int i = 0; i < buflen; i++) {
+        for (int i = 0; i < bytes_to_read; i++) {
             char *r = (char*)_gps.parse(buffer[i]);
 
-            if (strlen(r) > 0 && strcmp(r, "navpvt8") == 0)
-                return ESP_OK;
+            if (strlen(r) > 0 && strcmp(r, "navpvt8") == 0) {
+                return NAVPVT8;
+            }
         }
+
+        available -= bytes_to_read;
     }
+
+    return NO_DATA;
 }
 
 GPSPoint GPS::getFix() {
