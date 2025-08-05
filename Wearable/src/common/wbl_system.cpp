@@ -63,6 +63,44 @@ static void pwm_timer_callback(void *arg) {
     ledc_update_duty(HAPTIC_MODE, HAPTIC_CHANNEL);
 }
 
+#ifdef WBL_ACK_DBG
+uint32_t ack_count = 0;
+int64_t last_ack = 0;
+
+IRAM_ATTR void handle_ack_dbg(void *arg) {
+    ack_count++;
+    last_ack = timestamp_micros();
+}
+
+esp_err_t init_ack_dbg() {
+    //gpio_dump_io_configuration(stdout, SOC_GPIO_VALID_GPIO_MASK);
+    esp_intr_dump(stdout);
+
+    gpio_num_t pin = I2C_BUS_1_SDA;
+    uint32_t pin_bit_mask = 1ULL << pin;
+
+    static gpio_config_t conf = {};
+
+    conf.intr_type = GPIO_INTR_LOW_LEVEL;
+    conf.mode = GPIO_MODE_INPUT;
+    conf.pin_bit_mask = pin_bit_mask;
+    conf.pull_down_en = GPIO_PULLDOWN_DISABLE;
+    conf.pull_up_en = GPIO_PULLUP_DISABLE;
+
+    int flags = ESP_INTR_FLAG_IRAM | ESP_INTR_FLAG_SHARED;
+
+    ESP_RETURN_ON_ERROR(gpio_config(&conf), TAG, "failed to gpio_config");
+
+    ESP_RETURN_ON_ERROR(gpio_install_isr_service(flags), TAG, "gpio_install_isr_service");
+
+    ESP_RETURN_ON_ERROR(gpio_intr_enable(pin), TAG, "gpio_intr_enable");
+
+    ESP_RETURN_ON_ERROR(gpio_isr_register(handle_ack_dbg, (void*)pin_bit_mask, flags, nullptr), TAG, "gpio_isr_register");
+
+    return ESP_OK;
+}
+#endif
+
 esp_err_t init_pm() {
     #ifdef CONFIG_PM_ENABLE
     esp_pm_config_t pm_cfg = {
@@ -166,6 +204,10 @@ esp_err_t init_pwm() {
 }
 
 esp_err_t wbl_System::init() {
+    #ifdef WBL_ACK_DBG
+    ESP_RETURN_ON_ERROR(init_ack_dbg(), TAG, "Failed to init ack dbg");
+    #endif
+
     adc_oneshot_unit_init_cfg_t adc_conf = {
         .unit_id = VBAT_UNIT,
     };
@@ -200,6 +242,13 @@ esp_err_t wbl_System::init() {
 }
 
 esp_err_t wbl_System::update() {
+    #ifdef WBL_ACK_DBG
+    if (ack_count) {
+        printf("Acks %lu last_time %lli\n", ack_count, last_ack);
+        ack_count = 0;
+    }
+    #endif
+
     return ESP_OK;
 }
 

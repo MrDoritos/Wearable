@@ -94,6 +94,7 @@
 #define USE_EVENT_DBG
 #endif
 
+#define WBL_ACK_DBG
 #define USE_LAYOUT_DBG
 #define WBL_DEBUG
 

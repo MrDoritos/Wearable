@@ -149,7 +149,7 @@ void demo() {
     //if (gps.last_time_update > 0 && !time_set)
     //    displayTimeout.any_user_input();
 
-    wbl_system.acquirePMLock();
+    wbl_system.update();
     //wbl_system.releasePMLock();
 
     #ifdef __linux__
@@ -335,6 +335,7 @@ void app_main() {
         printf("Failed to initialize system\n");
         goto end;
     }
+    wbl_system.acquirePMLock();
     puts("Initialized system");
     if (mics6814.init() != ESP_OK) {
         printf("Failed to initialize mics6814\n");
