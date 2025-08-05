@@ -316,8 +316,8 @@ struct LogField : public Derived {
         return get_value_range(0, get_size());
     }
 
-    template<typename RType = double>
-    inline bool get_value_axis(const int &index_start, const int &index_end, value_type &value_min, value_type &value_max, value_type &value_range, RType &value_sum) {
+    template<typename VType = value_type, typename SumType = double>
+    inline bool get_value_axis(const int &index_start, const int &index_end, VType &value_min, VType &value_max, VType &value_range, SumType &value_sum) {
         int len = get_size();
         if (!len) return false;
         
@@ -337,8 +337,8 @@ struct LogField : public Derived {
         return true;
     }
 
-    template<typename RType = double>
-    inline bool get_value_axis(value_type &value_min, value_type &value_max, value_type &value_range, RType &value_sum) {
+    template<typename VType = value_type, typename SumType = double>
+    inline bool get_value_axis(VType &value_min, VType &value_max, VType &value_range, SumType &value_sum) {
         return get_value_axis(0, get_size(), value_min, value_max, value_range, value_sum);
     }
 

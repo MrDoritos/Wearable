@@ -114,6 +114,11 @@ void demo() {
             e_sinelog.push_back(t, (uu)ltr390.getLux());
         }
         e_sawlog.push_back(t, (uu)(int(t/5000)%1000));
+
+        float th = (float(((t/1000000) % 1000))/1000.0f)*(M_PI * 2.0f);
+        float x = -cos(th) * 10.0f;
+        float y = -sin(th) * 10.0f;
+        wbl::log.camm8_st.push_back(DPCAMM8ST(t, y, x, 10, 10, 10, 10, 10, 10, 10, 10));
     }
 
     if (cnt % 32 == 0) {
@@ -123,10 +128,6 @@ void demo() {
         e_nh3log.push_back(t, (uu)(mics6814.getNH3Voltage() * 1000.0f));
         e_no2log.push_back(t, (uu)(mics6814.getNO2Voltage() * 1000.0f));
         //wbl::log.battery_st.push_back(t, wbl_system.getBatteryVoltage() * 1000);
-        float th = (float(((t/1000000) % 100))/100.0f)*(M_PI * 2.0f);
-        float x = cos(th) * 10.0f + 20.0f;
-        float y = sin(th) * 10.0f + 20.0f;
-        //wbl::log.camm8_st.push_back(DPCAMM8ST(t, y, x, 10, 10, 10, 10, 10, 10, 10, 10));
     }
 
     wbl::log.update();

@@ -26,7 +26,7 @@ cfggnss gc(_gps);
 esp_err_t GPS::init() {
     ESP_RETURN_ON_ERROR(cam.init(), TAG, "gps i2c failed to init");
     //delay(100);
-    //restoreDefaults();
+    restoreDefaults();
     delay(100);
     disableNmea();
     delay(100);

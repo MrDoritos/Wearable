@@ -100,7 +100,7 @@
 #define WBL_D(x) puts(x)
 #define WBL_DF(x, args...) printf(x, args)
 #define WBL_DTIME_BEGIN() int64_t wbl_dtime_begin = micros()
-#define WBL_DTIME_END(x) printf("%s Elapsed %llius", x, micros() - wbl_dtime_begin)
+#define WBL_DTIME_END(x) printf("%s Elapsed %llius\n", x, micros() - wbl_dtime_begin)
 #else
 #define WBL_D(x)
 #define WBL_DF(x, args...)

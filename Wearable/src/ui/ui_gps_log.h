@@ -20,8 +20,10 @@ struct UIGPSLogT : public ElementT {
     using point_type = typename log_type::point_type;
     using axis_type = float;
 
-    using x_provider_type = LogField<LogFieldProvider<log_type, DataValueAccessor<point_type, float, 0>>>;
-    using y_provider_type = LogField<LogFieldProvider<log_type, DataValueAccessor<point_type, float, 1>>>;
+    // Longitude, EAST <-> WEST
+    using x_provider_type = LogField<LogFieldProvider<log_type, DataValueAccessor<point_type, float, 1>>>;
+    // Latitude, NORTH <-> SOUTH
+    using y_provider_type = LogField<LogFieldProvider<log_type, DataValueAccessor<point_type, float, 0>>>;
 
     log_type *log = nullptr;
     x_provider_type x_provider;
@@ -45,10 +47,12 @@ struct UIGPSLogT : public ElementT {
 
         constexpr inline uu get_y(const axis_type &y) const {
             const int _y = plot_size.height - ((y - y_min) * y_range_inv * plot_size.height);
-            return ((_y > plot_size.height) ? plot_size.height : ((y < 0) ? 0 : (uu)_y)) + plot_size.y;
+            return ((_y > plot_size.height) ? plot_size.height : ((_y < 0) ? 0 : (uu)_y)) + plot_size.y;
         }
 
         inline Origin get_position(const axis_type &x, const axis_type &y) const {
+            //WBL_DF("%f %u %f %u\n", x, get_x(x), y, get_y(y));
+
             return Origin(
                 get_x(x),
                 get_y(y)  
@@ -73,7 +77,7 @@ struct UIGPSLogT : public ElementT {
 
         Size window = *this;
         Size plot_size(
-            window.x, window.y, window.width, window.height - 1
+            window.x, window.y, window.width - 1, window.height - 1
         );
 
         PlotContext2D ctx;
@@ -86,6 +90,8 @@ struct UIGPSLogT : public ElementT {
         ctx.plot_size = plot_size;
         ctx.x_range_inv = xrange > 0 ? 1.0f / xrange : 0;
         ctx.y_range_inv = yrange > 0 ? 1.0f / yrange : 0;
+
+        //WBL_DF("%f %f %f %f %f %f %f %f\n", xmin, xmax, xrange, ctx.x_range_inv, ymin, ymax, yrange, ctx.y_range_inv);
 
         return ctx;
     }
@@ -102,6 +108,8 @@ struct UIGPSLogT : public ElementT {
 
         this->clear();
 
+        WBL_DTIME_BEGIN();
+
         PlotContext2D ctx = get_plot_context();
 
         if (ctx.x_range == 0 || ctx.y_range == 0)
@@ -117,6 +125,8 @@ struct UIGPSLogT : public ElementT {
 
             prev = n;
         }        
+
+        WBL_DTIME_END("GPS");
     }
 };
 
