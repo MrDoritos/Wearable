@@ -62,7 +62,7 @@ UI::ElementPeripheralLogT<DisplayTexture, decltype(lfpb)> e_pbatterylog(display,
 UI::ElementPeripheralLogT<DisplayTexture, decltype(lfpbst)> e_pbatterylogst(display, lfpbst);
 UI::ScreenBaseT<> gpsview("GPS");
 UI::UIGPSLogT<DisplayTexture, DLCAMM8ST> uigpsst(display, wbl::log.camm8_st);
-UI::UIGPSLogT<DisplayTexture, DLCAMM8LT> uigpslt(display, wbl::log.camm8_lt);
+UI::UIGPSLogT<DisplayTexture, DLCAMM8LT2> uigpslt(display, wbl::log.camm8_lt2);
 
 void demo() {
     /*
@@ -115,7 +115,7 @@ void demo() {
         }
         e_sawlog.push_back(t, (uu)(int(t/5000)%1000));
 
-        float th = (float(((t/1000000) % 1000))/1000.0f)*(M_PI * 2.0f);
+        float th = (float(((t/3000) % 1000))/1000.0f)*(M_PI * 2.0f);
         float x = -cos(th) * 10.0f;
         float y = -sin(th) * 10.0f;
         wbl::log.camm8_st.push_back(DPCAMM8ST(t, y, x, 10, 10, 10, 10, 10, 10, 10, 10));
@@ -220,7 +220,7 @@ void init() {
     gasscreen << e_colog << e_nh3log << e_pbatterylog << e_pbatterylogst;//e_no2log;
 
     uigpslt << StyleInfo { .display{INLINE}, .width {96}, .height{96} } << "GPSLT";
-    uigpsst << StyleInfo { .display{INLINE}, .width {32}, .height{32} } << "GPSST";
+    uigpsst << StyleInfo { .display{INLINE}, .width {32}, .height{64} } << "GPSST";
     gpsview << uigpslt << uigpsst;
 
     uiroot << UI::StyleInfo { .width{128}, .height{128} };

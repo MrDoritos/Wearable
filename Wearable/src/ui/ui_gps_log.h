@@ -50,6 +50,32 @@ struct UIGPSLogT : public ElementT {
             return ((_y > plot_size.height) ? plot_size.height : ((_y < 0) ? 0 : (uu)_y)) + plot_size.y;
         }
 
+        void set_equal_aspect_ratio() {
+            const float w = plot_size.width;
+            const float h = plot_size.height;
+
+            //WBL_DF("Equal aspect w:%f h:%f x_min:%f x_max:%f x_range:%f y_min:%f y_max:%f y_range:%f", w, h, x_min, x_max, x_range, y_min, y_max, y_range);
+            
+            if (w / h > x_range / y_range) {
+                const float nx_range = (x_range * h) / (y_range * w);
+                const float nx_scale = 1.0f / nx_range;
+                x_min *= nx_scale;
+                x_max *= nx_scale;
+                x_range = x_max - x_min;
+                x_range_inv = 1.0f / x_range;
+                //WBL_DF(" set x x_min:%f x_max:%f x_range:%f nx_range:%f nx_scale:%f\n", x_min, x_max, x_range, nx_range, nx_scale);
+            } else {
+                const float ny_range = (y_range * w) / (x_range * h);
+                const float ny_scale = 1.0f / ny_range;
+                y_min *= ny_scale;
+                y_max *= ny_scale;
+                y_range = y_max - y_min;
+                y_range_inv = 1.0f / y_range;
+                //WBL_DF(" set y y_min:%f y_max:%f y_range:%f ny_range:%f ny_scale:%f\n", y_min, y_max, y_range, ny_range, ny_scale);
+            }
+
+        }
+
         inline Origin get_position(const axis_type &x, const axis_type &y) const {
             //WBL_DF("%f %u %f %u\n", x, get_x(x), y, get_y(y));
 
@@ -114,6 +140,8 @@ struct UIGPSLogT : public ElementT {
 
         if (ctx.x_range == 0 || ctx.y_range == 0)
             return;
+
+        ctx.set_equal_aspect_ratio();
 
         Origin prev = ctx.get_position(log->template get(0));
         const int len = log->template size();
