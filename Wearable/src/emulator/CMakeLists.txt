@@ -32,6 +32,7 @@ add_library(lib
     ../ui/display_timeout.cpp
     emulator_inputs.cpp
     emu_func.cpp
+    peripherals.cpp
     ${GENERATED_ASSET_OBJECTS}
 )
 
@@ -53,6 +54,7 @@ target_include_directories(lib PUBLIC
     ../common
     ../
     ../log
+    ../peripheral
 )
 
 target_link_libraries(Emulator
