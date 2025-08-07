@@ -28,6 +28,7 @@
 #include "ui_gps_log.h"
 #include "ui_footer.h"
 #include "ui_distancetracker.h"
+#include "ui_therock.h"
 
 using namespace wbl;
 using namespace Sprites;
@@ -68,6 +69,8 @@ UI::UIGPSLogT<DisplayTexture, DLCAMM8LT2> uigpslt(display, wbl::log.camm8_lt2);
 UI::ElementFooterT<DisplayTexture> uigpsfooter(display, "GPS View");
 UI::ScreenBaseT<> distscreen("Tracker");
 UI::UIDistanceTrackerT<DisplayTexture> uitracker(display);
+UI::ScreenBaseT<> rockscreen("The Rock");
+UI::ElementTheRockT<DisplayTexture> e_therock(display);
 
 void demo() {
     /*
@@ -294,6 +297,9 @@ void init() {
     uiroot.name = "root";
 
     clockscreen.show_header = false;
+    rockscreen.show_header = false;
+
+    rockscreen << e_therock;
 
     header << uibattery;
     header << e_lockicon;
@@ -304,8 +310,10 @@ void init() {
     //uiroot << screenclocknoheader;
     clockscreen << uiclock;
     mainscreen << txt;
-    mainscreen.set_left(clockscreen);
-    mainscreen.set_right(settingscreen);
+    //mainscreen.set_left(clockscreen);
+    //mainscreen.set_right(settingscreen);
+    clockscreen.set_left(rockscreen);
+    settingscreen.set_left(clockscreen);
     settingscreen.set_right(gpsscreen);
     gpsscreen.set_right(imuscreen);
     imuscreen.set_right(sysinfoscreen);
