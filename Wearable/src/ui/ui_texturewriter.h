@@ -13,17 +13,21 @@ struct TextureWriterT {
     Size size; // inline x, offset y, inline height
     const Size boundary;
 
-    constexpr TextureWriterT(ElementT &ref, const Origin &pos):
+    constexpr TextureWriterT(ElementT &ref, const Size &boundary):
         ref(ref),
         wrap(ref.wrap & WRAP),
         clip_x(ref.overflow.x & HIDDEN),
         clip_y(ref.overflow.y & HIDDEN),
-        size(pos, Length(0)),
-        boundary(pos, ref.getLength()) {}
-
+        size(boundary.getOffset(), Length(0)),
+        boundary(boundary) {}
+        
+    constexpr TextureWriterT(ElementT &ref, const Origin &pos):
+        TextureWriterT(ref, Size(pos, ref.getLength())) {}
     constexpr TextureWriterT(ElementT &ref):TextureWriterT(ref, ref.getOffset()) {}
-    constexpr TextureWriterT(ElementT *ref, const Origin &pos):TextureWriterT(*ref,pos){}
+    constexpr TextureWriterT(ElementT *ref, const Origin &pos):TextureWriterT(*ref,pos) {}
+    constexpr TextureWriterT(ElementT *ref, const Size &boundary):TextureWriterT(*ref,boundary) {}
     constexpr TextureWriterT(ElementT *ref):TextureWriterT(*ref) {}
+        
 
     inline void add_break() {
         size.y += size.height;

@@ -2,6 +2,7 @@
 
 #include "ui.h"
 #include "ui_texturewriter.h"
+#include "sprites.h"
 
 namespace wbl {
 namespace UI {
@@ -26,20 +27,37 @@ struct ElementFooterT : public ElementT {
 
         drawn = true;
 
-        Length len = this->getTextContentSize(footer_text, Sprites::font);
-        Origin pos(
-            this->buffer.getWidth(),
-            this->buffer.getHeight()
+        Length scr = this->buffer.getLength();
+
+        Length len = this->getTextContentSize(footer_text, scr, Sprites::font);
+
+        Size pos(
+            (scr.width * 0.5f) - (len.width * 0.5f),
+            (scr.height - len.height),
+            scr.width,
+            scr.height
         );
 
-        Origin txtlft(
-            (pos.x * 0.5f) - (len.width * 0.5f),
-            (pos.y - len.height)
-        );
-
-        TextureWriterT<> writer(this, txtlft);
+        TextureWriterT<> writer(this, pos);
         writer.text(Sprites::font, footer_text);
         //this->buffer.line((uu)0, txtlft.y-1, pos.x, txtlft.y-1, 1);
+    }
+};
+
+template<typename Buffer = Sprites::DisplayTexture, typename ScreenT = ScreenBaseT<>, typename FooterT = ElementFooterT<Buffer>>
+struct ScreenFooterT : public ScreenT {
+    using ScreenT::ScreenT;
+    using ScreenT::operator<<;
+
+    FooterT footer;
+
+    constexpr ScreenFooterT(Buffer &buffer, const char *footer_text):
+        ScreenT(footer_text),footer(buffer, footer_text) {}
+
+    void handle_event(Event *event) override {
+        ScreenT::handle_event(event);
+
+        footer.handle_event(event);
     }
 };
 
