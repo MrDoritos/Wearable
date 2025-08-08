@@ -52,7 +52,8 @@ UI::ElementLogT<DisplayTexture, DataLog> e_sinelog(display, sinelog), e_squarelo
 UI::ElementLockIconT<DisplayTexture> e_lockicon(display);
 UI::ScreenFooterT<> gpsscreen(display, "GPS Info");
 UI::ElementGPST<DisplayTexture> uigps(display);
-UI::ScreenBaseT<> imuscreen("IMUInfo");
+UI::ScreenFooterT<> imuscreen(display, "IMU Info");
+
 UI::ElementIMUT<DisplayTexture> uiimu(display);
 UI::ScreenBaseT<> sysinfoscreen("System");
 UI::ElementSysInfoT<DisplayTexture> uisysinfo(display);
@@ -62,10 +63,6 @@ UI::ElementPeripheralLogAutoT<DisplayTexture, DLMICS6814ST, uint16_t, 0> e_colog
 UI::ElementPeripheralLogAutoT<DisplayTexture, DLMICS6814ST, uint16_t, 1> e_nh3log(display, wbl::log.mics6814_st);
 UI::ElementPeripheralLogAutoT<DisplayTexture, DLMICS6814ST, uint16_t, 2> e_no2log(display, wbl::log.mics6814_st);
 UI::ScreenFooterT<> gasscreen(display, "Gases");
-//UI::LogField<UI::LogFieldProvider<DLBatteryLT, UI::DataValueAccessor<DPBattery, uint16_t, 0>>> lfpb(&wbl::log.battery_lt);
-//UI::LogField<UI::LogFieldProvider<DLBatteryST, UI::DataValueAccessor<DPBattery, uint16_t, 0>>> lfpbst(&wbl::log.battery_st);
-//UI::ElementPeripheralLogT<DisplayTexture, decltype(lfpb)> e_pbatterylog(display, lfpb);
-//UI::ElementPeripheralLogT<DisplayTexture, decltype(lfpbst)> e_pbatterylogst(display, lfpbst);
 UI::ElementPeripheralLogAutoT<DisplayTexture, DLBatteryST, uint16_t, 0> e_pbatterylogst(display, wbl::log.battery_st);
 UI::ElementPeripheralLogAutoT<DisplayTexture, DLBatteryLT, uint16_t, 0> e_pbatterylog(display, wbl::log.battery_lt);
 UI::ScreenBaseT<> gpsview("GPS");

@@ -40,6 +40,7 @@ DLBatteryST::storage_type ds_bat_st;
 DLMICS6814ST::storage_type ds_mics_st;
 DLCAMM8ST::storage_type ds_camm8_st;
 DLCAMM8ODOST::storage_type ds_camm8_odo_st;
+DLIMUST::storage_type ds_imu_st;
 DLPEDST::storage_type ds_ped_st;
 DLLTR390ST::storage_type ds_ltr390_st;
 
@@ -50,6 +51,7 @@ esp_err_t PeripheralLog::init() {
     mics6814_st.set_log(ds_mics_st);
     camm8_st.set_log(ds_camm8_st);
     camm8_odo_st.set_log(ds_camm8_odo_st);
+    imu_st.set_log(ds_imu_st);
     ped_st.set_log(ds_ped_st);
     ltr390_st.set_log(ds_ltr390_st);
 
@@ -211,10 +213,20 @@ bool update_gpsimu() {
         DPPED p(t, gpsimu.getPedometer());
         WBL_DF("Push pedometer ST %lli -> %lli (%u)\n", log.ped_st.get_data_end_time(), p.time, p.steps);
         log.ped_st.push_back(p);
-        return true;
+        //return true;
     }
 
-    return false;
+    t = timestamp_micros();
+
+    if (LOG_IMU_ST_RATE * 1000 + log.imu_st.get_data_end_time() < t) {
+        AxisData acc = gpsimu.getAccelerometer(), gyro = gpsimu.getGyroscope();
+        DPIMU p(t, acc.x, acc.y, acc.z, gyro.x, gyro.y, gyro.z);
+        WBL_D("Push IMU ST");
+        log.imu_st.push_back(p);
+        //return true;
+    }
+
+    return true;
 }
 
 bool update_vbat() {
