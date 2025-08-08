@@ -40,21 +40,22 @@ $200 in parts, but sewing and 3D printing will take some time.
 
 ## Parts
 
-ESP32 S3
-TLV1117 3.3V LDO SOT-223 regulator
-JST 500 or 1200 mAh battery
-GME128128 I2C SH1107 1.5" Monochrome OLED
-BME688
-BerryGPS-IMU v4
-10mm Piezo, 10mm Vibration motor
-5x 4.25mm SMD buttons
-30 AWG silicone wire
-34 AWG enameled wire
-Stretchy fabric, stretchy thread, non-strechy thread
-MAX30102
-LTR390-UV
+- ESP32 S3
+- TLV1117 3.3V LDO SOT-223 regulator
+- JST 500 or 1200 mAh battery
+- GME128128 I2C SH1107 1.5" Monochrome OLED
+- BME688
+- BerryGPS-IMU v4
+- 10mm Piezo, 10mm Vibration motor
+- 5x 4.25mm SMD buttons
+- 30 AWG silicone wire
+- 34 AWG enameled wire
+- Stretchy fabric, stretchy thread, non-strechy thread
+- MAX30102
+- LTR390-UV
 
 Resin printed button caps.
+
 3D printed fabric frames and button holder.
 
 It is best to remove unnecessary connectors.
@@ -69,8 +70,8 @@ Internship project
 
 ## Credits
 
-DFRobot, MAX30102, BMP388
-RocketManRC, u-blox-m8
-Adafruit, LTR390, LSM6DSL, LIS3MDL, inspiration for display driver
-Mozilla, CSS documentation
-Espressif, ESP IDF, HAL for ESP32 S3
+- DFRobot, MAX30102, BMP388
+- RocketManRC, u-blox-m8
+- Adafruit, LTR390, LSM6DSL, LIS3MDL, inspiration for display driver
+- Mozilla, CSS documentation
+- Espressif, ESP IDF, HAL for ESP32 S3
