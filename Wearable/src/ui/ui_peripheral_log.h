@@ -402,7 +402,55 @@ struct LogField : public Derived {
     }
 };
 
-template<typename Buffer, typename LogField, typename ElementT = ElementBaseT<Buffer>> 
+namespace LogOpts {
+    enum Interpolation : uint8_t {
+        INTERPOLATION_AUTO=0,
+        ALWAYS=1,
+        NEVER=2,
+    };
+    enum Range : uint8_t {
+        RANGE_AUTO=0,
+        MIRROR=1,
+        REFERENCE_VALUE=2,
+        REFERENCE_MIDPOINT=4,
+    };
+    enum Display : uint16_t {
+        DISPLAY_NONE=0,
+        LABEL_X=1,
+        LABEL_Y=2,
+        REFERENCE_X=4,
+        REFERENCE_Y=8,
+        MIN_X=16,
+        MIN_Y=32,
+        MAX_X=64,
+        MAX_Y=128,
+        SAMPLE_COUNT=256,
+    };
+};
+
+template<
+    LogOpts::Interpolation ValueInterpolation,
+    LogOpts::Range ValueRange,
+    LogOpts::Display PlotDisplay
+>
+struct ElementPeripheralLogOptsT {
+    static constexpr LogOpts::Interpolation value_interpolation = ValueInterpolation;
+    static constexpr bool auto_interp = value_interpolation == 0;
+    static constexpr bool use_interp = (value_interpolation & LogOpts::ALWAYS) || auto_interp;
+    static constexpr LogOpts::Range value_range = ValueRange;
+    static constexpr bool auto_range = value_range == 0;
+    static constexpr bool mirror_range = value_range & LogOpts::MIRROR;
+    static constexpr bool use_midpoint = value_range & LogOpts::REFERENCE_MIDPOINT;
+    static constexpr bool use_reference = value_range & LogOpts::REFERENCE_VALUE;
+    static constexpr float reference_value = 0.0f;
+    static constexpr LogOpts::Display plot_display = PlotDisplay;
+    static constexpr bool draw_reference_x = plot_display & LogOpts::REFERENCE_X;
+    static constexpr bool draw_reference_y = plot_display & LogOpts::REFERENCE_Y;
+};
+
+using LogOptsBasic = ElementPeripheralLogOptsT<LogOpts::INTERPOLATION_AUTO, LogOpts::RANGE_AUTO, LogOpts::REFERENCE_Y>;
+
+template<typename Buffer, typename LogField, typename ElementT = ElementBaseT<Buffer>, typename LogOpts = LogOptsBasic> 
 struct ElementPeripheralLogT : public ElementT {
     using ElementT::ElementT;
     using ElementT::operator<<;
@@ -411,6 +459,7 @@ struct ElementPeripheralLogT : public ElementT {
     using time_type = typename log_type::time_type;
     using value_type = typename log_type::value_type;
     using point_type = typename log_type::point_type;
+    using log_opts = LogOpts;
 
     log_type *log = nullptr;
     time_type last_data_time = 0;
@@ -479,6 +528,22 @@ struct ElementPeripheralLogT : public ElementT {
             window.width, window.height - 1
         );
 
+        if (log_opts::mirror_range) {
+            value_type dmin = vmin - log_opts::reference_value;
+            value_type dmax = vmax - log_opts::reference_value;
+            dmin = dmin < 0 ? -dmin : dmin;
+            dmax = dmax < 0 ? -dmax : dmax;
+
+            if (dmin > dmax)
+                dmax = dmin;
+            else
+                dmin = dmax;
+
+            vmin = log_opts::reference_value - dmin;
+            vmax = log_opts::reference_value + dmax;
+            vrange = vmax - vmin;
+        }
+
         //WBL_DF("%s window_size [%u %u %u %u] plot_size [%u %u %u %u]\n", this->name, window.x, window.y, window.width, window.height, plot_size.x, plot_size.y, plot_size.width, plot_size.height);
 
         return PlotContext(
@@ -488,6 +553,21 @@ struct ElementPeripheralLogT : public ElementT {
             (trange > 0) ? 1.0f / float(trange) : 0,
             (vrange > 0) ? 1.0f / float(vrange) : 0
         );
+    }
+
+    void draw_reference_y(const PlotContext &ctx) {
+        value_type yref = ctx.value_range * 0.5 + ctx.value_min;
+        if (log_opts::use_reference)
+            yref = log_opts::reference_value;
+        const uu ypos = ctx.get_y(yref);
+
+        for (int x = 0; x < ctx.plot_size.width; x+=2) {
+            this->buffer.putPixel(x + ctx.plot_size.x, ypos, 1);
+        }
+    }
+
+    void draw_reference(const PlotContext &ctx) {
+        draw_reference_y(ctx);
     }
 
     void on_draw(Event *event) override {
@@ -506,6 +586,8 @@ struct ElementPeripheralLogT : public ElementT {
 
         if (ctx.time_range == 0 || ctx.value_range == 0)
             return;
+
+        draw_reference(ctx);
 
         uu py = 0, px = 0;
         time_type pt = ctx.time_min;

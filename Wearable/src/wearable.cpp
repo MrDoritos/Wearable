@@ -291,11 +291,11 @@ void init() {
     //uiroot.set_screen(mainscreen);
     //uiroot.set_screen(settingscreen);
     //uiroot.set_screen(gpsscreen);
-    //uiroot.set_screen(imuscreen);
+    uiroot.set_screen(imuscreen);
     //uiroot.set_screen(sysinfoscreen);
     //uiroot.set_screen(gasscreen);
     //uiroot.set_screen(gpsview);
-    uiroot.set_screen(distscreen);
+    //uiroot.set_screen(distscreen);
 
     WBL_D("Screen set");
 
