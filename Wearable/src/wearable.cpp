@@ -57,7 +57,10 @@ UI::ElementIMUT<DisplayTexture> uiimu(display);
 UI::ScreenBaseT<> sysinfoscreen("System");
 UI::ElementSysInfoT<DisplayTexture> uisysinfo(display);
 LoopBuffer colog, nh3log, no2log;
-UI::ElementLogT<DisplayTexture, DataLog> e_colog(display, colog), e_nh3log(display, nh3log), e_no2log(display, no2log);
+//UI::ElementLogT<DisplayTexture, DataLog> e_colog(display, colog), e_nh3log(display, nh3log), e_no2log(display, no2log);
+UI::ElementPeripheralLogAutoT<DisplayTexture, DLMICS6814ST, uint16_t, 0> e_colog(display, wbl::log.mics6814_st);
+UI::ElementPeripheralLogAutoT<DisplayTexture, DLMICS6814ST, uint16_t, 1> e_nh3log(display, wbl::log.mics6814_st);
+UI::ElementPeripheralLogAutoT<DisplayTexture, DLMICS6814ST, uint16_t, 2> e_no2log(display, wbl::log.mics6814_st);
 UI::ScreenBaseT<> gasscreen("Gases");
 UI::LogField<UI::LogFieldProvider<DLBatteryLT, UI::DataValueAccessor<DPBattery, uint16_t, 0>>> lfpb(&wbl::log.battery_lt);
 UI::LogField<UI::LogFieldProvider<DLBatteryST, UI::DataValueAccessor<DPBattery, uint16_t, 0>>> lfpbst(&wbl::log.battery_st);
@@ -112,9 +115,9 @@ void demo() {
 
     if (cnt % 32 == 0) {
         e_voltlog.push_back(t, wbl_system.getBatteryVoltage() * 1000);
-        e_colog.push_back(t, (uu)(mics6814.getCOVoltage() * 1000.0f));
-        e_nh3log.push_back(t, (uu)(mics6814.getNH3Voltage() * 1000.0f));
-        e_no2log.push_back(t, (uu)(mics6814.getNO2Voltage() * 1000.0f));
+        //e_colog.push_back(t, (uu)(mics6814.getCOVoltage() * 1000.0f));
+        //e_nh3log.push_back(t, (uu)(mics6814.getNH3Voltage() * 1000.0f));
+        //e_no2log.push_back(t, (uu)(mics6814.getNO2Voltage() * 1000.0f));
     }
 
     if (cnt % 200 == 0) {

@@ -416,6 +416,7 @@ struct ElementPeripheralLogT : public ElementT {
     time_type last_data_time = 0;
 
     constexpr ElementPeripheralLogT(Buffer &buffer, log_type &log):ElementT(buffer),log(&log) {}
+    constexpr ElementPeripheralLogT(Buffer &buffer, log_type *log):ElementT(buffer),log(log) {}
 
     struct PlotContext {
         const Size plot_size;
@@ -530,6 +531,32 @@ struct ElementPeripheralLogT : public ElementT {
             pt = time;
         }
     }
+};
+
+template<
+    typename Buffer, 
+    typename DataLog,
+    typename ValueT,
+    int N, 
+    typename PointT = typename DataLog::point_type,
+    typename LogFieldT = LogField<
+        LogFieldProvider<
+            DataLog,
+            DataValueAccessor<
+                PointT,
+                ValueT,
+                N
+            >
+        >
+    >,
+    typename ElementT = ElementPeripheralLogT<Buffer, LogFieldT>
+>
+struct ElementPeripheralLogAutoT : public LogFieldT, public ElementT {
+    using ElementT::ElementT;
+    using ElementT::operator<<;
+
+    constexpr ElementPeripheralLogAutoT(Buffer &buffer, DataLog &log)
+        :LogFieldT(&log),ElementT(buffer, (LogFieldT*)this) {}
 };
 
 }
