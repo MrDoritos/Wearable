@@ -103,7 +103,7 @@
 
 //#define WBL_ACK_DBG
 #define USE_LAYOUT_DBG
-//#define WBL_DEBUG
+#define WBL_DEBUG
 //#define WBL_LOG_DBG
 
 #ifdef WBL_DEBUG

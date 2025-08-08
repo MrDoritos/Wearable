@@ -4,6 +4,7 @@
 #include "gps.h"
 #include "display_timeout.h"
 #include "gps_imu.h"
+#include "ltr390.h"
 
 #include "esp_check.h"
 #include "esp_heap_caps.h"
@@ -39,6 +40,7 @@ DLMICS6814ST::storage_type ds_mics_st;
 DLCAMM8ST::storage_type ds_camm8_st;
 DLCAMM8ODOST::storage_type ds_camm8_odo_st;
 DLPEDST::storage_type ds_ped_st;
+DLLTR390ST::storage_type ds_ltr390_st;
 
 #define LOGALLOC(x) ESP_RETURN_ON_ERROR(make_ext(x), TAG, "Failed to alloc")
 
@@ -48,6 +50,7 @@ esp_err_t PeripheralLog::init() {
     camm8_st.set_log(ds_camm8_st);
     camm8_odo_st.set_log(ds_camm8_odo_st);
     ped_st.set_log(ds_ped_st);
+    ltr390_st.set_log(ds_ltr390_st);
 
     LOGALLOC(battery_lt);
     LOGALLOC(mics6814_lt);
@@ -55,6 +58,7 @@ esp_err_t PeripheralLog::init() {
     LOGALLOC(camm8_lt2);
     LOGALLOC(camm8_odo_lt);
     LOGALLOC(ped_lt);
+    LOGALLOC(ltr390_lt);
 
     return ESP_OK;
 }
@@ -228,7 +232,43 @@ bool update_vbat() {
         DVBAT v = log.battery_st.avg_range_time(last - rate, last);
         DPBattery p(last - (rate / 2), v.voltage);
         log.battery_lt.push_back(p);
-        log.battery_lt.push_back(micros(), bv);
+        //log.battery_lt.push_back(micros(), bv);
+    }
+
+    return true;
+}
+
+bool update_ltr390() {
+    int64_t t = timestamp_micros();
+    const int64_t half_rate = LOG_LTR390_ST_RATE * 500;
+    const int64_t last = log.ltr390_st.get_data_end_time();
+    static DVLTR390ST st_p(0,0,0,0);
+
+    if (half_rate * 2 + last < t) {
+        WBL_D("Push LTR390 ST");
+        log.ltr390_st.push_back(DPLTR390ST(t, st_p));
+    }
+
+    if (half_rate + last < t) {
+        st_p.als = ltr390.getALS();
+        st_p.lux = ltr390.getLux(st_p.als);
+        //WBL_DF("ALS LTR390 %lu\n", st_p.als);
+    } else {
+        st_p.uvs = ltr390.getUVS();
+        st_p.uvi = ltr390.getUVIhr(st_p.uvs);
+        //WBL_DF("UVS LTR390 %lu\n", st_p.uvs);
+    }
+
+    if (log.ltr390_st.size() < 2)
+        return true;
+
+    const int64_t lt_rate = LOG_LTR390_LT_RATE * 1000;
+    if (LOG_LTR390_LT_RATE * 1000 + log.ltr390_lt.get_data_end_time() < t) {
+        WBL_D("Push LTR390 LT");
+        const int64_t prev = log.ltr390_st.get_data_end_time();
+        DVLTR390ST v = log.ltr390_st.avg_range_time(prev - lt_rate, prev);
+        DPLTR390LT p(prev - (lt_rate / 2), v.lux, v.als);
+        log.ltr390_lt.push_back(p);
     }
 
     return true;
@@ -238,6 +278,7 @@ esp_err_t PeripheralLog::update() {
     update_vbat();
     update_camm8();
     update_gpsimu();
+    update_ltr390();
 
     return ESP_OK;
 }

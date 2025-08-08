@@ -73,14 +73,7 @@ UI::ScreenBaseT<> rockscreen("The Rock");
 UI::ElementTheRockT<DisplayTexture> e_therock(display);
 
 void demo() {
-    /*
-    if (dpad.enter.is_pressed()) {
-        display.putTexture(therock, {0,0,128,128}, {0,0});
-        display.flush();
-        delay(1000);
-        display.clear();
-    }
-    */
+    wbl::log.update();
 
     bool has_input = false;
     if (!displayTimeout.lock_key_state(dpad.enter.is_held()))
@@ -97,65 +90,36 @@ void demo() {
         display.setState(!isDisplayOff);
     }
 
-    /*
-    int64_t tt = millis() / 200;
-    uint8_t c = (tt % 0x10)*16;//((tt/0x10) % 16)*16;
-    uint8_t v = ((tt / 8) % 0x10)*4;//(tt % 0x10)*4;
-    uint8_t chg = (tt / (8*16));
-    
-    display.setChargePeriod(chg % 16, (chg / 16) % 16);
-    display.setContrast(c);
-    display.setVCOM(v);
-    */
-
     uiroot.once();
 
     static int cnt = 0;
     int64_t t = micros();
     if (cnt++ % 4 == 0) {
-        //e_sinelog.push_back(t, (uu)(sinf(float((int(t))/(M_PI * 2 * 100000)))*500.0f+1500.0f));
-        //e_squarelog.push_back(t, (cnt & 64));
+        /*
         if (cnt & 4) {
             e_squarelog.push_back(t, (uu)(ltr390.getUVIhr()*10.0f));
         } else {
             wbl_system.setDisplayBrightness(ltr390.getLux());
             e_sinelog.push_back(t, (uu)ltr390.getLux());
         }
-        e_sawlog.push_back(t, (uu)(int(t/5000)%1000));
-
-        /*
-        float th = (float(((t/30000) % 1000))/1000.0f)*(M_PI * 2.0f);
-        float tr = sin(float(t)*0.000000003f)*5.0f;
-        float x = cos(th) * tr;
-        float y = sin(th) * tr;
-        wbl::log.camm8_st.push_back(DPCAMM8ST(t, y, x, 10, 10, 10, 10, 10, 10, 10, 10));
         */
+        DPLTR390ST stp = wbl::log.ltr390_st.get(-1);
+        e_squarelog.push_back(t, stp.uvi*10.0f);
+        e_sinelog.push_back(t, stp.lux);
+        e_sawlog.push_back(t, (uu)(int(t/5000)%1000));
+        wbl_system.setDisplayBrightness(stp.lux);
     }
 
     if (cnt % 32 == 0) {
-        //e_voltlog.push_back(t, (uu)(4000 + ((((t ^ 0xDEADBEEF) % 0xC0FFEE) | t) & 31)));
         e_voltlog.push_back(t, wbl_system.getBatteryVoltage() * 1000);
         e_colog.push_back(t, (uu)(mics6814.getCOVoltage() * 1000.0f));
         e_nh3log.push_back(t, (uu)(mics6814.getNH3Voltage() * 1000.0f));
         e_no2log.push_back(t, (uu)(mics6814.getNO2Voltage() * 1000.0f));
-        //wbl::log.battery_st.push_back(t, wbl_system.getBatteryVoltage() * 1000);
     }
-
-    wbl::log.update();
-
-    //wbl::log.battery_lt.push_back(t, gpsimu.getAccelerometer().x * 4000 + 16000);
 
     if (cnt % 200 == 0) {
         uibattery.set_battery_level((uint8_t)wbl_system.getBatteryLevel());
     }
-
-    //gps.update();
-    //bool time_set = gps.last_time_update > 0;
-
-    //gps.setSystemTime();
-
-    //if (gps.last_time_update > 0 && !time_set)
-    //    displayTimeout.any_user_input();
 
     wbl_system.update();
     //wbl_system.releasePMLock();
