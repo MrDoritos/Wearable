@@ -485,7 +485,8 @@ struct ElementPeripheralLogT : public ElementT {
             plot_size,
             tmin, tmax, trange,
             vmin, vmax, vrange,
-            (trange > 0) ? 1.0f / float(trange) : 0, (vrange > 0) ? 1.0f / float(vrange) : 0
+            (trange > 0) ? 1.0f / float(trange) : 0,
+            (vrange > 0) ? 1.0f / float(vrange) : 0
         );
     }
 
@@ -508,9 +509,12 @@ struct ElementPeripheralLogT : public ElementT {
 
         uu py = 0, px = 0;
         time_type pt = ctx.time_min;
-        const time_type inc = ctx.get_time(1);
-        py = ctx.get_y(log->template get_value(0));
+        const time_type inc = (float(1.0)/ctx.plot_size.width) * ctx.time_range;//ctx.get_time(1);
         const int len = log->template get_size();
+
+        const bool intrp = len < ctx.plot_size.width;
+
+        py = ctx.get_y(intrp ? log->template get_value(0) : log->template get_value_average_time<float>(ctx.time_min, ctx.time_min + inc));
 
         //printf("%i %i %i %i %lli\n", ctx.plot_size.x, ctx.plot_size.y, ctx.plot_size.width, ctx.plot_size.height, ctx.time_max);
         //printf("%lli %u %.f %.f\n", ctx.time_range, ctx.value_range, ctx.time_range_inv, ctx.value_range_inv);
