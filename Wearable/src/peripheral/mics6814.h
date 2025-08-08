@@ -13,6 +13,10 @@ struct MICS6814 {
     float getCOVoltage();
     float getNO2Voltage();
     float getNH3Voltage();
+
+    uint16_t getCOmillivolts();
+    uint16_t getNO2millivolts();
+    uint16_t getNH3millivolts();
 };
 
 extern MICS6814 mics6814;

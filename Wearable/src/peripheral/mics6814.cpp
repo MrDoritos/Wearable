@@ -122,4 +122,16 @@ float MICS6814::getNO2Voltage() {
     return v_no2.getVoltage();
 }
 
+uint16_t MICS6814::getCOmillivolts() {
+    return (uint16_t)v_co.getmV();
+}
+
+uint16_t MICS6814::getNH3millivolts() {
+    return (uint16_t)v_nh3.getmV();
+}
+
+uint16_t MICS6814::getNO2millivolts() {
+    return (uint16_t)v_no2.getmV();
+}
+
 }

@@ -5,6 +5,7 @@
 #include "display_timeout.h"
 #include "gps_imu.h"
 #include "ltr390.h"
+#include "mics6814.h"
 
 #include "esp_check.h"
 #include "esp_heap_caps.h"
@@ -274,11 +275,46 @@ bool update_ltr390() {
     return true;
 }
 
+bool update_mics6814() {
+    int64_t t = timestamp_micros();
+
+    const int64_t st_rate = LOG_MICS6814_ST_RATE * 1000;
+    
+    if (st_rate + log.mics6814_st.get_data_end_time() < t) {
+        DPMICS6814 p(
+            t, 
+            mics6814.getCOmillivolts(), 
+            mics6814.getNH3millivolts(), 
+            mics6814.getNO2millivolts()
+        );
+
+        log.mics6814_st.push_back(p);
+
+        WBL_D("Push MICS6814 ST");
+    }
+
+    if (log.mics6814_st.size() < 2)
+        return true;
+
+    const int64_t lt_rate = LOG_MICS6814_LT_RATE * 1000;
+
+    if (lt_rate + log.mics6814_lt.get_data_end_time() < t) {
+        int64_t st_last = log.mics6814_st.get_data_end_time();
+        DVMICS6814 dv = log.mics6814_st.avg_range_time(st_last - lt_rate, st_last);
+        log.mics6814_lt.push_back(DPMICS6814(t, dv));
+
+        WBL_D("Push MICS6814 LT");
+    }
+
+    return true;
+}
+
 esp_err_t PeripheralLog::update() {
     update_vbat();
     update_camm8();
     update_gpsimu();
     update_ltr390();
+    update_mics6814();
 
     return ESP_OK;
 }
