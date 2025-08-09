@@ -9,7 +9,7 @@ namespace UI {
 
 namespace ValueBases {
 
-template<typename Base, typename T, typename T_format_type = float>
+template<typename Base, typename T, typename T_format_type = float, int64_t base_divT = 1>
 struct ValueInfo {
     using value_type = T;
     using format_type = T_format_type;
@@ -20,9 +20,11 @@ struct ValueInfo {
 
     static constexpr inline const char *format() { return "%f%s%s"; }
 
+    static constexpr inline float prescale() { return 1.0 / float(base_divT); }
+
     template<typename RType = value_type, typename IType = value_type>
     static constexpr inline RType scale(const IType &v) {
-        return RType(v);
+        return RType(v * Base::prescale());
     }
 
     static inline int printf(char *buffer, int maxlen, const value_type &v) {
@@ -46,15 +48,9 @@ struct ValueSI {
 
     template<typename T = value_type>
     static constexpr inline int get_n(const T &v) {
-        if (v > 1e12) return 1;
-        if (v > 1e9) return 2;
-        if (v > 1e6) return 3;
-        if (v > 1e3) return 4;
-        if (v > 0) return 0;
-        if (v > 1e-3) return 5;
-        if (v > 1e-6) return 6;
-        if (v > 1e-9) return 7;
-        if (v > 1e-12) return 8;
+        for (int i = 0; i < sizeof(scales)/sizeof(scales[0]); i++)
+            if (v > scales[i])
+                return i;
         return 0;
     }
 
@@ -64,18 +60,21 @@ struct ValueSI {
 
     template<typename IType = value_type>
     static constexpr inline const char *prefix(const IType &v) {
-        return units[get_n(v)];
+        return units[get_n<IType>(v)];
     }
 
+    static constexpr inline float prescale() { return 1.0; }
+
     template<typename RType = value_type, typename IType = value_type>
-    static constexpr inline RType scale(const IType &v) {
-        return RType(v) * (1.0/RType(scales[get_n(v)]));
+    static constexpr inline RType scale(const IType &value) {
+        return RType(value * (1.0/scales[get_n<IType>(value)]));
     }
 
     template<typename IType = value_type>
     static inline int printf(char *buffer, int maxlen, const IType &v) {
-        format_type scaled = Base::template scale<format_type>(v);
-        return snprintf(buffer, maxlen, Base::format(), scaled, Base::unit(), Base::prefix(scaled));
+        const format_type prescaled = Base::prescale() * v;
+        const format_type scaled = Base::template scale<format_type, format_type>(prescaled);
+        return snprintf(buffer, maxlen, Base::format(), scaled, Base::prefix(prescaled), Base::unit());
     }
 };
     
@@ -85,31 +84,28 @@ struct TimeScale : public ValueSI<TimeScale<base_scale, valueT, formatT>, valueT
     using format_type = formatT;
 
     static constexpr inline const char *unit() { return "s"; }
-    template<typename RType = value_type, typename IType = value_type>
-    static constexpr inline RType scale(const IType &v) {
-        const RType v = RType(v) * (1.0/base_scale);
-        return v * (1.0/RType(scales[this->get_n(v)]));
-    }
+    static constexpr inline float prescale() { return 1.0f / float(base_scale); }
 };
 
 using TimeMilli = TimeScale<1000>;
 using TimeMicro = TimeScale<1000000>;
 
-template<char const *s_unitT, char const *s_formatT, typename valueT = float, typename formatT = float>
-struct SIBase : public ValueSI<SIBase<s_unitT, s_formatT, valueT, formatT>, valueT, formatT> {
+template<char const *s_unitT, char const *s_formatT, int64_t base_divT = 1, typename valueT = float, typename formatT = float>
+struct SIBase : public ValueSI<SIBase<s_unitT, s_formatT, base_divT, valueT, formatT>, valueT, formatT> {
     using value_type = valueT;
     using format_type = formatT;
 
     static constexpr inline const char *unit() { return s_unitT; }
     static constexpr inline const char *format() { return s_formatT; }
+    static constexpr inline float prescale() { return 1.0f / float(base_divT); }
 };
 
 char unit_none[] = "";
-char format_float[] = "%.3f%s%s";
+char format_float[] = "%.1f%s%s";
 char unit_voltage[] = "V";
 
 using ValueBase = SIBase<unit_none, format_float>;
-using Voltage = SIBase<unit_voltage, format_float>;
+using Voltage = SIBase<unit_voltage, format_float, 1000>;
 
 }
 
@@ -441,6 +437,9 @@ namespace LogOpts {
         MAX_X=64,
         MAX_Y=128,
         SAMPLE_COUNT=256,
+        RANGE_X=512,
+        RANGE_Y=1024,
+        LABEL_OUTSIDE=2048,
     };
 };
 
@@ -469,9 +468,12 @@ struct ElementPeripheralLogOptsT {
     static constexpr bool draw_label_max_x = plot_display & LogOpts::MAX_X;
     static constexpr bool draw_label_max_y = plot_display & LogOpts::MAX_Y;
     static constexpr bool draw_sample_count = plot_display & LogOpts::SAMPLE_COUNT;
+    static constexpr bool draw_label_outside = plot_display & LogOpts::LABEL_OUTSIDE;
+    static constexpr bool draw_range_x = plot_display & LogOpts::RANGE_X;
+    static constexpr bool draw_range_y = plot_display & LogOpts::RANGE_Y;
 };
 
-using LogOptsBasic = ElementPeripheralLogOptsT<LogOpts::INTERPOLATION_AUTO, LogOpts::RANGE_AUTO, LogOpts::REFERENCE_Y>;
+using LogOptsBasic = ElementPeripheralLogOptsT<LogOpts::INTERPOLATION_AUTO, LogOpts::RANGE_AUTO, LogOpts::REFERENCE_Y | LogOpts::RANGE_Y>;
 
 template<typename Buffer, typename LogField, typename ElementT = ElementBaseT<Buffer>, typename LogOpts = LogOptsBasic> 
 struct ElementPeripheralLogT : public ElementT {
@@ -527,6 +529,18 @@ struct ElementPeripheralLogT : public ElementT {
             return (y > plot_size.height) ? plot_size.height : (y < 0 ? 0 : (uu)y);
         }
 
+        constexpr inline uu get_text_top_offset() const {
+            return 0;
+        }
+
+        constexpr inline uu get_text_bottom_offset() const {
+            if (log_opts::draw_label_outside)
+                return plot_size.height + 5;
+            if (plot_size.height > 4)
+                return plot_size.height - 5; 
+            return 0;               
+        }
+
         template<typename T = value_type>
         constexpr inline uu get_y(const T &value) const {
             return get_offset_y<T>(value) + plot_size.y;
@@ -555,7 +569,15 @@ struct ElementPeripheralLogT : public ElementT {
         log->template get_time_axis(tmin, tmax, trange);
         log->template get_value_axis(vmin, vmax, vrange, vsum);
 
-        const Size window = *this;
+        Size window = *this;
+
+        if (log_opts::draw_label_outside) {
+            if (window.height > 10) {
+                window.height = window.height - 10;
+                window.y += 5;
+            }
+        }
+
         const Size plot_size(
             window.x, window.y,
             window.width, window.height - 1
@@ -599,13 +621,20 @@ struct ElementPeripheralLogT : public ElementT {
             this->buffer.putPixel(x + ctx.plot_size.x, ypos + ctx.plot_size.y, 1);
         }
 
-        const uu ytx = ypos < 5 ? 0 : ypos - 4;
-        ctx.writer.setOffsetY(ytx);
-        ctx.writer.template print_value<typename log_type::value_unit>(Sprites::minifont, yref);
+        if (log_opts::draw_label_y) {
+            const uu ytx = ypos < 5 ? 0 : ypos - 4;
+            ctx.writer.setOffsetY(ytx);
+            ctx.writer.template print_value<typename log_type::value_unit>(Sprites::minifont, yref);
+        }
     }
 
     void draw_reference(PlotContext &ctx) {
-        draw_reference_y(ctx);
+        if (log_opts::draw_reference_y)
+            draw_reference_y(ctx);
+        if (log_opts::draw_range_y) {
+            ctx.writer.setOffsetY(ctx.get_text_bottom_offset());
+            ctx.writer.template print_value<typename log_type::value_unit>(Sprites::minifont, ctx.value_range);
+        }
     }
 
     void on_draw(Event *event) override {
