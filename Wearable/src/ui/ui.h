@@ -1539,7 +1539,7 @@ struct ElementRootT : public ElementT {
     char debug_log[debug_log_length];
     IScreen *active_screen = nullptr;
     IElement *header_element = nullptr;
-    bool layout_dirty = true;
+    bool layout_dirty = true, draw_dirty = false;
     ub active_step = 0;
 
     template<typename FORMAT, typename ...Args>
@@ -1717,8 +1717,8 @@ struct ElementRootT : public ElementT {
     }
 
     inline void do_content_size() {
-        bool dirty = layout_dirty;
-        if (dirty) {
+        draw_dirty = layout_dirty;
+        if (draw_dirty) {
             this->dispatch(Event::CONTENT_SIZE, Event::REQUEST, Event::CHILDREN);
             this->clear();
         }
@@ -1732,7 +1732,7 @@ struct ElementRootT : public ElementT {
     }
 
     inline void do_draw() {
-        this->handle_deferred_event(Event(Event::DRAW, (layout_dirty || redraw_needed) ? Event::REDRAW : Event::VALUE_NONE, Event::RDEPTH, Event::NORMAL));
+        this->handle_deferred_event(Event(Event::DRAW, (draw_dirty || redraw_needed) ? Event::REDRAW : Event::VALUE_NONE, Event::RDEPTH, Event::NORMAL));
         layout_dirty = false;
         redraw_needed = false;
         log_time("DRAW.");
