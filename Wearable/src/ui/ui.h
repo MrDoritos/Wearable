@@ -19,6 +19,7 @@
 #include "config.h"
 #include "display_timeout.h"
 #include "config.h"
+#include "wbl_system.h"
 
 namespace wbl {
 namespace UI {
@@ -1730,11 +1731,13 @@ struct ElementRootT : public ElementT {
 
     inline void do_tick() {
         log_time("ELPSD");
+        wbl_system.displayFlushWait();
         this->dispatch(Event::TICK);
         log_time("TICK ");
     }
 
     inline void do_draw() {
+        //wbl_system.displayFlushWait();
         this->handle_deferred_event(Event(Event::DRAW, (draw_dirty || redraw_needed) ? Event::REDRAW : Event::VALUE_NONE, Event::RDEPTH, Event::NORMAL));
         layout_dirty = false;
         redraw_needed = false;
@@ -1742,6 +1745,7 @@ struct ElementRootT : public ElementT {
     }
 
     inline void do_debug() {
+        //wbl_system.displayFlushWait();
         if (debug_details>2) {
             this->overlay_tree_positions(debug_details==4, true);
             log_time("OVRLY");
@@ -1773,8 +1777,9 @@ struct ElementRootT : public ElementT {
 
     inline void do_flush() {
         //this->buffer.flush();
-        this->buffer.async_flush(); 
+        //this->buffer.async_flush(); 
         //this->buffer.flush2();
+        wbl_system.displayFlush();
         log_time("FLUSH");
     }
 

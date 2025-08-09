@@ -10,6 +10,12 @@
 #include "sprites.h"
 #include "esp_pm.h"
 #include "esp_clk_tree.h"
+#include "user_inputs.h"
+#include "display_timeout.h"
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
+#include "esp_err.h"
+#include "sprites.h"
 
 #include <stdio.h>
 
@@ -41,6 +47,43 @@ bool adc_calib = false;
 esp_timer_handle_t timer_handle;
 esp_pm_lock_handle_t pm_lock = nullptr;
 bool pm_lock_acquired = false;
+SemaphoreHandle_t flush_semaphore = nullptr;
+bool display_flushing = false;
+TaskHandle_t flush_task_handle = nullptr;
+
+extern "C" {
+    void flush_task(void*) {
+        while (1) {
+            xSemaphoreTake(flush_semaphore, portMAX_DELAY);
+            display_flushing = true;
+            ESP_ERROR_CHECK_WITHOUT_ABORT(wbl::Sprites::display.flush2());
+            display_flushing = false;
+            vPortYield();
+        }
+    }
+}
+
+void start_flush_task() {
+    if (flush_task_handle)
+        return;
+
+    xTaskCreatePinnedToCore(
+        flush_task,
+        "Flush",
+        4048,
+        nullptr,
+        5,
+        &flush_task_handle,
+        APP_CPU_NUM
+    );
+}
+
+void stop_flush_task() {
+    if (flush_task_handle == nullptr)
+        return;
+
+    vTaskDelete(flush_task_handle);
+}
 
 static void pwm_timer_callback(void *arg) {
     int32_t &dur = wbl_system.haptic_feedback_end;
@@ -62,44 +105,6 @@ static void pwm_timer_callback(void *arg) {
     ledc_set_duty(HAPTIC_MODE, HAPTIC_CHANNEL, state ? level : 0);
     ledc_update_duty(HAPTIC_MODE, HAPTIC_CHANNEL);
 }
-
-#ifdef WBL_ACK_DBG
-uint32_t ack_count = 0;
-int64_t last_ack = 0;
-
-IRAM_ATTR void handle_ack_dbg(void *arg) {
-    ack_count++;
-    last_ack = esp_timer_get_time();
-}
-
-esp_err_t init_ack_dbg() {
-    //gpio_dump_io_configuration(stdout, SOC_GPIO_VALID_GPIO_MASK);
-    //esp_intr_dump(stdout);
-
-    gpio_num_t pin = GPIO_NUM_4;//I2C_BUS_1_SDA;
-    uint32_t pin_bit_mask = 1ULL << pin;
-
-    static gpio_config_t conf = {};
-
-    conf.intr_type = GPIO_INTR_NEGEDGE;
-    conf.mode = GPIO_MODE_INPUT;
-    conf.pin_bit_mask = pin_bit_mask;
-    conf.pull_down_en = GPIO_PULLDOWN_DISABLE;
-    conf.pull_up_en = GPIO_PULLUP_DISABLE;
-
-    int flags = ESP_INTR_FLAG_LOWMED | ESP_INTR_FLAG_SHARED;//ESP_INTR_FLAG_IRAM | ESP_INTR_FLAG_SHARED;
-
-    ESP_RETURN_ON_ERROR(gpio_config(&conf), TAG, "failed to gpio_config");
-
-    ESP_RETURN_ON_ERROR(gpio_install_isr_service(flags), TAG, "gpio_install_isr_service");
-
-    ESP_RETURN_ON_ERROR(gpio_intr_enable(pin), TAG, "gpio_intr_enable");
-
-    ESP_RETURN_ON_ERROR(gpio_isr_register(handle_ack_dbg, (void*)pin_bit_mask, flags, nullptr), TAG, "gpio_isr_register");
-
-    return ESP_OK;
-}
-#endif
 
 esp_err_t init_pm() {
     #ifdef CONFIG_PM_ENABLE
@@ -204,10 +209,6 @@ esp_err_t init_pwm() {
 }
 
 esp_err_t wbl_System::init() {
-    #ifdef WBL_ACK_DBG
-    ESP_RETURN_ON_ERROR(init_ack_dbg(), TAG, "Failed to init ack dbg");
-    #endif
-
     adc_oneshot_unit_init_cfg_t adc_conf = {
         .unit_id = VBAT_UNIT,
     };
@@ -238,18 +239,39 @@ esp_err_t wbl_System::init() {
 
     ESP_RETURN_ON_ERROR(init_pm(), TAG, "Failed to init power management");
 
+    flush_semaphore = xSemaphoreCreateBinary();
+
+    start_flush_task();
+
     return ESP_OK;
 }
 
-esp_err_t wbl_System::update() {
-    #ifdef WBL_ACK_DBG
-    if (ack_count) {
-        printf("Acks %lu last_time %lli\n", ack_count, last_ack);
-        ack_count = 0;
+esp_err_t wbl_System::update() {    
+    static bool isDisplayOff = false;
+
+    if (displayTimeout.is_display_off() != isDisplayOff) {
+        isDisplayOff = displayTimeout.is_display_off();
+        wbl::Sprites::display.setState(!isDisplayOff);
+        if (isDisplayOff)
+            stop_flush_task();
+        else
+            start_flush_task();
     }
-    #endif
 
     return ESP_OK;
+}
+
+esp_err_t wbl_System::displayFlush() {
+    if (display_flushing)
+        return ESP_OK;
+    xSemaphoreGive(flush_semaphore);
+    return ESP_OK;
+}
+
+void wbl_System::displayFlushWait() {
+    while (display_flushing) {
+        __asm__ __volatile__ ("nop");
+    }
 }
 
 void wbl_System::setHapticFeedback(const bool &state) {

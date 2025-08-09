@@ -74,6 +74,7 @@ UI::UIDistanceTrackerT<DisplayTexture> uitracker(display);
 UI::ScreenBaseT<> rockscreen("The Rock");
 UI::ElementTheRockT<DisplayTexture> e_therock(display);
 
+
 void demo() {
     wbl::log.update();
 
@@ -84,28 +85,12 @@ void demo() {
         dpad.update();
 
     displayTimeout.update(has_input);
-    
-    static bool isDisplayOff = false;
 
-    if (displayTimeout.is_display_off() != isDisplayOff) {
-        isDisplayOff = displayTimeout.is_display_off();
-        display.setState(!isDisplayOff);
-    }
-
-    //uiroot.once();
     uiroot.step();
 
     static int cnt = 0;
     int64_t t = micros();
     if (cnt++ % 4 == 0) {
-        /*
-        if (cnt & 4) {
-            e_squarelog.push_back(t, (uu)(ltr390.getUVIhr()*10.0f));
-        } else {
-            wbl_system.setDisplayBrightness(ltr390.getLux());
-            e_sinelog.push_back(t, (uu)ltr390.getLux());
-        }
-        */
         DPLTR390ST stp = wbl::log.ltr390_st.get(-1);
         e_squarelog.push_back(t, stp.uvi*10.0f);
         e_sinelog.push_back(t, stp.lux);
@@ -113,19 +98,11 @@ void demo() {
         wbl_system.setDisplayBrightness(stp.lux);
     }
 
-    if (cnt % 32 == 0) {
-        //e_voltlog.push_back(t, wbl_system.getBatteryVoltage() * 1000);
-        //e_colog.push_back(t, (uu)(mics6814.getCOVoltage() * 1000.0f));
-        //e_nh3log.push_back(t, (uu)(mics6814.getNH3Voltage() * 1000.0f));
-        //e_no2log.push_back(t, (uu)(mics6814.getNO2Voltage() * 1000.0f));
-    }
-
     if (cnt % 200 == 0) {
         uibattery.set_battery_level((uint8_t)wbl_system.getBatteryLevel());
     }
 
     wbl_system.update();
-    //wbl_system.releasePMLock();
 
     #ifdef __linux__
     delay(30);
@@ -364,8 +341,6 @@ void app_main() {
         WBL_D("Display clear");
         wbl_system.setDisplayRotation(DISPLAY_ROTATION);
         WBL_D("Display rotation");
-        //display.flush();
-        WBL_D("Display flush");
         gps.update();
         gps.setSystemTime();
         displayTimeout.update(true);

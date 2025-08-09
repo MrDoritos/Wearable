@@ -27,6 +27,8 @@ struct wbl_System {
     esp_err_t releasePMLock();
     uint32_t getCPUFreq();
     uint32_t testCPUFreq();
+    esp_err_t displayFlush();
+    void displayFlushWait();
 
     bool use_audible_feedback = true;
     bool use_haptic_feedback = true;

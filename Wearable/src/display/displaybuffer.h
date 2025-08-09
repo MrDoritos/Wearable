@@ -67,7 +67,7 @@ struct DisplayBufferT : public Frame, public Display {
     static uint8_t cmd_buffer[33];
 
     IRAM_ATTR static bool on_master_done(i2c_master_dev_handle_t dev, const i2c_master_event_data_t *data, void *arg) {
-        return false;
+        //return false;
         if (!draw_transaction)
             return false;
 
@@ -125,22 +125,22 @@ struct DisplayBufferT : public Frame, public Display {
     }
 
     inline esp_err_t init() {
-        I2C::bus.trans_queue_depth = 400;
+        //I2C::bus.trans_queue_depth = 400;
 
         ESP_RETURN_ON_ERROR(Display::init(), TAG, "display init failed");
         WBL_D("Display init");
 
         Frame::clear();
-        //ESP_RETURN_ON_ERROR(Display::clearDisplay(), TAG, "clear display failed");
+        ESP_RETURN_ON_ERROR(Display::clearDisplay(), TAG, "clear display failed");
         WBL_D("Display clear");
         
-        static i2c_master_event_callbacks_t cbs = {
-            .on_trans_done = on_master_done
-        };
+        //static i2c_master_event_callbacks_t cbs = {
+        //    .on_trans_done = on_master_done
+        //};
 
         draw_transaction = false;
 
-        ESP_RETURN_ON_ERROR(i2c_master_register_event_callbacks(I2C::dev, &cbs, nullptr), TAG, "display set callback failed");
+        //ESP_RETURN_ON_ERROR(i2c_master_register_event_callbacks(I2C::dev, &cbs, nullptr), TAG, "display set callback failed");
 
         return ESP_OK;
     }
@@ -159,7 +159,7 @@ struct DisplayBufferT : public Frame, public Display {
 
         for (uint8_t page = 0; page < Display::PAGES; page++) {
             page_cmd.pos = SH1107::SET_PAGEADDR + page;
-            //ESP_RETURN_ON_ERROR(I2C::write((uint8_t*)&page_cmd, sizeof(page_cmd)), TAG, "set page pos fail");
+            ESP_RETURN_ON_ERROR(I2C::write((uint8_t*)&page_cmd, sizeof(page_cmd)), TAG, "set page pos fail");
             /*
             i2c_operation_job_t i2c_ops[] = {
                 { .command = I2C_MASTER_CMD_START },
@@ -197,6 +197,7 @@ struct DisplayBufferT : public Frame, public Display {
             };
             ESP_RETURN_ON_ERROR(i2c_master_multi_buffer_transmit(I2C::dev, page_buffer, sizeof(page_buffer)/sizeof(page_buffer[0]), -1), TAG, "failed multi page pos");
             */
+            /*
             i2c_operation_job_t page_buffer[] = {
                 {.command = I2C_MASTER_CMD_START },
                 {.command = I2C_MASTER_CMD_WRITE, 
@@ -208,13 +209,13 @@ struct DisplayBufferT : public Frame, public Display {
                 {.command = I2C_MASTER_CMD_STOP },
             };
             ESP_RETURN_ON_ERROR(i2c_master_execute_defined_operations(I2C::dev, page_buffer, sizeof(page_buffer)/sizeof(page_buffer[0]), -1), TAG, "failed to execute trans");
-
+            */
             i2c_master_transmit_multi_buffer_info_t disp_buffer[] = {
                 {.write_buffer = &dc, .buffer_size = 1 },
                 {.write_buffer = ptr, .buffer_size = size },
             };
             ESP_RETURN_ON_ERROR(i2c_master_multi_buffer_transmit(I2C::dev, disp_buffer, sizeof(disp_buffer)/sizeof(disp_buffer[0]), -1), TAG, "display multi buffer fail");
-            ESP_RETURN_ON_ERROR(i2c_master_bus_wait_all_done(I2C::bus.bus, 100), TAG, "failed to wait for i2c");
+            //ESP_RETURN_ON_ERROR(i2c_master_bus_wait_all_done(I2C::bus.bus, 100), TAG, "failed to wait for i2c");
 
             ptr += size;
         }
