@@ -1739,20 +1739,24 @@ struct ElementRootT : public ElementT {
     }
 
     inline void do_debug() {
-        if (debug_details>1)
-            this->overlay_tree_positions(debug_details==3, true);
-
-        log_time("OVRLY");
+        if (debug_details>2) {
+            this->overlay_tree_positions(debug_details==4, true);
+            log_time("OVRLY");
+        }
 
         int64_t frametime = micros() - ftime;
         ftime = micros();
         log("TOTAL:%5llius\n", frametime);
-        log("FPS  : %.1f\n", 1000000.0f/frametime);
+        //log("FPS  : %.1f\n", 1000000.0f/frametime);
+        const int buflen = 10;
+        char buf[buflen];
+        snprintf(buf, buflen, "%.1f FPS", 1000000.0f/frametime);
+        this->draw_text(buf, Sprites::minifont, Origin(this->getWidth()*.3,0), false, true);
     }
 
     inline void do_log_flush() {
         int64_t log_flush_time = 0;
-        if (debug) {
+        if (debug_details>1) {
             log_flush_time = micros();
             flush_log(false);
             log_flush_time = micros() - log_flush_time;
@@ -1792,6 +1796,8 @@ struct ElementRootT : public ElementT {
         if (displayTimeout.is_display_off())
             return;
 
+        reset_log_time();
+
         switch (active_step) {
             case 0: do_tick(); break;
             case 1: do_content_size(); break;
@@ -1803,7 +1809,7 @@ struct ElementRootT : public ElementT {
 
         active_step++;
 
-        if (!debug && active_step == 3) active_step++;
+        if (debug_details == 0 && active_step == 3) active_step++;
         if (do_not_flush && active_step == 5) active_step++;
 
         active_step = active_step % 6;
@@ -1844,8 +1850,8 @@ struct ElementRootT : public ElementT {
             //    debug = !debug;
             if (event->value & EventValues::DPAD_UP)
                 debug_details++;
-            debug_details %= 4;
-            debug = debug_details > 0;
+            debug_details %= 5;
+            debug = debug_details > 1;
             layout_dirty = true;
         }
         #endif
