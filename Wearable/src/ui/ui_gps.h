@@ -37,9 +37,9 @@ struct ElementGPST : public ElementT {
 
         buffer.print("Satellites: %i ", gps.getSatelliteCount());
         buffer.print("PDOP %.2lf\n", gps.getPDOP());
-        buffer.print("HAcc %.2lfmm ", gps.getHorizontalAccuracy());
-        buffer.print("VAcc %.2lfmm\n", gps.getVerticalAccuracy());
-        buffer.print("TAcc %uns\n", gps.getTimeAccuracy());
+        buffer.print("HACC %.2lfmm ", gps.getHorizontalAccuracy());
+        buffer.print("VACC %.2lfmm\n", gps.getVerticalAccuracy());
+        buffer.print("TACC %uns\n", gps.getTimeAccuracy());
 
         this->draw_text(buffer.buffer, Sprites::minifont, {0, offset.height});
     }

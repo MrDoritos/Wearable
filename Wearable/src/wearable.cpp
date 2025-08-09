@@ -92,7 +92,8 @@ void demo() {
         display.setState(!isDisplayOff);
     }
 
-    uiroot.once();
+    //uiroot.once();
+    uiroot.step();
 
     static int cnt = 0;
     int64_t t = micros();

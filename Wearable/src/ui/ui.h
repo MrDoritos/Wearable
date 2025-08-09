@@ -1540,6 +1540,7 @@ struct ElementRootT : public ElementT {
     IScreen *active_screen = nullptr;
     IElement *header_element = nullptr;
     bool layout_dirty = true;
+    ub active_step = 0;
 
     template<typename FORMAT, typename ...Args>
     inline int log(FORMAT format, const Args&...args) {
@@ -1715,40 +1716,43 @@ struct ElementRootT : public ElementT {
         }
     }
 
-    inline void once(const bool &do_not_flush=false) {
-        if (displayTimeout.is_display_off())
-            return;
-
-        //reset_log(false);
-        log_time("ELPSD");
-        
-        //reset_log_time();
-        this->dispatch(Event::TICK);
-        log_time("TICK ");
-
+    inline void do_content_size() {
         bool dirty = layout_dirty;
         if (dirty) {
             this->dispatch(Event::CONTENT_SIZE, Event::REQUEST, Event::CHILDREN);
             this->clear();
         }
         log_time("CTSIZ");
+    }
 
-        this->handle_deferred_event(Event(Event::DRAW, dirty || redraw_needed ? Event::REDRAW : Event::VALUE_NONE, Event::RDEPTH, Event::NORMAL));
+    inline void do_tick() {
+        log_time("ELPSD");
+        this->dispatch(Event::TICK);
+        log_time("TICK ");
+    }
+
+    inline void do_draw() {
+        this->handle_deferred_event(Event(Event::DRAW, (layout_dirty || redraw_needed) ? Event::REDRAW : Event::VALUE_NONE, Event::RDEPTH, Event::NORMAL));
         layout_dirty = false;
         redraw_needed = false;
-        
         log_time("DRAW.");
+    }
+
+    inline void do_debug() {
+        if (debug_details>1)
+            this->overlay_tree_positions(debug_details==3, true);
+
+        log_time("OVRLY");
+
+        int64_t frametime = micros() - ftime;
+        ftime = micros();
+        log("TOTAL:%5llius\n", frametime);
+        log("FPS  : %.1f\n", 1000000.0f/frametime);
+    }
+
+    inline void do_log_flush() {
         int64_t log_flush_time = 0;
         if (debug) {
-            if (debug_details>1)
-                this->overlay_tree_positions(debug_details==3, true);
-
-            log_time("OVRLY");
-
-            int64_t frametime = micros() - ftime;
-            ftime = micros();
-            log("TOTAL:%5llius\n", frametime);
-            log("FPS  : %.1f\n", 1000000.0f/frametime);
             log_flush_time = micros();
             flush_log(false);
             log_flush_time = micros() - log_flush_time;
@@ -1758,10 +1762,51 @@ struct ElementRootT : public ElementT {
 
         log("LOGFS:%5llius\n", log_flush_time);
         reset_log_time();
+    }
+
+    inline void do_flush() {
+        this->buffer.flush();
+        log_time("FLUSH");
+    }
+
+    inline void once(const bool &do_not_flush=false) {
+        if (displayTimeout.is_display_off())
+            return;
+
+        do_tick();
+
+        do_content_size();
+
+        do_draw();
+        
+        if (debug)
+            do_debug();
+
+        do_log_flush();
 
         if (!do_not_flush)
-            this->buffer.flush();
-        log_time("FLUSH");
+            do_flush();
+    }
+
+    inline void step(const bool &do_not_flush=false) {
+        if (displayTimeout.is_display_off())
+            return;
+
+        switch (active_step) {
+            case 0: do_tick(); break;
+            case 1: do_content_size(); break;
+            case 2: do_draw(); break;
+            case 3: do_debug(); break;
+            case 4: do_log_flush(); break;
+            case 5: do_flush(); break;
+        }
+
+        active_step++;
+
+        if (!debug && active_step == 3) active_step++;
+        if (do_not_flush && active_step == 5) active_step++;
+
+        active_step = active_step % 6;
     }
 
     inline void setDebug(const bool &debug_state=true) {
