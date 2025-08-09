@@ -48,7 +48,6 @@ struct Display : public I2C {
             SH1107::SET_PAGEADDR + page, 0x10 + ((page_start + page_start_offset) >> 4), (page_start + page_start_offset) & 0xf
         };
         ESP_RETURN_ON_ERROR(this->write_commands(cmd, sizeof(cmd)), TAG, "setPagePosition failed");
-
         return ESP_OK;
     }
   
@@ -278,7 +277,9 @@ struct Display : public I2C {
     inline esp_err_t init() {
         ESP_RETURN_ON_ERROR(I2C::init(), TAG, "i2c_device init failed");
 
-        return this->reset();
+        ESP_RETURN_ON_ERROR(this->reset(), TAG, "display reset failed");
+
+        return ESP_OK;
     }
 };
 

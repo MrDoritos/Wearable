@@ -1769,7 +1769,8 @@ struct ElementRootT : public ElementT {
     }
 
     inline void do_flush() {
-        this->buffer.flush();
+        //this->buffer.flush();
+        this->buffer.async_flush(); 
         log_time("FLUSH");
     }
 

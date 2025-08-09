@@ -18,13 +18,18 @@ struct I2C_BUS {
     gpio_num_t SCL;
     i2c_clock_source_t CLK;
     bool INTERNAL_PULLUP;
+    size_t trans_queue_depth;
+    
 
     i2c_master_bus_handle_t bus;
 
     constexpr I2C_BUS(const uint8_t &port, const gpio_num_t &sda, const gpio_num_t &scl, const i2c_clock_source_t &clk, const bool &internal_pullup=true)
-    :PORT(port),SDA(sda),SCL(scl),CLK(clk),INTERNAL_PULLUP(internal_pullup){}
+    :PORT(port),SDA(sda),SCL(scl),CLK(clk),INTERNAL_PULLUP(internal_pullup),trans_queue_depth(0){}
 
     inline esp_err_t probe(uint16_t device_id) {
+        if (trans_queue_depth)
+            return ESP_OK;
+
         ESP_RETURN_ON_ERROR(i2c_master_probe(bus, device_id, 1000 / portTICK_PERIOD_MS), TAG, "failed to probe device %i", device_id);
 
         return ESP_OK;
@@ -40,6 +45,7 @@ struct I2C_BUS {
             .scl_io_num = SCL,
             .clk_source = CLK,
             .glitch_ignore_cnt = 7,
+            .trans_queue_depth = trans_queue_depth,
             .flags = {
                 .enable_internal_pullup = INTERNAL_PULLUP
             },

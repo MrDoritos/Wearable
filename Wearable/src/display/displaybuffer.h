@@ -2,6 +2,7 @@
 
 #include "framebuffer.h"
 #include "sh1107.h"
+#include "config.h"
 
 namespace wbl {
 
@@ -52,12 +53,94 @@ template<typename Display, typename Frame = FramebufferPageT<Display::WIDTH, Dis
 struct DisplayBufferT : public Frame, public Display {
     static constexpr const char *TAG = "wbl::DisplayBufferT";
 
+    enum PageState : uint8_t {
+        PAGE_END = 1,
+        PAGE_START = 2,
+        PAGE_CONT = 4
+    };
+
+    static uint8_t page_pos;
+    static uint8_t bytes_rem;
+    static uint8_t *page_ptr;
+    static uint8_t page_state;
+    static bool draw_transaction;
+    static uint8_t cmd_buffer[33];
+
+    /*IRAM_ATTR*/ static bool on_master_done(i2c_master_dev_handle_t dev, const i2c_master_event_data_t *data, void *arg) {
+        if (!draw_transaction)
+            return false;
+
+        const uint8_t size = 16;
+        const uint8_t dc = 0x40;
+        const uint8_t count = bytes_rem > size ? size : bytes_rem;
+
+        if (page_state & PAGE_START) { // send page pos, set bytes rem
+            bytes_rem = Display::BYTES_PER_PAGE;
+            cmd_buffer[0] = 0;
+            cmd_buffer[1] = SH1107::SET_PAGEADDR + page_pos;
+            cmd_buffer[2] = 0x10;
+            cmd_buffer[3] = 0;
+            page_state = PAGE_CONT;
+            i2c_master_transmit(dev, cmd_buffer, 4, 100);
+            page_pos++;
+            if (page_pos >= Display::PAGES) {
+                page_state = PAGE_END;
+                draw_transaction = false;
+            }
+            return false;
+        }
+
+        if (page_state & PAGE_CONT) {
+            cmd_buffer[0] = dc;
+            for (int i = 0; i < count; i++)
+                cmd_buffer[i+1] = page_ptr[i];
+            i2c_master_transmit(dev, cmd_buffer, 17, 100);
+
+            page_ptr += count;
+            bytes_rem -= count;
+
+            if (bytes_rem < 1) {
+                page_state = PAGE_START;
+            }
+
+            return false;
+        }
+
+        return false;
+    }
+
+    inline esp_err_t async_flush() {
+        if (draw_transaction)
+            return ESP_OK;
+
+        page_pos = 0;
+        draw_transaction = true;
+        page_state = PAGE_START;
+        page_ptr = &this->buffer[0]; 
+
+        Display::setPagePosition(0);
+
+        return ESP_OK;
+    }
+
     inline esp_err_t init() {
+        I2C::bus.trans_queue_depth = 400;
+
         ESP_RETURN_ON_ERROR(Display::init(), TAG, "display init failed");
+        WBL_D("Display init");
 
         Frame::clear();
-        ESP_RETURN_ON_ERROR(Display::clearDisplay(), TAG, "clear display failed");
+        //ESP_RETURN_ON_ERROR(Display::clearDisplay(), TAG, "clear display failed");
+        WBL_D("Display clear");
         
+        static i2c_master_event_callbacks_t cbs = {
+            .on_trans_done = on_master_done
+        };
+
+        draw_transaction = false;
+
+        ESP_RETURN_ON_ERROR(i2c_master_register_event_callbacks(I2C::dev, &cbs, nullptr), TAG, "display set callback failed");
+
         return ESP_OK;
     }
 
