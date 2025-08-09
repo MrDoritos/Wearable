@@ -145,10 +145,19 @@ struct DisplayBufferT : public Frame, public Display {
         return ESP_OK;
     }
 
+    uint8_t backbuffer[Frame::SIZE];
+
+    inline void copyBack() {
+        memcpy(backbuffer, Frame::buffer, Frame::SIZE);
+    }
+
     inline esp_err_t flush2() {
         const size_t size = Display::BYTES_PER_PAGE;
         uint8_t dc = 0x40;
-        uint8_t *ptr = &this->buffer[0];
+        //uint8_t backbuffer[Frame::SIZE];
+        //uint8_t *ptr = &this->buffer[0];
+        uint8_t *ptr = backbuffer;
+        //memcpy(backbuffer, Frame::buffer, Frame::SIZE);
 
         struct {
             uint8_t p = 0;

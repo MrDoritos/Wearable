@@ -264,6 +264,8 @@ esp_err_t wbl_System::update() {
 esp_err_t wbl_System::displayFlush() {
     if (display_flushing)
         return ESP_OK;
+    displayFlushWait();
+    wbl::Sprites::display.copyBack();
     xSemaphoreGive(flush_semaphore);
     return ESP_OK;
 }

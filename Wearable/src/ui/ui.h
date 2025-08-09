@@ -1731,7 +1731,7 @@ struct ElementRootT : public ElementT {
 
     inline void do_tick() {
         log_time("ELPSD");
-        wbl_system.displayFlushWait();
+        //wbl_system.displayFlushWait();
         this->dispatch(Event::TICK);
         log_time("TICK ");
     }
