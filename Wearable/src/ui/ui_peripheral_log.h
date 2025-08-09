@@ -7,39 +7,34 @@
 namespace wbl {
 namespace UI {
 
-template<typename T, typename T_format_type = float>
+namespace ValueBases {
+
+template<typename Base, typename T, typename T_format_type = float>
 struct ValueInfo {
     using value_type = T;
     using format_type = T_format_type;
 
-    static constexpr const char *v_prefix;
-    static constexpr const char *v_format;
-    static constexpr const format_type v_scale;
+    static constexpr inline const char *prefix(const value_type &v) { return ""; }
 
-    static constexpr inline const char *prefix() { return v_prefix; }
+    static constexpr inline const char *unit() { return ""; }
 
-    static constexpr inline const char *unit(const value_type &v) { return ""; }
+    static constexpr inline const char *format() { return "%f%s%s"; }
 
     template<typename RType = value_type, typename IType = value_type>
     static constexpr inline RType scale(const IType &v) {
-        return RType(v * v_scale);
+        return RType(v);
     }
 
     static inline int printf(char *buffer, int maxlen, const value_type &v) {
-        const char *v_unit = unit(v);
-        format_type scaled = scale<format_type>(v);
-        return snprintf(buffer, maxlen, v_format, scaled, v_unit, v_prefix);
+        format_type scaled = Base::template scale<format_type>(v);
+        return snprintf(buffer, maxlen, Base::format(), scaled, Base::prefix(v), Base::unit());
     }
 };
 
-template<typename T_value, typename T_format_type = float>
+template<typename Base, typename T_value, typename T_format_type = float>
 struct ValueSI {
     using value_type = T_value;
     using format_type = T_format_type;
-
-    static constexpr const char *v_prefix;
-    static constexpr const char *v_format;
-    static constexpr const format_type v_scale;
 
     static constexpr const char *units[] = {
         "", "T", "G", "M", "k", "m", "u", "n", "p"
@@ -48,8 +43,6 @@ struct ValueSI {
     static constexpr const float scales[] = {
         1, 1e12, 1e9, 1e6, 1e3, 1e-3, 1e-6, 1e-9, 1e-12
     };
-
-    static constexpr inline const char *prefix() { return v_prefix; }
 
     template<typename T = value_type>
     static constexpr inline int get_n(const T &v) {
@@ -65,39 +58,60 @@ struct ValueSI {
         return 0;
     }
 
+    static constexpr inline const char *unit() { return ""; }
+
+    static constexpr inline const char *format() { return "%f%s%s"; }
+
     template<typename IType = value_type>
-    static constexpr inline const char *unit(const IType &v) {
-        return units[get_n(v * v_scale)];
+    static constexpr inline const char *prefix(const IType &v) {
+        return units[get_n(v)];
     }
 
     template<typename RType = value_type, typename IType = value_type>
     static constexpr inline RType scale(const IType &v) {
-        return RType(v * v_scale) / RType(scales[get_n(v * v_scale)]);
+        return RType(v) * (1.0/RType(scales[get_n(v)]));
     }
 
-    static inline int printf(char *buffer, int maxlen, const value_type &v) {
-        const char *v_unit = unit(v);
-        format_type scaled = scale<format_type>(v);
-        return snprintf(buffer, maxlen, v_format, scaled, v_unit, v_prefix);
+    template<typename IType = value_type>
+    static inline int printf(char *buffer, int maxlen, const IType &v) {
+        format_type scaled = Base::template scale<format_type>(v);
+        return snprintf(buffer, maxlen, Base::format(), scaled, Base::unit(), Base::prefix(scaled));
+    }
+};
+    
+template<int64_t base_scale = 1, typename valueT = int64_t, typename formatT = float>
+struct TimeScale : public ValueSI<TimeScale<base_scale, valueT, formatT>, valueT, formatT> {
+    using value_type = valueT;
+    using format_type = formatT;
+
+    static constexpr inline const char *unit() { return "s"; }
+    template<typename RType = value_type, typename IType = value_type>
+    static constexpr inline RType scale(const IType &v) {
+        const RType v = RType(v) * (1.0/base_scale);
+        return v * (1.0/RType(scales[this->get_n(v)]));
     }
 };
 
-/*
-using ValueTimeMilli = ValueSI<int64_t, float>;
-template<> constexpr const char *ValueTimeMilli::v_format = "%.f%s%s";
-template<> constexpr const char *ValueTimeMilli::v_prefix = "s";
-template<> constexpr ValueTimeMilli::format_type ValueTimeMilli::v_scale = 0.001f;
-using ValueTimeMicro = ValueSI<int64_t, float>;
-template<> constexpr const char *ValueTimeMicro::v_format = "%.f%s%s";
-template<> constexpr const char *ValueTimeMicro::v_prefix = "s";
-template<> constexpr ValueTimeMicro::format_type ValueTimeMicro::v_scale = 0.000001f;
-using ValueSIBase = ValueSI<float, float>;
-template<> constexpr const char *ValueSIBase::v_format = "%.f%s%s";
-template<> constexpr const char *ValueSIBase::v_prefix = "";
-template<> constexpr ValueSIBase::format_type ValueSIBase::v_scale = 1.0f;
-*/
+using TimeMilli = TimeScale<1000>;
+using TimeMicro = TimeScale<1000000>;
 
-template<typename DataLog, typename Derived, typename TimeUnit = int, typename ValueUnit = int>
+template<char const *s_unitT, char const *s_formatT, typename valueT = float, typename formatT = float>
+struct SIBase : public ValueSI<SIBase<s_unitT, s_formatT, valueT, formatT>, valueT, formatT> {
+    using value_type = valueT;
+    using format_type = formatT;
+
+    static constexpr inline const char *unit() { return s_unitT; }
+    static constexpr inline const char *format() { return s_formatT; }
+};
+
+char unit_none[] = "";
+char format_float[] = "%.3f%s%s";
+
+using ValueBase = SIBase<unit_none, format_float>;
+
+}
+
+template<typename DataLog, typename Derived, typename TimeUnit = ValueBases::TimeMicro, typename ValueUnit = ValueBases::ValueBase>
 struct LogFieldProvider : public Derived {
     using log_type = DataLog;
     using value_type = typename Derived::value_type;
@@ -446,6 +460,13 @@ struct ElementPeripheralLogOptsT {
     static constexpr LogOpts::Display plot_display = PlotDisplay;
     static constexpr bool draw_reference_x = plot_display & LogOpts::REFERENCE_X;
     static constexpr bool draw_reference_y = plot_display & LogOpts::REFERENCE_Y;
+    static constexpr bool draw_label_x = plot_display & LogOpts::LABEL_X;
+    static constexpr bool draw_label_y = plot_display & LogOpts::LABEL_Y;
+    static constexpr bool draw_label_min_x = plot_display & LogOpts::MIN_X;
+    static constexpr bool draw_label_min_y = plot_display & LogOpts::MIN_Y;
+    static constexpr bool draw_label_max_x = plot_display & LogOpts::MAX_X;
+    static constexpr bool draw_label_max_y = plot_display & LogOpts::MAX_Y;
+    static constexpr bool draw_sample_count = plot_display & LogOpts::SAMPLE_COUNT;
 };
 
 using LogOptsBasic = ElementPeripheralLogOptsT<LogOpts::INTERPOLATION_AUTO, LogOpts::RANGE_AUTO, LogOpts::REFERENCE_Y>;
@@ -564,6 +585,10 @@ struct ElementPeripheralLogT : public ElementT {
         for (int x = 0; x < ctx.plot_size.width; x+=2) {
             this->buffer.putPixel(x + ctx.plot_size.x, ypos, 1);
         }
+
+        TextureWriterT<> writer(this);
+
+        writer.print_value<typename log_type::value_unit>(Sprites::minifont, yref);
     }
 
     void draw_reference(const PlotContext &ctx) {

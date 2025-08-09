@@ -131,6 +131,13 @@ struct TextureWriterT {
         size.x++;
         printf(Sprites::minifont, "%03i", millis);
     }
+
+    template<typename Base, typename value_type = typename Base::value_type, typename FontProvider, int buflen = 100>
+    void print_value(const FontProvider &font, const value_type &value) {
+        char buf[buflen];
+        Base::template printf<value_type>(buf, buflen, value);
+        text(font, buf);
+    }
 };
 
 }
