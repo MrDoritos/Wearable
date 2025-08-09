@@ -18,6 +18,7 @@
 #include "wbl_func.h"
 #include "config.h"
 #include "display_timeout.h"
+#include "config.h"
 
 namespace wbl {
 namespace UI {
@@ -1550,8 +1551,10 @@ struct ElementRootT : public ElementT {
         int count;
         if constexpr (sizeof...(args) < 1) {
             count = snprintf(debug_log+debug_log_offset, debug_log_length-debug_log_offset, "%s", format);
+            //WBL_D(format);
         } else {
             count = snprintf(debug_log+debug_log_offset, debug_log_length-debug_log_offset, format, args...);
+            //WBL_DF(format, args...);
         }
         if (count > 0)
             debug_log_offset += count;
@@ -1771,6 +1774,7 @@ struct ElementRootT : public ElementT {
     inline void do_flush() {
         //this->buffer.flush();
         this->buffer.async_flush(); 
+        //this->buffer.flush2();
         log_time("FLUSH");
     }
 

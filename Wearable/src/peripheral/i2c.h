@@ -71,11 +71,12 @@ struct I2C {
     uint16_t I2C_TIMEOUT;
     uint32_t I2C_CLOCK;
     uint16_t SCL_WAIT;
+    uint8_t disable_ack_check;
 
     i2c_master_dev_handle_t dev = 0;
 
     constexpr I2C(I2C_BUS &bus, const uint16_t &address, const uint16_t &timeout, const uint32_t &clock, const uint16_t &stretch)
-    :bus(bus),I2C_ADDRESS(address),I2C_TIMEOUT(timeout),I2C_CLOCK(clock),SCL_WAIT(stretch){}
+    :bus(bus),I2C_ADDRESS(address),I2C_TIMEOUT(timeout),I2C_CLOCK(clock),SCL_WAIT(stretch),disable_ack_check(1){}
 
     inline esp_err_t write(const uint8_t *c, const uint8_t n) {
         ESP_RETURN_ON_ERROR(i2c_master_transmit(dev, c, n, I2C_TIMEOUT / portTICK_PERIOD_MS), TAG, "i2c_master_transmit failed");
@@ -160,6 +161,9 @@ struct I2C {
             .device_address = I2C_ADDRESS,
             .scl_speed_hz = I2C_CLOCK,
             .scl_wait_us = SCL_WAIT,
+            .flags = {
+                .disable_ack_check = disable_ack_check,
+            },
         };
 
         ESP_RETURN_ON_ERROR(probe(), TAG, "failed to check device during init");
