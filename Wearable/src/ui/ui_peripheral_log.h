@@ -39,40 +39,41 @@ struct ValueSI {
     using format_type = T_format_type;
 
     static constexpr const char *units[] = {
-        "", "T", "G", "M", "k", "m", "u", "n", "p"
+        "", "T", "G", "M", "k", "", "m", "u", "n", "p"
     };
     
     static constexpr const float scales[] = {
-        1, 1e12, 1e9, 1e6, 1e3, 1e-3, 1e-6, 1e-9, 1e-12
+        1, 1e12, 1e9, 1e6, 1e3, 1, 1e-3, 1e-6, 1e-9, 1e-12
     };
 
     template<typename T = value_type>
     static constexpr inline int get_n(const T &v) {
-        for (int i = 0; i < sizeof(scales)/sizeof(scales[0]); i++)
-            if (v > scales[i])
+        const T vv = v < 0 ? -v : v;
+        for (int i = 1; i < sizeof(Base::scales)/sizeof(Base::scales[0]); i++)
+            if (vv > Base::scales[i])
                 return i;
         return 0;
     }
 
     static constexpr inline const char *unit() { return ""; }
 
-    static constexpr inline const char *format() { return "%f%s%s"; }
+    static constexpr inline const char *format() { return "%.1f%s%s"; }
 
     template<typename IType = value_type>
     static constexpr inline const char *prefix(const IType &v) {
-        return units[get_n<IType>(v)];
+        return Base::units[Base::template get_n<IType>(v)];
     }
 
     static constexpr inline float prescale() { return 1.0; }
 
     template<typename RType = value_type, typename IType = value_type>
     static constexpr inline RType scale(const IType &value) {
-        return RType(value * (1.0/scales[get_n<IType>(value)]));
+        return RType(RType(value) * (1.0/Base::scales[Base::template get_n<IType>(value)]));
     }
 
     template<typename IType = value_type>
     static inline int printf(char *buffer, int maxlen, const IType &v) {
-        const format_type prescaled = Base::prescale() * v;
+        const format_type prescaled = Base::prescale() * format_type(v);
         const format_type scaled = Base::template scale<format_type, format_type>(prescaled);
         return snprintf(buffer, maxlen, Base::format(), scaled, Base::prefix(prescaled), Base::unit());
     }
@@ -124,6 +125,20 @@ using Voltage = SIBase<unit_voltage, format_float, 1000>;
 using Gs = SIBase<unit_Gs, format_float>;
 using Rads = SIBase<unit_Rads, format_float>;
 using Degs = SIBase<unit_Degs, format_float>;
+
+template<typename value_type = float, typename format_type = float>
+struct SIByteT : public ValueSI<SIByteT<value_type, format_type>, value_type, format_type> {
+    static constexpr inline const char *unit() { return "iB"; }
+    
+    static constexpr const float scales[] = {
+        1.0f, 1024.0f*1024.0f*1024.0f*1024.0f, 1024.0f*1024.0f*1024.0f, 1024.0f*1024.0f, 1024.0f
+    };
+};
+
+
+using SIByte = SIByteT<>;
+char unit_B[] = "B";
+using Byte = SIBase<unit_B, format_float, 1, float, float>;
 
 }
 
