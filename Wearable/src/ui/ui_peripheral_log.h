@@ -103,9 +103,15 @@ struct SIBase : public ValueSI<SIBase<s_unitT, s_formatT, base_divT, valueT, for
 char unit_none[] = "";
 char format_float[] = "%.1f%s%s";
 char unit_voltage[] = "V";
+char unit_Gs[] = "g";
+char unit_Rads[] = "rads";
+char unit_Degs[] = "d/s";
 
 using ValueBase = SIBase<unit_none, format_float>;
 using Voltage = SIBase<unit_voltage, format_float, 1000>;
+using Gs = SIBase<unit_Gs, format_float>;
+using Rads = SIBase<unit_Rads, format_float>;
+using Degs = SIBase<unit_Degs, format_float>;
 
 }
 
@@ -473,7 +479,7 @@ struct ElementPeripheralLogOptsT {
     static constexpr bool draw_range_y = plot_display & LogOpts::RANGE_Y;
 };
 
-using LogOptsBasic = ElementPeripheralLogOptsT<LogOpts::INTERPOLATION_AUTO, LogOpts::RANGE_AUTO, LogOpts::REFERENCE_Y | LogOpts::RANGE_Y>;
+using LogOptsBasic = ElementPeripheralLogOptsT<LogOpts::INTERPOLATION_AUTO, LogOpts::RANGE_AUTO, LogOpts::REFERENCE_Y | LogOpts::RANGE_Y | LogOpts::LABEL_OUTSIDE>;
 
 template<typename Buffer, typename LogField, typename ElementT = ElementBaseT<Buffer>, typename LogOpts = LogOptsBasic> 
 struct ElementPeripheralLogT : public ElementT {

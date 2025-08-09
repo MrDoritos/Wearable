@@ -124,6 +124,40 @@ struct TextureWriterT {
         }
     }
 
+    template<typename Callback>
+    void text_callback(const char *txt, Callback callback) {
+        const int length = strlen(txt);
+
+        for (int i = 0; i < length; i++) {
+            const char &ch = txt[i];
+
+            if (ch == '\n') {
+                add_break();
+                continue;
+            }
+
+            callback(ch);
+        }
+    }
+
+    template<typename FontProvider>
+    void subscript(const FontProvider &font, const char *txt) {
+        text_callback(
+        txt, 
+        [&](const char &ch) {
+            const auto &gl = font.getCharacter(ch);
+            const Length glyph_size(
+                gl.font_width + gl.advance_x,
+                gl.font_height + gl.advance_y
+            );
+            Origin pos;
+            if (!add_length(glyph_size, pos))
+                return;
+            pos.y += (size.height - (glyph_size.height * 0.5));
+            ref.buffer.putSprite(gl, pos);
+        });
+    }
+
     template<typename FontProvider>
     void print_timer_time(const FontProvider &font, const int64_t &time, const int64_t &div = 1000) {
         int64_t t_millis = time / div;

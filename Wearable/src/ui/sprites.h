@@ -96,6 +96,43 @@ static constexpr const AtlasFontSprite GLYPHS_ALPHA_3x5[] = {
     FT35(171,0), // Z
 };
 
+#define F35Baseline 35
+#define F35(x) FT35(x, F35Baseline)
+#define F35W(x, w, h) FT(x, F35Baseline, w, h)
+
+static constexpr const AtlasFontSprite GLYPHS_ALPHA_LOWER_3x5[] = {
+    F35(71), // a
+    F35(75), // b
+    F35W(79, 2, 5), // c
+    F35(83), // d
+    F35(87), // e
+    F35W(91, 2, 5), // f
+    F35(95), // g
+    F35(99), // h
+    F35W(103, 1, 5), // i
+    F35W(107, 2, 5), // j
+    F35(111), // k
+    F35W(115, 2, 5), // l
+    F35W(119, 5, 5), // m
+    F35(125), // n
+    F35(129), // o
+    F35(133), // p
+    F35(137), // q
+    F35W(141, 2, 5), // r
+    F35W(145, 2, 5), // s
+    F35(149), // t
+    F35(153), // u
+    F35(157), // v
+    F35W(161, 5, 5), // w
+    F35(167), // x
+    F35(171), // y
+    F35W(175, 2, 5), // z
+};
+
+#undef F35Baseline
+#undef F35
+#undef F35W
+
 static constexpr const AtlasFontSprite GLYPHS_SPECIAL_3x5[] = {
     //FT35(0,5), // %
     FT35(191,0), // SPACE
@@ -191,7 +228,7 @@ struct MinifontProvider : public TextureT<FramebufferT<Memorybuffer<const pixel>
         if (character >= '0' && character <= '9')
             return convSrc(GLYPHS_NUM_3x5[character-'0']);
         if (character >= 'a' && character <= 'z')
-            return convSrc(GLYPHS_ALPHA_3x5[character-'a']);
+            return convSrc(GLYPHS_ALPHA_LOWER_3x5[character-'a']);
         if (character >= 'A' && character <= 'Z')
             return convSrc(GLYPHS_ALPHA_3x5[character-'A']);
         if (character >= ' ' && character <= '/')
