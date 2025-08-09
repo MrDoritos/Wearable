@@ -24,7 +24,9 @@ struct ElementIMUT : public ElementT {
                     DLIMUST,
                     float,
                     N,
-                    ValueUnit
+                    ValueUnit,
+                    ValueBases::TimeMicro,
+                    LogOpts::Small
                 >
             >
     struct ElementIMUInfoT : public _ElementT {
@@ -34,6 +36,9 @@ struct ElementIMUT : public ElementT {
         const char *field_name;
         const char *field_sub;
         PeripheralT log;
+
+        using value_unit = typename PeripheralT::value_unit;
+        using time_unit = typename PeripheralT::time_unit;
 
         constexpr ElementIMUInfoT(Buffer &buffer, const char *field_name, const char *field_sub):
                 _ElementT(buffer, field_name),
@@ -53,7 +58,7 @@ struct ElementIMUT : public ElementT {
                 .display{INLINE},
                 .width{36},
                 .height{17},
-                .margin{0,0,0,36},
+                .margin{0,0,0,32},
             };
 
             log << log_style;
@@ -74,7 +79,16 @@ struct ElementIMUT : public ElementT {
             writer.size.x = log.getRight()+1;
 
             //writer.printf(Sprites::font, "% .3lf", log.get_value(-1));
-            writer.template print_value<typename PeripheralT::value_unit>(Sprites::font, log.get_value(-1));
+            const int buflen = 20;
+            char buffer[buflen];
+            //writer.template print_value<typename PeripheralT::value_unit>(Sprites::font, log.get_value(-1));
+            const float val = log.get_value(-1);
+            value_unit::print_value(buffer, buflen, val);
+            writer.text(Sprites::font, buffer);
+            value_unit::print_unit(buffer, buflen, val);
+            writer.size.x++;
+            writer.subscript(Sprites::minifont, buffer);
+
         }
 
         void on_tick(Event *event) override {

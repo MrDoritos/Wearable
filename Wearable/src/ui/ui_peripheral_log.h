@@ -76,6 +76,18 @@ struct ValueSI {
         const format_type scaled = Base::template scale<format_type, format_type>(prescaled);
         return snprintf(buffer, maxlen, Base::format(), scaled, Base::prefix(prescaled), Base::unit());
     }
+
+    template<typename IType = value_type>
+    static inline int print_value(char *buffer, const int &maxlen, const IType &v) {
+        const format_type scaled = Base::template scale<format_type, format_type>(Base::prescale() * v);
+        return snprintf(buffer, maxlen, Base::format(), scaled, "", "");
+    }
+
+    template<typename IType = value_type>
+    static inline int print_unit(char *buffer, const int &maxlen, const IType &v) {
+        const format_type prescaled = Base::prescale() * v;
+        return snprintf(buffer, maxlen, "%s%s", Base::prefix(prescaled), Base::unit());
+    }
 };
     
 template<int64_t base_scale = 1, typename valueT = int64_t, typename formatT = float>
@@ -421,32 +433,34 @@ struct LogField : public Derived {
 };
 
 namespace LogOpts {
-    enum Interpolation : uint8_t {
-        INTERPOLATION_AUTO=0,
-        ALWAYS=1,
-        NEVER=2,
-    };
-    enum Range : uint8_t {
-        RANGE_AUTO=0,
-        MIRROR=1,
-        REFERENCE_VALUE=2,
-        REFERENCE_MIDPOINT=4,
-    };
-    enum Display : uint16_t {
-        DISPLAY_NONE=0,
-        LABEL_X=1,
-        LABEL_Y=2,
-        REFERENCE_X=4,
-        REFERENCE_Y=8,
-        MIN_X=16,
-        MIN_Y=32,
-        MAX_X=64,
-        MAX_Y=128,
-        SAMPLE_COUNT=256,
-        RANGE_X=512,
-        RANGE_Y=1024,
-        LABEL_OUTSIDE=2048,
-    };
+
+enum Interpolation : uint8_t {
+    INTERPOLATION_AUTO=0,
+    ALWAYS=1,
+    NEVER=2,
+};
+
+enum Range : uint8_t {
+    RANGE_AUTO=0,
+    MIRROR=1,
+    REFERENCE_VALUE=2,
+    REFERENCE_MIDPOINT=4,
+};
+
+enum Display : uint16_t {
+    DISPLAY_NONE=0,
+    LABEL_X=1,
+    LABEL_Y=2,
+    REFERENCE_X=4,
+    REFERENCE_Y=8,
+    MIN_X=16,
+    MIN_Y=32,
+    MAX_X=64,
+    MAX_Y=128,
+    SAMPLE_COUNT=256,
+    RANGE_X=512,
+    RANGE_Y=1024,
+    LABEL_OUTSIDE=2048,
 };
 
 template<
@@ -454,10 +468,11 @@ template<
     LogOpts::Range ValueRange,
     LogOpts::Display PlotDisplay
 >
-struct ElementPeripheralLogOptsT {
+struct Opts {
     static constexpr LogOpts::Interpolation value_interpolation = ValueInterpolation;
     static constexpr bool auto_interp = value_interpolation == 0;
-    static constexpr bool use_interp = (value_interpolation & LogOpts::ALWAYS) || auto_interp;
+    static constexpr bool always_interp = value_interpolation & LogOpts::ALWAYS;
+    static constexpr bool use_interp = always_interp || auto_interp;
     static constexpr LogOpts::Range value_range = ValueRange;
     static constexpr bool auto_range = value_range == 0;
     static constexpr bool mirror_range = value_range & LogOpts::MIRROR;
@@ -479,9 +494,12 @@ struct ElementPeripheralLogOptsT {
     static constexpr bool draw_range_y = plot_display & LogOpts::RANGE_Y;
 };
 
-using LogOptsBasic = ElementPeripheralLogOptsT<LogOpts::INTERPOLATION_AUTO, LogOpts::RANGE_AUTO, LogOpts::REFERENCE_Y | LogOpts::RANGE_Y | LogOpts::LABEL_OUTSIDE>;
+using Basic = Opts<INTERPOLATION_AUTO, RANGE_AUTO, REFERENCE_Y | RANGE_Y | LABEL_OUTSIDE>;
+using Small = Opts<ALWAYS, RANGE_AUTO, REFERENCE_Y | RANGE_Y | LABEL_OUTSIDE>;
 
-template<typename Buffer, typename LogField, typename ElementT = ElementBaseT<Buffer>, typename LogOpts = LogOptsBasic> 
+}
+
+template<typename Buffer, typename LogField, typename LogOptsT = LogOpts::Basic, typename ElementT = ElementBaseT<Buffer>> 
 struct ElementPeripheralLogT : public ElementT {
     using ElementT::ElementT;
     using ElementT::operator<<;
@@ -490,7 +508,7 @@ struct ElementPeripheralLogT : public ElementT {
     using time_type = typename log_type::time_type;
     using value_type = typename log_type::value_type;
     using point_type = typename log_type::point_type;
-    using log_opts = LogOpts;
+    using log_opts = LogOptsT;
 
     log_type *log = nullptr;
     time_type last_data_time = 0;
@@ -506,15 +524,15 @@ struct ElementPeripheralLogT : public ElementT {
         TextureWriterT<> writer;
 
         constexpr PlotContext(const Size &plot_size,
-                              const time_type &time_min,
-                              const time_type &time_max,
-                              const time_type &time_range,
-                              const value_type &value_min,
-                              const value_type &value_max,
-                              const value_type &value_range,
-                              const float &time_range_inv,
-                              const float &value_range_inv,
-                              TextureWriterT<> &&writer):
+                                const time_type &time_min,
+                                const time_type &time_max,
+                                const time_type &time_range,
+                                const value_type &value_min,
+                                const value_type &value_max,
+                                const value_type &value_range,
+                                const float &time_range_inv,
+                                const float &value_range_inv,
+                                TextureWriterT<> &&writer):
             plot_size(plot_size),
             time_min(time_min),time_max(time_max),time_range(time_range),
             value_min(value_min),value_max(value_max),value_range(value_range),
@@ -667,7 +685,7 @@ struct ElementPeripheralLogT : public ElementT {
         const time_type inc = (float(1.0)/ctx.plot_size.width) * ctx.time_range;//ctx.get_time(1);
         const int len = log->template get_size();
 
-        const bool intrp = len < ctx.plot_size.width;
+        const bool intrp = ((len < ctx.plot_size.width) && log_opts::use_interp) || log_opts::always_interp;
 
         py = ctx.get_y(intrp ? log->template get_value(0) : log->template get_value_average_time<float>(ctx.time_min, ctx.time_min + inc));
 
@@ -677,7 +695,7 @@ struct ElementPeripheralLogT : public ElementT {
         for (uu x = 1; x < ctx.plot_size.width; x++) {
             const time_type time = ctx.get_time(x);
 
-            const float v = len < ctx.plot_size.width ? log->template get_value_interpolate_time<float>(time) : log->template get_value_average_time<float>(pt - inc, time + inc);
+            const float v = intrp ? log->template get_value_interpolate_time<float>(time) : log->template get_value_average_time<float>(pt - inc, time + inc);
             
             const uu y = ctx.template get_y<float>(v);
 
@@ -691,7 +709,7 @@ struct ElementPeripheralLogT : public ElementT {
         }
     }
 };
-
+    
 template<
     typename Buffer, 
     typename DataLog,
@@ -699,6 +717,7 @@ template<
     int N,
     typename ValueUnitT = ValueBases::ValueBase,
     typename TimeUnitT = ValueBases::TimeMicro,
+    typename LogOptsT = LogOpts::Basic,
     typename PointT = typename DataLog::point_type,
     typename LogFieldT = LogField<
         LogFieldProvider<
@@ -712,7 +731,7 @@ template<
             ValueUnitT
         >
     >,
-    typename ElementT = ElementPeripheralLogT<Buffer, LogFieldT>
+    typename ElementT = ElementPeripheralLogT<Buffer, LogFieldT, LogOptsT>
 >
 struct ElementPeripheralLogAutoT : public LogFieldT, public ElementT {
     using ElementT::ElementT;
