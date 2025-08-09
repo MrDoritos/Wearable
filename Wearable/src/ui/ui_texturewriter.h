@@ -28,6 +28,13 @@ struct TextureWriterT {
     constexpr TextureWriterT(ElementT *ref, const Size &boundary):TextureWriterT(*ref,boundary) {}
     constexpr TextureWriterT(ElementT *ref):TextureWriterT(*ref) {}
         
+    inline void setOffsetY(const uu &y) {
+        size.y = y + boundary.y;
+    }
+
+    inline void setOffsetX(const uu &x) {
+        size.x = x + boundary.x;
+    }
 
     inline void add_break() {
         size.y += size.height;

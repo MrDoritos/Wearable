@@ -63,8 +63,8 @@ UI::ElementPeripheralLogAutoT<DisplayTexture, DLMICS6814ST, uint16_t, 0> e_colog
 UI::ElementPeripheralLogAutoT<DisplayTexture, DLMICS6814ST, uint16_t, 1> e_nh3log(display, wbl::log.mics6814_st);
 UI::ElementPeripheralLogAutoT<DisplayTexture, DLMICS6814ST, uint16_t, 2> e_no2log(display, wbl::log.mics6814_st);
 UI::ScreenFooterT<> gasscreen(display, "Gases");
-UI::ElementPeripheralLogAutoT<DisplayTexture, DLBatteryST, uint16_t, 0> e_pbatterylogst(display, wbl::log.battery_st);
-UI::ElementPeripheralLogAutoT<DisplayTexture, DLBatteryLT, uint16_t, 0> e_pbatterylog(display, wbl::log.battery_lt);
+UI::ElementPeripheralLogAutoT<DisplayTexture, DLBatteryST, uint16_t, 0, UI::ValueBases::Voltage> e_pbatterylogst(display, wbl::log.battery_st);
+UI::ElementPeripheralLogAutoT<DisplayTexture, DLBatteryLT, uint16_t, 0, UI::ValueBases::Voltage> e_pbatterylog(display, wbl::log.battery_lt);
 UI::ScreenBaseT<> gpsview("GPS");
 UI::UIGPSLogT<DisplayTexture, DLCAMM8ST> uigpsst(display, wbl::log.camm8_st);
 UI::UIGPSLogT<DisplayTexture, DLCAMM8LT2> uigpslt(display, wbl::log.camm8_lt2);

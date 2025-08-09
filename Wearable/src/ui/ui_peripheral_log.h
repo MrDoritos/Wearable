@@ -106,8 +106,10 @@ struct SIBase : public ValueSI<SIBase<s_unitT, s_formatT, valueT, formatT>, valu
 
 char unit_none[] = "";
 char format_float[] = "%.3f%s%s";
+char unit_voltage[] = "V";
 
 using ValueBase = SIBase<unit_none, format_float>;
+using Voltage = SIBase<unit_voltage, format_float>;
 
 }
 
@@ -493,6 +495,7 @@ struct ElementPeripheralLogT : public ElementT {
         const time_type time_min, time_max, time_range;
         const value_type value_min, value_max, value_range;
         const float time_range_inv, value_range_inv;
+        TextureWriterT<> writer;
 
         constexpr PlotContext(const Size &plot_size,
                               const time_type &time_min,
@@ -502,22 +505,31 @@ struct ElementPeripheralLogT : public ElementT {
                               const value_type &value_max,
                               const value_type &value_range,
                               const float &time_range_inv,
-                              const float &value_range_inv):
+                              const float &value_range_inv,
+                              TextureWriterT<> &&writer):
             plot_size(plot_size),
             time_min(time_min),time_max(time_max),time_range(time_range),
             value_min(value_min),value_max(value_max),value_range(value_range),
-            time_range_inv(time_range_inv),value_range_inv(value_range_inv) {}
-            
+            time_range_inv(time_range_inv),value_range_inv(value_range_inv),
+            writer(writer) {}
+
+        constexpr inline uu get_offset_x(const time_type &time) const {
+            return (uu)((time - time_min) * time_range_inv * plot_size.width);
+        }
 
         constexpr inline uu get_x(const time_type &time) const {
-            const int x = ((time - time_min) * time_range_inv * plot_size.width) + plot_size.x;
-            return (uu)x;
+            return get_offset_x(time) + plot_size.x;
+        }
+
+        template<typename T = value_type>
+        constexpr inline uu get_offset_y(const T &value) const {
+            const int y = plot_size.height - ((value - value_min) * value_range_inv * plot_size.height);
+            return (y > plot_size.height) ? plot_size.height : (y < 0 ? 0 : (uu)y);
         }
 
         template<typename T = value_type>
         constexpr inline uu get_y(const T &value) const {
-            const int y = plot_size.height - ((value - value_min) * value_range_inv * plot_size.height);
-            return ((y > plot_size.height) ? plot_size.height : ((y < 0) ? 0 : (uu)y)) + plot_size.y;
+            return get_offset_y<T>(value) + plot_size.y;
         }
 
         constexpr inline time_type get_time(const uu &x) const {
@@ -536,7 +548,7 @@ struct ElementPeripheralLogT : public ElementT {
         return last_data_time != log->template get_time_max();
     }
 
-    constexpr inline PlotContext get_plot_context() const {
+    inline PlotContext get_plot_context() {
         time_type tmin = 0, tmax = 0, trange = 0;
         value_type vmin = 0, vmax = 0, vrange = 0, vsum;
 
@@ -572,26 +584,27 @@ struct ElementPeripheralLogT : public ElementT {
             tmin, tmax, trange,
             vmin, vmax, vrange,
             (trange > 0) ? 1.0f / float(trange) : 0,
-            (vrange > 0) ? 1.0f / float(vrange) : 0
+            (vrange > 0) ? 1.0f / float(vrange) : 0,
+            TextureWriterT<>(this)
         );
     }
 
-    void draw_reference_y(const PlotContext &ctx) {
+    void draw_reference_y(PlotContext &ctx) {
         value_type yref = ctx.value_range * 0.5 + ctx.value_min;
         if (log_opts::use_reference)
             yref = log_opts::reference_value;
-        const uu ypos = ctx.get_y(yref);
+        const uu ypos = ctx.get_offset_y(yref);
 
         for (int x = 0; x < ctx.plot_size.width; x+=2) {
-            this->buffer.putPixel(x + ctx.plot_size.x, ypos, 1);
+            this->buffer.putPixel(x + ctx.plot_size.x, ypos + ctx.plot_size.y, 1);
         }
 
-        TextureWriterT<> writer(this);
-
-        writer.print_value<typename log_type::value_unit>(Sprites::minifont, yref);
+        const uu ytx = ypos < 5 ? 0 : ypos - 4;
+        ctx.writer.setOffsetY(ytx);
+        ctx.writer.template print_value<typename log_type::value_unit>(Sprites::minifont, yref);
     }
 
-    void draw_reference(const PlotContext &ctx) {
+    void draw_reference(PlotContext &ctx) {
         draw_reference_y(ctx);
     }
 
@@ -607,7 +620,7 @@ struct ElementPeripheralLogT : public ElementT {
 
         this->clear();
 
-        const PlotContext ctx = get_plot_context();
+        PlotContext ctx = get_plot_context();
 
         if (ctx.time_range == 0 || ctx.value_range == 0)
             return;
@@ -648,7 +661,9 @@ template<
     typename Buffer, 
     typename DataLog,
     typename ValueT,
-    int N, 
+    int N,
+    typename ValueUnitT = ValueBases::ValueBase,
+    typename TimeUnitT = ValueBases::TimeMicro,
     typename PointT = typename DataLog::point_type,
     typename LogFieldT = LogField<
         LogFieldProvider<
@@ -657,7 +672,9 @@ template<
                 PointT,
                 ValueT,
                 N
-            >
+            >,
+            TimeUnitT,
+            ValueUnitT
         >
     >,
     typename ElementT = ElementPeripheralLogT<Buffer, LogFieldT>
