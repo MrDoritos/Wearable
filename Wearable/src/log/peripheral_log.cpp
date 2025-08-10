@@ -221,7 +221,7 @@ bool update_gpsimu() {
     if (LOG_IMU_ST_RATE * 1000 + log.imu_st.get_data_end_time() < t) {
         AxisData acc = gpsimu.getAccelerometer(), gyro = gpsimu.getGyroscope();
         DPIMU p(t, acc.x, acc.y, acc.z, gyro.x, gyro.y, gyro.z);
-        WBL_D("Push IMU ST");
+        //WBL_D("Push IMU ST");
         log.imu_st.push_back(p);
         //return true;
     }
@@ -230,11 +230,11 @@ bool update_gpsimu() {
 }
 
 bool update_vbat() {
-    int64_t t = micros();
+    int64_t t = timestamp_micros();
     uint16_t bv = wbl_system.getBatteryMillivolts();
     
     if (LOG_BATTERY_ST_RATE * 1000 + log.battery_st.get_data_end_time() < t)
-        log.battery_st.push_back(micros(), bv);
+        log.battery_st.push_back(t, bv);
     
     if (log.battery_st.size() < 2)
         return true;
@@ -256,19 +256,28 @@ bool update_ltr390() {
     const int64_t half_rate = LOG_LTR390_ST_RATE * 500;
     const int64_t last = log.ltr390_st.get_data_end_time();
     static DVLTR390ST st_p(0,0,0,0);
+    static uint8_t als = 0, uvs = 0;
 
     if (half_rate * 2 + last < t) {
         WBL_D("Push LTR390 ST");
         log.ltr390_st.push_back(DPLTR390ST(t, st_p));
+        als = 0;
+        uvs = 0;
     }
 
     if (half_rate + last < t) {
-        st_p.als = ltr390.getALS();
-        st_p.lux = ltr390.getLux(st_p.als);
+        if (als < 2) {
+            st_p.als = ltr390.getALS();
+            st_p.lux = ltr390.getLux(st_p.als);
+            als++;
+        }
         //WBL_DF("ALS LTR390 %lu\n", st_p.als);
     } else {
-        st_p.uvs = ltr390.getUVS();
-        st_p.uvi = ltr390.getUVIhr(st_p.uvs);
+        if (uvs < 2) {
+            st_p.uvs = ltr390.getUVS();
+            st_p.uvi = ltr390.getUVIhr(st_p.uvs);
+            uvs++;
+        }
         //WBL_DF("UVS LTR390 %lu\n", st_p.uvs);
     }
 
@@ -321,12 +330,32 @@ bool update_mics6814() {
     return true;
 }
 
+//#define PL_TIME
+#ifdef PL_TIME
+#define PT_TIME(x) (x = micros() - t; t = micros())
+#else
+#define PT_TIME(x)
+#endif
+
 esp_err_t PeripheralLog::update() {
+    #ifdef PL_TIME
+    int64_t t = micros(), a, b, c, d, e;
+    #endif
+
     update_vbat();
+    PT_TIME(a);
     update_camm8();
+    PT_TIME(b);
     update_gpsimu();
-    update_ltr390();
-    update_mics6814();
+    PT_TIME(c);
+    update_ltr390(); 
+    PT_TIME(d);
+    update_mics6814(); 
+    PT_TIME(e);
+
+    #ifdef PL_TIME
+    WBL_DF("vbat %lli, camm8 %lli, gpsimu %lli, ltr390 %lli, mics %lli\n", a, b, c, d, e);
+    #endif
 
     return ESP_OK;
 }
