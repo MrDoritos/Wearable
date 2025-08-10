@@ -86,6 +86,8 @@ void demo() {
 
     displayTimeout.update(has_input);
 
+    wbl_system.update();
+
     uiroot.step();
 
     static int cnt = 0;
@@ -98,11 +100,9 @@ void demo() {
         wbl_system.setDisplayBrightness(stp.lux);
     }
 
-    if (cnt % 200 == 0) {
-        uibattery.set_battery_level((uint8_t)wbl_system.getBatteryLevel());
-    }
-
-    wbl_system.update();
+    //if (cnt % 200 == 0) {
+    //    uibattery.set_battery_level((uint8_t)wbl_system.getBatteryLevel());
+    //}
 
     #ifdef __linux__
     delay(30);

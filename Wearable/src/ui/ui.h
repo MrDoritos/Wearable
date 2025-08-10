@@ -1863,6 +1863,7 @@ struct ElementRootT : public ElementT {
             debug_details %= 5;
             debug = debug_details > 1;
             layout_dirty = true;
+            active_step = 0;
         }
         #endif
 
@@ -1910,6 +1911,8 @@ struct ElementRootT : public ElementT {
             active_screen->dispatch(EventTypes::SCREEN, EventValues::HIDDEN, EventDirection::RDEPTH);
             this->remove_child(active_screen);
         }
+        
+        active_step = 0;
 
         this->clear();
 
@@ -1956,31 +1959,55 @@ struct ElementBatteryT : public ElementT {
     ub current_level = 50;
     ub last_draw_level = 101;
     Sprites::Atlas::Sprite battery_sprite = Sprites::BATTERY_5x10_PAD;
+    int64_t last_bat_set = 0;
 
     void set_battery_level(const ub &level) {
         this->current_level = level;
     }
 
     inline void update() {
+        if (10000000 + last_bat_set < micros()) {
+            set_battery_level((uint8_t)wbl_system.getBatteryLevel());
+            last_bat_set = micros();
+        }
+    }
+
+    inline bool is_stale() {
+        return last_draw_level != current_level;
+    }
+
+    inline void print_level() {
         snprintf(buf, buflen, "%i%% ", current_level);
     }
 
     void on_content_size(Event *event) override {
-        this->update();
+        if (!is_stale())
+            return;
         Length size = this->getSpritesContentSize(&battery_sprite, 1) + this->getTextContentSize((const char*)buf, Sprites::font);
         size.height = 12;
         this->set_content_size(size);
     }
 
     //void on_clear(Event *event) override { }
+    void on_tick(Event *event) override {
+        this->update();
+        if (is_stale())
+            print_level();
+    }
 
     void on_draw(Event *event) override {
-        if (last_draw_level == current_level && !(event->value & Event::REDRAW))
-            return;
+        if (!(event->value & Event::REDRAW))
+            if (!is_stale())
+                return;
+
+        if (event->value & Event::REDRAW) {
+            this->update();
+            print_level();
+        }
+
         last_draw_level = current_level;
 
         this->clear();
-        this->update();
         Origin pos = *this;
         this->draw_multi({}, battery_sprite, (const char*)buf);
         const ub sheight = battery_sprite.getHeight();
