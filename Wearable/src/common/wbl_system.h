@@ -25,6 +25,7 @@ struct wbl_System {
     void setDisplayRotation(const uint8_t &rotation);
     esp_err_t acquirePMLock();
     esp_err_t releasePMLock();
+    bool isPMLocked();
     uint32_t getCPUFreq();
     uint32_t testCPUFreq();
     esp_err_t displayFlush();

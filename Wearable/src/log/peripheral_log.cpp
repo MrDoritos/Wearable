@@ -360,8 +360,89 @@ esp_err_t PeripheralLog::update() {
     return ESP_OK;
 }
 
+template<typename LOG>
+constexpr inline int64_t calc_time(const int64_t &t, const LOG &dl, const int64_t rate_ms) {
+    if (dl.size() < 1)
+        return rate_ms * 1000;
+    int64_t ret;
+    ret = (rate_ms * 1000 + dl.get_data_end_time()) - t;
+    //WBL_DF("time: %lli, last: %lli, ret: %lli, rate: %lli\n", t, dl.get_data_end_time(), ret, rate_ms * 1000);
+    return ret < 0 ? 0 : ret;
+}
+
+constexpr inline int64_t tmin(const int64_t &a, const int64_t &b) {
+    return a > b ? b : a;
+}
+
+inline int64_t time_till_camm8(const int64_t &t) {
+    int64_t st, lt, lt2, odo;
+    st = calc_time(t, log.camm8_st, LOG_CAMM8_ST_RATE);
+    lt = calc_time(t, log.camm8_lt, LOG_CAMM8_LT_RATE);
+    lt2 = calc_time(t, log.camm8_lt2, LOG_CAMM8_LT2_RATE);
+    odo = calc_time(t, log.camm8_odo_st, LOG_CAMM8_ODO_ST_RATE);
+    return tmin(st, tmin(lt, tmin(lt2, odo)));
+}
+
+inline int64_t time_till_gpsimu(const int64_t &t) {
+    int64_t st, ped;
+    st = calc_time(t, log.imu_st, LOG_IMU_ST_RATE);
+    ped = calc_time(t, log.ped_st, LOG_IMU_PED_ST_RATE);
+    return tmin(st, ped);
+}
+
+inline int64_t time_till_vbat(const int64_t &t) {
+    int64_t st, lt;
+    st = calc_time(t, log.battery_st, LOG_BATTERY_ST_RATE);
+    lt = calc_time(t, log.battery_lt, LOG_BATTERY_LT_RATE);
+    return tmin(st, lt);
+}
+
+inline int64_t time_till_ltr390(const int64_t &t) {
+    int64_t st, lt;
+    st = calc_time(t, log.ltr390_st, LOG_LTR390_ST_RATE);
+    lt = calc_time(t, log.ltr390_lt, LOG_LTR390_LT_RATE);
+    return tmin(st, lt);
+}
+
+inline int64_t time_till_mics6814(const int64_t &t) {
+    int64_t st, lt;
+    st = calc_time(t, log.mics6814_st, LOG_MICS6814_ST_RATE);
+    lt = calc_time(t, log.mics6814_lt, LOG_MICS6814_LT_RATE);
+    return tmin(st, lt);
+}
+
 int64_t PeripheralLog::getNextPollTime() {
-    return 0;
+    const int64_t t = timestamp_micros();
+    int64_t cam, imu, bat, ltr, mic;
+    cam = time_till_camm8(t);
+    imu = time_till_gpsimu(t);
+    bat = time_till_vbat(t);
+    ltr = time_till_ltr390(t);
+    mic = time_till_mics6814(t);
+    return tmin(cam, tmin(imu, tmin(bat, tmin(ltr, mic))));
+}
+
+int64_t leap = 0;
+int64_t sleep_tot = 0;
+
+void PeripheralLog::sleepTillNextPoll() {
+    const int64_t dur = getNextPollTime();
+    if (dur == 0)
+        return;
+
+    const int64_t ms = dur / 1000;
+    if (ms == 0)
+        return;
+
+    if (leap + 1000000 < timestamp_micros()) {
+        WBL_DF("Sleep %llims over %llims %lli %luhz\n", sleep_tot, (timestamp_micros() - leap) / 1000, timestamp_micros(), wbl_system.testCPUFreq());
+        leap = timestamp_micros();
+        sleep_tot = 0;
+    }
+    sleep_tot += ms;
+
+    //WBL_DF("Sleep %llims\n", ms);
+    delay(ms);
 }
 
 }

@@ -286,6 +286,7 @@ struct PeripheralLog {
     esp_err_t init();
     esp_err_t update();
     int64_t getNextPollTime();
+    void sleepTillNextPoll();
 
     DLBatteryST battery_st;
     DLBatteryLT battery_lt;

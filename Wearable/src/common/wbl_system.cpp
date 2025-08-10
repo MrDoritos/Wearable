@@ -146,6 +146,10 @@ esp_err_t wbl_System::releasePMLock() {
     return ESP_OK;
 }
 
+bool wbl_System::isPMLocked() {
+    return pm_lock_acquired;
+}
+
 uint32_t wbl_System::getCPUFreq() {
     uint32_t ret = 0;
     ESP_ERROR_CHECK(esp_clk_tree_src_get_freq_hz(SOC_MOD_CLK_CPU, ESP_CLK_TREE_SRC_FREQ_PRECISION_EXACT, &ret));

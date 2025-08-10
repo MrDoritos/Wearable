@@ -100,9 +100,8 @@ void demo() {
         wbl_system.setDisplayBrightness(stp.lux);
     }
 
-    //if (cnt % 200 == 0) {
-    //    uibattery.set_battery_level((uint8_t)wbl_system.getBatteryLevel());
-    //}
+    if (displayTimeout.is_display_off())
+        wbl::log.sleepTillNextPoll();
 
     #ifdef __linux__
     delay(30);
@@ -295,7 +294,8 @@ void app_main() {
         printf("Failed to initialize system\n");
         goto end;
     }
-    wbl_system.acquirePMLock();
+    //wbl_system.acquirePMLock();
+    //wbl_system.releasePMLock();
     puts("Initialized system");
     if (mics6814.init() != ESP_OK) {
         printf("Failed to initialize mics6814\n");
