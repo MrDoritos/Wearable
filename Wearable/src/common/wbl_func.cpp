@@ -8,13 +8,15 @@ int64_t micros() {
 }
 
 int64_t millis() {
-    struct timeval tv;
-    gettimeofday(&tv, nullptr);
-    return (tv.tv_sec * 1000LL + (tv.tv_usec / 1000LL));
+    //struct timeval tv;
+    //gettimeofday(&tv, nullptr);
+    //return (tv.tv_sec * 1000LL + (tv.tv_usec / 1000LL));
+    return micros() / 1000;
 }
 
 int64_t seconds() {
-    return time(nullptr);
+    //return time(nullptr);
+    return micros() / 1000000;
 }
 
 int64_t timestamp_seconds() {

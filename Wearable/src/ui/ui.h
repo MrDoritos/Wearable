@@ -1354,7 +1354,7 @@ struct ScreenClockT : public ElementT {
     void on_draw(Event *event) override {
         using calc = float;
 
-        const int64_t now = use_milliseconds ? millis() : seconds();    
+        const int64_t now = use_milliseconds ? timestamp_millis() : timestamp_seconds();    
     
         if (now == prev_draw_time)
             return;
@@ -1911,7 +1911,7 @@ struct ElementRootT : public ElementT {
             active_screen->dispatch(EventTypes::SCREEN, EventValues::HIDDEN, EventDirection::RDEPTH);
             this->remove_child(active_screen);
         }
-        
+
         active_step = 0;
 
         this->clear();

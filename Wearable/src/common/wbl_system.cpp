@@ -64,7 +64,7 @@ extern "C" {
 }
 
 void start_flush_task() {
-    if (flush_task_handle)
+    if (flush_task_handle != nullptr)
         return;
 
     xTaskCreatePinnedToCore(
@@ -83,6 +83,7 @@ void stop_flush_task() {
         return;
 
     vTaskDelete(flush_task_handle);
+    flush_task_handle = nullptr;
 }
 
 static void pwm_timer_callback(void *arg) {
