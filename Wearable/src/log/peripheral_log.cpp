@@ -442,7 +442,7 @@ void PeripheralLog::sleepTillNextPoll() {
     sleep_tot += ms;
 
     //WBL_DF("Sleep %llims\n", ms);
-    delay(ms);
+    delay_sleep(ms);
 }
 
 }

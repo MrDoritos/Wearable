@@ -93,11 +93,13 @@ void demo() {
     static int cnt = 0;
     int64_t t = micros();
     if (cnt++ % 4 == 0) {
-        DPLTR390ST stp = wbl::log.ltr390_st.get(-1);
-        e_squarelog.push_back(t, stp.uvi*10.0f);
-        e_sinelog.push_back(t, stp.lux);
+        if (wbl::log.ltr390_st.size() > 0) {
+            DPLTR390ST stp = wbl::log.ltr390_st.get(-1);
+            e_squarelog.push_back(t, stp.uvi*10.0f);
+            e_sinelog.push_back(t, stp.lux);
+            wbl_system.setDisplayBrightness(stp.lux);
+        }
         e_sawlog.push_back(t, (uu)(int(t/5000)%1000));
-        wbl_system.setDisplayBrightness(stp.lux);
     }
 
     if (displayTimeout.is_display_off())
@@ -341,8 +343,8 @@ void app_main() {
         WBL_D("Display clear");
         wbl_system.setDisplayRotation(DISPLAY_ROTATION);
         WBL_D("Display rotation");
-        gps.update();
-        gps.setSystemTime();
+        //gps.update();
+        //gps.setSystemTime();
         displayTimeout.update(true);
         while (1) {
             demo();
