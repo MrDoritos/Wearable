@@ -1,6 +1,6 @@
 <?xml version="1.0" standalone="no"?>
 <mlt LC_NUMERIC="C" version="7.33.0" title="Shotcut version 25.07.26" producer="main_bin">
-  <profile description="HD 1080p 25 fps" width="1920" height="1080" progressive="1" sample_aspect_num="1" sample_aspect_den="1" display_aspect_num="16" display_aspect_den="9" frame_rate_num="60" frame_rate_den="1" colorspace="709"/>
+  <profile description="HD 1080p 25 fps" width="1920" height="1080" progressive="1" sample_aspect_num="1" sample_aspect_den="1" display_aspect_num="16" display_aspect_den="9" frame_rate_num="60" frame_rate_den="1" colorspace="2020"/>
   <chain id="chain0" out="00:02:16.350">
     <property name="length">00:02:16.367</property>
     <property name="eof">pause</property>
@@ -1059,6 +1059,27 @@
     <property name="meta.media.variable_frame_rate">1</property>
     <property name="meta.media.top_field_first">0</property>
     <property name="meta.media.progressive">1</property>
+    <filter id="filter0" in="00:00:31.767" out="00:00:48.567">
+      <property name="version">0.4</property>
+      <property name="mlt_service">frei0r.levels</property>
+      <property name="threads">0</property>
+      <property name="0">0.3</property>
+      <property name="1">0</property>
+      <property name="2">1</property>
+      <property name="3">0.1675</property>
+      <property name="4">0</property>
+      <property name="5">0.988235</property>
+      <property name="6">0</property>
+      <property name="7">0.3</property>
+      <property name="disable">0</property>
+    </filter>
+    <filter id="filter1" in="00:00:31.767" out="00:00:48.567">
+      <property name="mlt_service">avfilter.hue</property>
+      <property name="av.h">0</property>
+      <property name="av.b">0.8</property>
+      <property name="av.s">1.62</property>
+      <property name="disable">0</property>
+    </filter>
   </chain>
   <chain id="chain30" out="00:00:59.783">
     <property name="length">00:00:59.800</property>
@@ -1196,6 +1217,25 @@
     <property name="meta.media.top_field_first">0</property>
     <property name="meta.media.progressive">1</property>
     <property name="shotcut:caption">IMG_2865.mov</property>
+    <filter id="filter2" in="00:00:15.000" out="00:00:52.183">
+      <property name="version">0.4</property>
+      <property name="mlt_service">frei0r.levels</property>
+      <property name="threads">0</property>
+      <property name="0">0.3</property>
+      <property name="1">0</property>
+      <property name="2">1</property>
+      <property name="3">0.1675</property>
+      <property name="4">0</property>
+      <property name="5">0.988235</property>
+      <property name="6">0</property>
+      <property name="7">0.3</property>
+    </filter>
+    <filter id="filter3" in="00:00:15.000" out="00:00:52.183">
+      <property name="mlt_service">avfilter.hue</property>
+      <property name="av.h">0</property>
+      <property name="av.b">0.8</property>
+      <property name="av.s">1.62</property>
+    </filter>
   </chain>
   <tractor id="tractor0" in="00:00:00.000" out="00:00:00.267">
     <property name="shotcut:transition">lumaMix</property>
@@ -1284,6 +1324,25 @@
     <property name="meta.media.top_field_first">0</property>
     <property name="meta.media.progressive">1</property>
     <property name="shotcut:caption">IMG_2867.mov</property>
+    <filter id="filter4" in="00:00:12.233" out="00:00:13.533">
+      <property name="version">0.4</property>
+      <property name="mlt_service">frei0r.levels</property>
+      <property name="threads">0</property>
+      <property name="0">0.3</property>
+      <property name="1">0</property>
+      <property name="2">1</property>
+      <property name="3">0.1675</property>
+      <property name="4">0</property>
+      <property name="5">0.988235</property>
+      <property name="6">0</property>
+      <property name="7">0.3</property>
+    </filter>
+    <filter id="filter5" in="00:00:12.233" out="00:00:13.533">
+      <property name="mlt_service">avfilter.hue</property>
+      <property name="av.h">0</property>
+      <property name="av.b">0.8</property>
+      <property name="av.s">1.62</property>
+    </filter>
   </chain>
   <chain id="chain15" out="00:01:25.950">
     <property name="length">00:01:25.967</property>
@@ -1354,6 +1413,25 @@
     <property name="meta.media.variable_frame_rate">1</property>
     <property name="meta.media.top_field_first">0</property>
     <property name="meta.media.progressive">1</property>
+    <filter id="filter6" in="00:00:13.550" out="00:01:18.083">
+      <property name="version">0.4</property>
+      <property name="mlt_service">frei0r.levels</property>
+      <property name="threads">0</property>
+      <property name="0">0.3</property>
+      <property name="1">0</property>
+      <property name="2">1</property>
+      <property name="3">0.1675</property>
+      <property name="4">0</property>
+      <property name="5">0.988235</property>
+      <property name="6">0</property>
+      <property name="7">0.3</property>
+    </filter>
+    <filter id="filter7" in="00:00:13.550" out="00:01:18.083">
+      <property name="mlt_service">avfilter.hue</property>
+      <property name="av.h">0</property>
+      <property name="av.b">0.8</property>
+      <property name="av.s">1.62</property>
+    </filter>
   </chain>
   <chain id="chain18" out="00:01:22.250">
     <property name="length">00:01:22.267</property>
@@ -1422,6 +1500,25 @@
     <property name="meta.media.top_field_first">0</property>
     <property name="meta.media.progressive">1</property>
     <property name="shotcut:caption">IMG_2847.MOV</property>
+    <filter id="filter8" in="00:00:22.983" out="00:00:46.483">
+      <property name="version">0.4</property>
+      <property name="mlt_service">frei0r.levels</property>
+      <property name="threads">0</property>
+      <property name="0">0.3</property>
+      <property name="1">0</property>
+      <property name="2">1</property>
+      <property name="3">0.1675</property>
+      <property name="4">0</property>
+      <property name="5">0.988235</property>
+      <property name="6">0</property>
+      <property name="7">0.3</property>
+    </filter>
+    <filter id="filter9" in="00:00:22.983" out="00:00:46.483">
+      <property name="mlt_service">avfilter.hue</property>
+      <property name="av.h">0</property>
+      <property name="av.b">0.8</property>
+      <property name="av.s">1.62</property>
+    </filter>
   </chain>
   <tractor id="tractor1" in="00:00:00.000" out="00:00:00.317">
     <property name="shotcut:transition">lumaMix</property>
@@ -1512,6 +1609,25 @@
     <property name="meta.media.variable_frame_rate">1</property>
     <property name="meta.media.top_field_first">0</property>
     <property name="meta.media.progressive">1</property>
+    <filter id="filter10" in="00:00:00.100" out="00:00:13.150">
+      <property name="version">0.4</property>
+      <property name="mlt_service">frei0r.levels</property>
+      <property name="threads">0</property>
+      <property name="0">0.3</property>
+      <property name="1">0</property>
+      <property name="2">1</property>
+      <property name="3">0.1675</property>
+      <property name="4">0</property>
+      <property name="5">0.988235</property>
+      <property name="6">0</property>
+      <property name="7">0.3</property>
+    </filter>
+    <filter id="filter11" in="00:00:00.100" out="00:00:13.150">
+      <property name="mlt_service">avfilter.hue</property>
+      <property name="av.h">0</property>
+      <property name="av.b">0.8</property>
+      <property name="av.s">1.62</property>
+    </filter>
   </chain>
   <tractor id="tractor2" in="00:00:00.000" out="00:00:00.217">
     <property name="shotcut:transition">lumaMix</property>
@@ -1602,6 +1718,25 @@
     <property name="meta.media.variable_frame_rate">1</property>
     <property name="meta.media.top_field_first">0</property>
     <property name="meta.media.progressive">1</property>
+    <filter id="filter12" in="00:00:00.300" out="00:00:13.917">
+      <property name="version">0.4</property>
+      <property name="mlt_service">frei0r.levels</property>
+      <property name="threads">0</property>
+      <property name="0">0.3</property>
+      <property name="1">0</property>
+      <property name="2">1</property>
+      <property name="3">0.1675</property>
+      <property name="4">0</property>
+      <property name="5">0.988235</property>
+      <property name="6">0</property>
+      <property name="7">0.3</property>
+    </filter>
+    <filter id="filter13" in="00:00:00.300" out="00:00:13.917">
+      <property name="mlt_service">avfilter.hue</property>
+      <property name="av.h">0</property>
+      <property name="av.b">0.8</property>
+      <property name="av.s">1.62</property>
+    </filter>
   </chain>
   <tractor id="tractor3" in="00:00:00.000" out="00:00:00.317">
     <property name="shotcut:transition">lumaMix</property>
@@ -1692,6 +1827,25 @@
     <property name="meta.media.variable_frame_rate">1</property>
     <property name="meta.media.top_field_first">0</property>
     <property name="meta.media.progressive">1</property>
+    <filter id="filter14" out="00:00:12.133">
+      <property name="version">0.4</property>
+      <property name="mlt_service">frei0r.levels</property>
+      <property name="threads">0</property>
+      <property name="0">0.3</property>
+      <property name="1">0</property>
+      <property name="2">1</property>
+      <property name="3">0.1675</property>
+      <property name="4">0</property>
+      <property name="5">0.988235</property>
+      <property name="6">0</property>
+      <property name="7">0.3</property>
+    </filter>
+    <filter id="filter15" out="00:00:12.133">
+      <property name="mlt_service">avfilter.hue</property>
+      <property name="av.h">0</property>
+      <property name="av.b">0.8</property>
+      <property name="av.s">1.62</property>
+    </filter>
   </chain>
   <tractor id="tractor4" in="00:00:00.000" out="00:00:00.383">
     <property name="shotcut:transition">lumaMix</property>
@@ -1782,13 +1936,32 @@
     <property name="meta.media.variable_frame_rate">1</property>
     <property name="meta.media.top_field_first">0</property>
     <property name="meta.media.progressive">1</property>
-    <filter id="filter0" in="00:00:00.400" out="00:00:31.717">
+    <filter id="filter16" in="00:00:00.400" out="00:00:31.717">
       <property name="window">75</property>
       <property name="max_gain">20dB</property>
       <property name="level">10</property>
       <property name="channel_mask">-1</property>
       <property name="mlt_service">volume</property>
       <property name="shotcut:filter">audioGain</property>
+    </filter>
+    <filter id="filter17" in="00:00:00.400" out="00:00:31.550">
+      <property name="version">0.4</property>
+      <property name="mlt_service">frei0r.levels</property>
+      <property name="threads">0</property>
+      <property name="0">0.3</property>
+      <property name="1">0</property>
+      <property name="2">1</property>
+      <property name="3">0.1675</property>
+      <property name="4">0</property>
+      <property name="5">0.988235</property>
+      <property name="6">0</property>
+      <property name="7">0.3</property>
+    </filter>
+    <filter id="filter18" in="00:00:00.400" out="00:00:31.550">
+      <property name="mlt_service">avfilter.hue</property>
+      <property name="av.h">0</property>
+      <property name="av.b">0.8</property>
+      <property name="av.s">1.62</property>
     </filter>
   </chain>
   <tractor id="tractor5" in="00:00:00.000" out="00:00:00.367">
@@ -1880,6 +2053,25 @@
     <property name="meta.media.variable_frame_rate">1</property>
     <property name="meta.media.top_field_first">0</property>
     <property name="meta.media.progressive">1</property>
+    <filter id="filter19" out="00:00:11.917">
+      <property name="version">0.4</property>
+      <property name="mlt_service">frei0r.levels</property>
+      <property name="threads">0</property>
+      <property name="0">0.3</property>
+      <property name="1">0</property>
+      <property name="2">1</property>
+      <property name="3">0.1675</property>
+      <property name="4">0</property>
+      <property name="5">0.988235</property>
+      <property name="6">0</property>
+      <property name="7">0.3</property>
+    </filter>
+    <filter id="filter20" out="00:00:11.917">
+      <property name="mlt_service">avfilter.hue</property>
+      <property name="av.h">0</property>
+      <property name="av.b">0.8</property>
+      <property name="av.s">1.62</property>
+    </filter>
   </chain>
   <tractor id="tractor6" in="00:00:00.000" out="00:00:00.317">
     <property name="shotcut:transition">lumaMix</property>
@@ -1968,6 +2160,25 @@
     <property name="meta.media.top_field_first">0</property>
     <property name="meta.media.progressive">1</property>
     <property name="shotcut:caption">IMG_2861.MOV</property>
+    <filter id="filter21" in="00:00:00.583" out="00:00:15.767">
+      <property name="version">0.4</property>
+      <property name="mlt_service">frei0r.levels</property>
+      <property name="threads">0</property>
+      <property name="0">0.3</property>
+      <property name="1">0</property>
+      <property name="2">1</property>
+      <property name="3">0.1675</property>
+      <property name="4">0</property>
+      <property name="5">0.988235</property>
+      <property name="6">0</property>
+      <property name="7">0.3</property>
+    </filter>
+    <filter id="filter22" in="00:00:00.583" out="00:00:15.767">
+      <property name="mlt_service">avfilter.hue</property>
+      <property name="av.h">0</property>
+      <property name="av.b">0.8</property>
+      <property name="av.s">1.62</property>
+    </filter>
   </chain>
   <tractor id="tractor7" in="00:00:00.000" out="00:00:00.383">
     <property name="shotcut:transition">lumaMix</property>
@@ -2056,6 +2267,25 @@
     <property name="meta.media.top_field_first">0</property>
     <property name="meta.media.progressive">1</property>
     <property name="shotcut:caption">IMG_2853.MOV</property>
+    <filter id="filter23" in="00:00:10.567" out="00:00:26.283">
+      <property name="version">0.4</property>
+      <property name="mlt_service">frei0r.levels</property>
+      <property name="threads">0</property>
+      <property name="0">0.3</property>
+      <property name="1">0</property>
+      <property name="2">1</property>
+      <property name="3">0.1675</property>
+      <property name="4">0</property>
+      <property name="5">0.988235</property>
+      <property name="6">0</property>
+      <property name="7">0.3</property>
+    </filter>
+    <filter id="filter24" in="00:00:10.567" out="00:00:26.283">
+      <property name="mlt_service">avfilter.hue</property>
+      <property name="av.h">0</property>
+      <property name="av.b">0.8</property>
+      <property name="av.s">1.62</property>
+    </filter>
   </chain>
   <tractor id="tractor8" in="00:00:00.000" out="00:00:00.317">
     <property name="shotcut:transition">lumaMix</property>
@@ -2142,7 +2372,10 @@
     <property name="meta.media.top_field_first">0</property>
     <property name="meta.media.progressive">1</property>
     <property name="shotcut:caption">20250807_142225.mp4</property>
-    <filter id="filter1" in="00:00:00.283" out="00:02:11.367">
+    <filter id="filter25" in="00:00:00.283" out="00:02:11.367">
+      <property name="mlt_service">avfilter.hflip</property>
+    </filter>
+    <filter id="filter26" in="00:00:00.283" out="00:02:11.367">
       <property name="window">75</property>
       <property name="max_gain">20dB</property>
       <property name="level">10</property>
@@ -2236,6 +2469,9 @@
     <property name="meta.media.top_field_first">0</property>
     <property name="meta.media.progressive">1</property>
     <property name="shotcut:caption">20250807_142225.mp4</property>
+    <filter id="filter27" in="00:02:11.400" out="00:02:14.217">
+      <property name="mlt_service">avfilter.hflip</property>
+    </filter>
   </chain>
   <chain id="chain27" out="00:02:20.517">
     <property name="length">00:02:20.533</property>
@@ -2302,7 +2538,10 @@
     <property name="meta.media.top_field_first">0</property>
     <property name="meta.media.progressive">1</property>
     <property name="shotcut:caption">20250807_143758.mp4</property>
-    <filter id="filter2" out="00:02:18.767">
+    <filter id="filter28" in="00:00:00.183" out="00:02:18.767">
+      <property name="mlt_service">avfilter.hflip</property>
+    </filter>
+    <filter id="filter29" out="00:02:18.767">
       <property name="window">75</property>
       <property name="max_gain">20dB</property>
       <property name="level">10</property>
@@ -2398,6 +2637,25 @@
     <property name="meta.media.top_field_first">0</property>
     <property name="meta.media.progressive">1</property>
     <property name="shotcut:caption">IMG_2916 2.MOV</property>
+    <filter id="filter30" in="00:00:09.550" out="00:00:16.200">
+      <property name="version">0.4</property>
+      <property name="mlt_service">frei0r.levels</property>
+      <property name="threads">0</property>
+      <property name="0">0.3</property>
+      <property name="1">0</property>
+      <property name="2">1</property>
+      <property name="3">0.1675</property>
+      <property name="4">0</property>
+      <property name="5">0.988235</property>
+      <property name="6">0</property>
+      <property name="7">0.3</property>
+    </filter>
+    <filter id="filter31" in="00:00:09.550" out="00:00:16.200">
+      <property name="mlt_service">avfilter.hue</property>
+      <property name="av.h">0</property>
+      <property name="av.b">0.8</property>
+      <property name="av.s">1.62</property>
+    </filter>
   </chain>
   <tractor id="tractor11" in="00:00:00.000" out="00:00:00.283">
     <property name="shotcut:transition">lumaMix</property>
@@ -2450,7 +2708,7 @@
     <entry producer="chain27" in="00:00:00.550" out="00:02:18.467"/>
     <entry producer="tractor11" in="00:00:00.000" out="00:00:00.283"/>
     <entry producer="chain28" in="00:00:09.850" out="00:00:16.200"/>
-    <filter id="filter3" out="00:08:51.383">
+    <filter id="filter32" out="00:08:51.383">
       <property name="mlt_service">avfilter.hflip</property>
     </filter>
   </playlist>
@@ -2458,7 +2716,7 @@
     <property name="shotcut">1</property>
     <property name="shotcut:projectAudioChannels">2</property>
     <property name="shotcut:projectFolder">0</property>
-    <property name="shotcut:scaleFactor">0.0319522</property>
+    <property name="shotcut:scaleFactor">0.226</property>
     <property name="shotcut:trackHeaderWidth">253</property>
     <property name="shotcut:trackHeight">55</property>
     <properties name="shotcut:markers"/>
