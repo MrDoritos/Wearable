@@ -2917,7 +2917,7 @@
     <property name="shotcut">1</property>
     <property name="shotcut:projectAudioChannels">2</property>
     <property name="shotcut:projectFolder">0</property>
-    <property name="shotcut:scaleFactor">0.383248</property>
+    <property name="shotcut:scaleFactor">0.084088</property>
     <property name="shotcut:trackHeaderWidth">253</property>
     <property name="shotcut:trackHeight">55</property>
     <properties name="shotcut:markers"/>
