@@ -2450,14 +2450,17 @@
     <entry producer="chain27" in="00:00:00.550" out="00:02:18.467"/>
     <entry producer="tractor11" in="00:00:00.000" out="00:00:00.283"/>
     <entry producer="chain28" in="00:00:09.850" out="00:00:16.200"/>
+    <filter id="filter3" out="00:08:51.383">
+      <property name="mlt_service">avfilter.hflip</property>
+    </filter>
   </playlist>
   <tractor id="tractor12" title="Shotcut version 25.07.26" in="00:00:00.000" out="00:08:51.383">
     <property name="shotcut">1</property>
     <property name="shotcut:projectAudioChannels">2</property>
     <property name="shotcut:projectFolder">0</property>
-    <property name="shotcut:scaleFactor">0.0740004</property>
+    <property name="shotcut:scaleFactor">0.0319522</property>
     <property name="shotcut:trackHeaderWidth">253</property>
-    <property name="shotcut:trackHeight">43</property>
+    <property name="shotcut:trackHeight">55</property>
     <properties name="shotcut:markers"/>
     <property name="shotcut:skipConvert">0</property>
     <track producer="background"/>
