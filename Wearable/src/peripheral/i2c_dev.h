@@ -7,5 +7,6 @@
 namespace wbl {
 
 extern I2C i2c_ltr390;
+extern I2C i2c_bme688;
 
 }
